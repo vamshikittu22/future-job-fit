@@ -38,7 +38,7 @@ Suggestions:
 • Suggestion 3
 
 ### Rewritten Resume
-[Resume here]
+[Resume here] 
 `;
 
     const userPrompt = `Resume:\n${resumeText}\n${jobDescription ? `Job Description:\n${jobDescription}` : ''}`;

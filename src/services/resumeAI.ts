@@ -15,7 +15,7 @@ export class ResumeAIService {
     try {
       // Replace this URL with your actual Vercel serverless endpoint
       const response = await fetch('https://future-job-jo4gehj63-vamshi-krishnas-projects-7654112d.vercel.app/api/resume', {
-        method: 'POST',
+        method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription })
       });
