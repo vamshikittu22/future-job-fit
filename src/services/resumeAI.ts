@@ -14,7 +14,7 @@ export class ResumeAIService {
   private async callGPT(resumeText: string, jobDescription?: string): Promise<string> {
     try {
       // Replace this URL with your actual Vercel serverless endpoint
-      const response = await fetch('https://vercel.com/vamshi-krishnas-projects-7654112d/future-job-fit/FP4ZtniKwm7d8vVkZVQxq6oujPaB/api/resume', {
+      const response = await fetch('https://future-job-fit-git-main-vamshi-krishnas-projects-7654112d.vercel.app/api/resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, jobDescription })
