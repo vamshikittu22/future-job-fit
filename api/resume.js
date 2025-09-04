@@ -1,7 +1,12 @@
-
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // Allow requests from any origin (for dev purposes)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
   try {
@@ -12,56 +17,37 @@ export default async function handler(req, res) {
     }
 
     const systemPrompt = `
-You are an expert ATS resume builder and career coach.
+You are an expert ATS resume builder and career coach. 
 Evaluate resumes and rewrite them into optimized, ATS-friendly versions.
-
-Tasks:
-1. Evaluate the resume and provide:
-   - ATS Compatibility Score (0-100)
-   - Missing job-relevant keywords (from the job description if provided)
-   - Top 3 suggestions for improvement (bullets, metrics, formatting)
-
-2. Rewrite the resume into a clean, ATS-optimized format.
-   - Use standard sections: Summary, Skills, Experience, Education, Projects
-   - Keep language concise, measurable, and keyword-rich
-   - Tailor to the Job Description if provided
-
-Format your response as:
-
-### Evaluation
-ATS Score: X/100  
-Missing Keywords: keyword1, keyword2, keyword3  
-Suggestions: 
-• Suggestion 1
-• Suggestion 2
-• Suggestion 3
-
-### Rewritten Resume
-[Resume here] 
+...
 `;
 
-    const userPrompt = `Resume:\n${resumeText}\n${jobDescription ? `Job Description:\n${jobDescription}` : ''}`;
+    const userPrompt = `
+Resume:
+${resumeText}
+
+Job Description:
+${jobDescription || "N/A"}
+`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         temperature: 0.4,
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ]
       })
     });
 
     const data = await response.json();
-    const message = data.choices?.[0]?.message?.content || "";
-
-    res.status(200).json({ result: message });
+    res.status(200).json(data);
 
   } catch (err) {
     console.error(err);
