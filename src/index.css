@@ -8,46 +8,48 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Swiss-inspired monochrome palette */
-    --background: 0 0% 99%;
-    --foreground: 0 0% 8%;
+    /* Dark mode Swiss palette with soft grays */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Electric blue accent for futuristic touch */
-    --primary: 217 91% 60%;
+    /* Electric Blue accent (#0A84FF) */
+    --primary: 212 100% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 240 10% 10%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 217 91% 60%;
+    --accent: 212 100% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Clean Swiss borders */
-    --border: 0 0% 90%;
-    --input: 0 0% 95%;
-    --ring: 217 91% 60%;
+    /* Soft dark borders */
+    --border: 240 10% 15%;
+    --input: 240 10% 12%;
+    --ring: 212 100% 52%;
 
     --radius: 0.75rem;
 
-    /* Custom Swiss design tokens */
-    --gradient-accent: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    /* Custom Swiss design tokens for dark mode */
+    --gradient-accent: linear-gradient(135deg, hsl(212 100% 52%), hsl(212 100% 62%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 10% 6%), hsl(240 10% 4%));
+    --gradient-card: linear-gradient(145deg, hsl(240 10% 7%), hsl(240 10% 5%));
     
-    /* Elegant shadows */
-    --shadow-swiss: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.05);
-    --shadow-accent: 0 4px 20px hsl(217 91% 60% / 0.25);
+    /* Enhanced shadows for dark mode */
+    --shadow-swiss: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.2);
+    --shadow-accent: 0 4px 30px hsl(212 100% 52% / 0.3);
+    --shadow-nav: 0 2px 10px rgba(0, 0, 0, 0.4);
     
     /* Smooth transitions */
     --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -115,6 +117,10 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+
+  html {
+    @apply dark;
   }
 }

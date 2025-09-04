@@ -2,10 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Target, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       {/* Hero Section */}
       <main className="container mx-auto px-6 py-16">
         <div className="max-w-4xl mx-auto text-center mb-16">
@@ -30,8 +33,8 @@ export default function Home() {
 
         {/* Benefits Grid */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-subtle">
-            <div className="w-12 h-12 mx-auto mb-4 bg-accent/10 rounded-xl flex items-center justify-center">
+          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-card">
+            <div className="w-12 h-12 mx-auto mb-4 bg-accent/20 rounded-xl flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-accent" />
             </div>
             <h3 className="text-xl font-semibold mb-3">ATS-Friendly Rewriting</h3>
@@ -40,8 +43,8 @@ export default function Home() {
             </p>
           </Card>
 
-          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-subtle">
-            <div className="w-12 h-12 mx-auto mb-4 bg-accent/10 rounded-xl flex items-center justify-center">
+          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-card">
+            <div className="w-12 h-12 mx-auto mb-4 bg-accent/20 rounded-xl flex items-center justify-center">
               <Target className="w-6 h-6 text-accent" />
             </div>
             <h3 className="text-xl font-semibold mb-3">Tailored to Job Descriptions</h3>
@@ -50,8 +53,8 @@ export default function Home() {
             </p>
           </Card>
 
-          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-subtle">
-            <div className="w-12 h-12 mx-auto mb-4 bg-accent/10 rounded-xl flex items-center justify-center">
+          <Card className="p-8 text-center border-0 shadow-swiss bg-gradient-card">
+            <div className="w-12 h-12 mx-auto mb-4 bg-accent/20 rounded-xl flex items-center justify-center">
               <Zap className="w-6 h-6 text-accent" />
             </div>
             <h3 className="text-xl font-semibold mb-3">Instant Actionable Feedback</h3>
@@ -61,6 +64,7 @@ export default function Home() {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -65,11 +65,13 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-accent': 'var(--gradient-accent)',
-				'gradient-subtle': 'var(--gradient-subtle)'
+				'gradient-subtle': 'var(--gradient-subtle)',
+				'gradient-card': 'var(--gradient-card)'
 			},
 			boxShadow: {
 				'swiss': 'var(--shadow-swiss)',
-				'accent': 'var(--shadow-accent)'
+				'accent': 'var(--shadow-accent)',
+				'nav': 'var(--shadow-nav)'
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',

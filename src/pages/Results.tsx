@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Download, Target, AlertCircle, CheckCircle } from "lucide-react";
+import { Copy, Download, Target, AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 interface EvaluationResult {
   atsScore: number;
@@ -126,24 +128,22 @@ ACHIEVEMENTS
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/input">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold">Analysis Results</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-center">Analysis Results</h1>
+          <p className="text-center text-muted-foreground mt-2">
+            Your personalized resume analysis and optimization
+          </p>
         </div>
 
         {/* Results Grid */}
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Evaluation Card */}
-          <Card className="p-6 shadow-swiss">
+          <Card className="p-6 shadow-swiss bg-gradient-card">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <Target className="w-5 h-5 text-accent" />
               </div>
               <h2 className="text-xl font-semibold">Evaluation</h2>
@@ -200,10 +200,10 @@ ACHIEVEMENTS
           </Card>
 
           {/* Rewritten Resume Card */}
-          <Card className="p-6 shadow-swiss">
+          <Card className="p-6 shadow-swiss bg-gradient-card">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-accent" />
                 </div>
                 <h2 className="text-xl font-semibold">Tailored Resume</h2>
@@ -246,6 +246,7 @@ ACHIEVEMENTS
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

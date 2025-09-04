@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Briefcase } from "lucide-react";
-import { Link } from "react-router-dom";
+import { FileText, Briefcase } from "lucide-react";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
@@ -69,24 +70,22 @@ PREFERRED:
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold">Resume Analysis</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-center">Resume Analysis</h1>
+          <p className="text-center text-muted-foreground mt-2">
+            Paste your resume and job description to get started
+          </p>
         </div>
 
         {/* Input Grid */}
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Resume Input */}
-          <Card className="p-6 shadow-swiss">
+          <Card className="p-6 shadow-swiss bg-gradient-card">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-accent" />
               </div>
               <div>
@@ -109,9 +108,9 @@ PREFERRED:
           </Card>
 
           {/* Job Description Input */}
-          <Card className="p-6 shadow-swiss">
+          <Card className="p-6 shadow-swiss bg-gradient-card">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-accent" />
               </div>
               <div>
@@ -155,6 +154,7 @@ PREFERRED:
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
