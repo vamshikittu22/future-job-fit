@@ -12,44 +12,27 @@ interface ResumeEvaluationResponse {
 
 export class ResumeAIService {
   private async callGPT(resumeText: string, jobDescription?: string): Promise<string> {
-    const systemPrompt = `You are an expert ATS resume builder and career coach. 
-Your role is to evaluate resumes and rewrite them into optimized, ATS-friendly versions.
+    try {
+      // Replace this URL with your actual Vercel serverless endpoint
+      const response = await fetch('https://https://future-job-jo4gehj63-vamshi-krishnas-projects-7654112d.vercel.app/api/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText, jobDescription })
+      });
 
-Tasks:
-1. Evaluate the resume and provide:
-   - ATS Compatibility Score (0-100)
-   - Missing job-relevant keywords (from the job description if provided)
-   - Top 3 suggestions for improvement (bullets, metrics, formatting)
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
 
-2. Rewrite the resume into a clean, ATS-optimized format.
-   - Use standard sections: Summary, Skills, Experience, Education, Projects
-   - Keep language concise, measurable, and keyword-rich
-   - Tailor to the Job Description if provided
+      if (!content) throw new Error('No GPT response content received.');
+      return content;
 
-Format your response as:
+    } catch (error) {
+      console.error('GPT call failed, using mock response:', error);
 
-### Evaluation
-ATS Score: X/100  
-Missing Keywords: keyword1, keyword2, keyword3  
-Suggestions: 
-• Suggestion 1
-• Suggestion 2  
-• Suggestion 3
-
-### Rewritten Resume
-[Resume here]`;
-
-    const userPrompt = `Resume:
-${resumeText}
-
-${jobDescription ? `Job Description:
-${jobDescription}` : ''}`;
-
-    // For now, we'll use a mock response since we don't have GPT API key setup
-    // In production, this would make an actual API call to OpenAI
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`### Evaluation
+      // Fallback: Mock response for testing
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(`### Evaluation
 ATS Score: 78/100  
 Missing Keywords: TypeScript, CI/CD, GraphQL, Testing, Leadership, Agile
 Suggestions: 
@@ -92,7 +75,6 @@ Software Engineer | StartupXYZ | 2018-2020
 
 EDUCATION
 Bachelor of Science in Computer Science | State University | 2014-2018
-Relevant Coursework: Data Structures, Algorithms, Software Engineering, Database Systems
 GPA: 3.7/4.0
 
 ACHIEVEMENTS & PROJECTS
@@ -100,8 +82,9 @@ ACHIEVEMENTS & PROJECTS
 • Mentored 3 junior developers who were promoted to mid-level positions within 12 months
 • Led successful migration of legacy jQuery codebase to modern React architecture
 • Open source contributor with 500+ GitHub stars across personal projects`);
-      }, 2000);
-    });
+        }, 2000);
+      });
+    }
   }
 
   private parseGPTResponse(response: string): ResumeEvaluationResponse {
