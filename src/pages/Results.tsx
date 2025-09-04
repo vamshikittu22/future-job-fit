@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Download, Target, AlertCircle, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { resumeAI } from "@/services/resumeAI";
 
 interface EvaluationResult {
   atsScore: number;
@@ -18,69 +19,36 @@ interface EvaluationResult {
 export default function Results() {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulate API call to GPT
-    const resumeText = localStorage.getItem("resumeText");
-    const jobDescription = localStorage.getItem("jobDescription");
+    const evaluateResume = async () => {
+      const resumeText = localStorage.getItem("resumeText");
+      const jobDescription = localStorage.getItem("jobDescription");
 
-    if (!resumeText) {
-      return;
-    }
+      if (!resumeText) {
+        navigate("/input");
+        return;
+      }
 
-    // Mock evaluation result for demo
-    setTimeout(() => {
-      setEvaluation({
-        atsScore: 78,
-        missingKeywords: ["TypeScript", "CI/CD", "GraphQL", "Testing", "Leadership"],
-        suggestions: [
-          "Add specific metrics and quantifiable achievements",
-          "Include more technical keywords from the job description",
-          "Strengthen leadership and collaboration examples"
-        ],
-        rewrittenResume: `John Smith
-Senior Frontend Developer
-john.smith@email.com | (555) 123-4567 | LinkedIn: linkedin.com/in/johnsmith
+      try {
+        setError(null);
+        const result = await resumeAI.evaluateResume({
+          resumeText,
+          jobDescription: jobDescription || undefined
+        });
+        setEvaluation(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-PROFESSIONAL SUMMARY
-Results-driven Senior Frontend Developer with 5+ years of experience building scalable web applications. Expert in React, TypeScript, and modern JavaScript with proven leadership capabilities and strong problem-solving skills.
-
-TECHNICAL SKILLS
-• Frontend: React, TypeScript, JavaScript (ES6+), HTML5, CSS3
-• Styling: Tailwind CSS, Styled Components, SCSS
-• Testing: Jest, Cypress, React Testing Library
-• Tools: Git, CI/CD pipelines, Webpack, Vite
-• State Management: Redux, Zustand, Context API
-• Backend: Node.js, REST APIs, GraphQL, SQL
-
-PROFESSIONAL EXPERIENCE
-
-Senior Software Engineer | TechCorp | 2020-Present
-• Developed 15+ scalable React applications serving 100K+ users, improving performance by 40%
-• Led cross-functional team of 5 developers, mentoring junior staff and conducting code reviews
-• Implemented TypeScript migration reducing bugs by 60% and improving developer productivity
-• Collaborated with product managers and designers to deliver pixel-perfect, responsive interfaces
-• Established CI/CD pipelines reducing deployment time from 2 hours to 15 minutes
-
-Software Engineer | StartupXYZ | 2018-2020
-• Built responsive frontend interfaces using React and modern CSS frameworks
-• Integrated REST APIs and optimized database queries improving load times by 30%
-• Participated in agile development process with daily standups and sprint planning
-• Implemented comprehensive testing suite achieving 90%+ code coverage
-
-EDUCATION
-Bachelor of Science in Computer Science | State University | 2014-2018
-Relevant Coursework: Data Structures, Algorithms, Software Engineering, Database Systems
-
-ACHIEVEMENTS
-• Reduced application bundle size by 35% through code splitting and optimization
-• Mentored 3 junior developers who were promoted within 12 months
-• Led successful migration of legacy codebase to modern React architecture`
-      });
-      setIsLoading(false);
-    }, 2000);
-  }, []);
+    evaluateResume();
+  }, [navigate]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -102,26 +70,37 @@ ACHIEVEMENTS
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-          <h2 className="text-xl font-semibold mb-2">Analyzing your resume...</h2>
-          <p className="text-muted-foreground">This may take a few seconds</p>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-4 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <h2 className="text-xl font-semibold mb-2">Analyzing your resume...</h2>
+            <p className="text-muted-foreground">Our AI is evaluating your resume and generating improvements</p>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
-  if (!evaluation) {
+  if (error || !evaluation) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-          <Link to="/input">
-            <Button variant="secondary">Try Again</Button>
-          </Link>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
+            <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+            <p className="text-muted-foreground mb-4">
+              {error || "Failed to analyze your resume. Please try again."}
+            </p>
+            <Link to="/input">
+              <Button variant="secondary">Try Again</Button>
+            </Link>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
