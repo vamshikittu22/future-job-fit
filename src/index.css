@@ -105,11 +105,6 @@ All colors MUST be HSL.
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
-  /* Default to dark mode if no theme is set */
-  html:not(.light):not(.dark) {
-    @apply dark;
-  }
 }
 
 @layer components {
