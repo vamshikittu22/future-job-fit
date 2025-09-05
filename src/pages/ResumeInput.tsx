@@ -5,22 +5,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { FileText, Briefcase } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import ModelSelector from "@/components/ModelSelector";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleGenerate = () => {
     if (!resumeText.trim()) {
+      toast({
+        title: "Resume Required",
+        description: "Please paste your resume text before generating.",
+        variant: "destructive",
+      });
       return;
     }
     
-    // Store data in localStorage for now (in production would use proper state management)
+    // Store data in localStorage for Results page
     localStorage.setItem("resumeText", resumeText);
     localStorage.setItem("jobDescription", jobDescription);
+    localStorage.setItem("selectedModel", selectedModel);
     
     navigate("/results");
   };
@@ -71,19 +82,47 @@ PREFERRED:
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-6 py-8">
+      <motion.div 
+        className="container mx-auto px-6 py-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Header */}
-        <div className="mb-8">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
           <h1 className="text-3xl font-bold text-center">Resume Analysis</h1>
           <p className="text-center text-muted-foreground mt-2">
             Paste your resume and job description to get started
           </p>
-        </div>
+        </motion.div>
+
+        {/* Model Selection */}
+        <motion.div 
+          className="flex justify-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <ModelSelector 
+            value={selectedModel} 
+            onValueChange={setSelectedModel} 
+          />
+        </motion.div>
 
         {/* Input Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <motion.div 
+          className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           {/* Resume Input */}
-          <Card className="p-6 shadow-swiss bg-gradient-card">
+          <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-accent" />
@@ -108,7 +147,7 @@ PREFERRED:
           </Card>
 
           {/* Job Description Input */}
-          <Card className="p-6 shadow-swiss bg-gradient-card">
+          <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-accent" />
@@ -131,16 +170,21 @@ PREFERRED:
               className="min-h-[400px] text-sm leading-relaxed"
             />
           </Card>
-        </div>
+        </motion.div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4 justify-center mt-8">
+        <motion.div 
+          className="flex flex-wrap gap-4 justify-center mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
           <Button 
             variant="hero" 
             size="lg" 
             onClick={handleGenerate}
             disabled={!resumeText.trim()}
-            className="px-8"
+            className="px-8 hover:shadow-accent transition-all duration-300"
           >
             Generate Resume
           </Button>
@@ -148,12 +192,12 @@ PREFERRED:
             variant="secondary" 
             size="lg" 
             onClick={loadExample}
-            className="px-8"
+            className="px-8 hover:shadow-swiss transition-all duration-300"
           >
             Load Example
           </Button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       <Footer />
     </div>
   );

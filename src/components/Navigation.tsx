@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navigation() {
   const location = useLocation();
@@ -19,6 +20,8 @@ export default function Navigation() {
 
           {/* Navigation */}
           <div className="flex items-center gap-4">
+            <ThemeToggle />
+            
             {!isHome && (
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/">
