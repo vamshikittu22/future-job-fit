@@ -18,6 +18,8 @@ export class ResumeAIService {
 
   constructor() {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "demo";
+    console.log("Gemini key loaded:", import.meta.env.VITE_GEMINI_API_KEY);
+
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
