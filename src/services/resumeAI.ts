@@ -4,6 +4,7 @@ interface ResumeEvaluationRequest {
   resumeText: string;
   jobDescription?: string;
   model?: string;
+  customInstructions?: any;
 }
 
 interface ResumeEvaluationResponse {
@@ -26,12 +27,13 @@ export class ResumeAIService {
   private async callGemini(
     resumeText: string,
     jobDescription?: string,
-    model = "gemini-1.5-flash"
+    model = "gemini-1.5-flash",
+    customInstructions?: any
   ): Promise<string> {
     try {
       const generativeModel = this.genAI.getGenerativeModel({ model });
 
-      const systemPrompt = `You are an expert ATS resume builder and career coach.
+      let systemPrompt = `You are an expert ATS resume builder and career coach.
 Evaluate resumes and rewrite them into optimized, ATS-friendly versions.
 
 Tasks:
@@ -54,6 +56,50 @@ Suggestions: …
 
 ### Rewritten Resume
 [Resume here]`;
+
+      // Add custom instructions if provided
+      if (customInstructions) {
+        systemPrompt += `\n\nAdditional Custom Instructions:`;
+        
+        if (customInstructions.resumeLength) {
+          systemPrompt += `\n- Target resume length: ${customInstructions.resumeLength} page(s)`;
+        }
+        
+        if (customInstructions.selectedTags?.length > 0) {
+          systemPrompt += `\n- Emphasize these areas: ${customInstructions.selectedTags.join(', ')}`;
+        }
+        
+        if (customInstructions.targetAudience) {
+          systemPrompt += `\n- Target audience: ${customInstructions.targetAudience}`;
+        }
+        
+        if (customInstructions.leadershipGoals) {
+          systemPrompt += `\n- Leadership focus: ${customInstructions.leadershipGoals}`;
+        }
+        
+        if (customInstructions.metrics) {
+          systemPrompt += `\n- Metrics emphasis: ${customInstructions.metrics}`;
+        }
+        
+        if (customInstructions.summaryCount) {
+          systemPrompt += `\n- Professional summary bullets: ${customInstructions.summaryCount}`;
+        }
+        
+        if (customInstructions.projectCount) {
+          systemPrompt += `\n- Maximum projects to include: ${customInstructions.projectCount}`;
+        }
+        
+        if (customInstructions.prdrAllocation) {
+          const allocations = Object.entries(customInstructions.prdrAllocation)
+            .map(([key, value]) => `${key}: ${value}%`)
+            .join(', ');
+          systemPrompt += `\n- Skill emphasis allocation: ${allocations}`;
+        }
+        
+        if (customInstructions.customInstructions) {
+          systemPrompt += `\n- Custom guidance: ${customInstructions.customInstructions}`;
+        }
+      }
 
       const userPrompt = `Resume:
 ${resumeText}
@@ -123,7 +169,8 @@ ${jobDescription || "N/A"}`;
       const geminiResponse = await this.callGemini(
         request.resumeText,
         request.jobDescription,
-        request.model
+        request.model,
+        request.customInstructions
       );
       return this.parseGeminiResponse(geminiResponse);
     } catch (error) {

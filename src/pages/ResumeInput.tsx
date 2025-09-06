@@ -10,11 +10,17 @@ import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ModelSelector from "@/components/ModelSelector";
+import CustomizeAIButton from "@/components/CustomizeAIButton";
+import CustomizeAIModal from "@/components/CustomizeAIModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+  const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [customInstructions, setCustomInstructions] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,11 +34,22 @@ export default function ResumeInput() {
       return;
     }
     
+    // Show confirmation modal instead of directly navigating
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmGeneration = () => {
     // Store data in localStorage for Results page
     localStorage.setItem("resumeText", resumeText);
     localStorage.setItem("jobDescription", jobDescription);
     localStorage.setItem("selectedModel", selectedModel);
     
+    // Store custom instructions if available
+    if (customInstructions) {
+      localStorage.setItem("customInstructions", JSON.stringify(customInstructions));
+    }
+    
+    setConfirmModalOpen(false);
     navigate("/results");
   };
 
@@ -101,9 +118,9 @@ PREFERRED:
           </p>
         </motion.div>
 
-        {/* Model Selection */}
+        {/* Model Selection & Customize AI */}
         <motion.div 
-          className="flex justify-center mb-8"
+          className="flex justify-center items-center gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -112,6 +129,7 @@ PREFERRED:
             value={selectedModel} 
             onValueChange={setSelectedModel} 
           />
+          <CustomizeAIButton onClick={() => setCustomizeModalOpen(true)} />
         </motion.div>
 
         {/* Input Grid */}
@@ -198,6 +216,23 @@ PREFERRED:
           </Button>
         </motion.div>
       </motion.div>
+      
+      <CustomizeAIModal
+        open={customizeModalOpen}
+        onOpenChange={setCustomizeModalOpen}
+        onSave={setCustomInstructions}
+      />
+      
+      <ConfirmationModal
+        open={confirmModalOpen}
+        onOpenChange={setConfirmModalOpen}
+        onConfirm={handleConfirmGeneration}
+        resumeText={resumeText}
+        jobDescription={jobDescription}
+        customInstructions={customInstructions}
+        selectedModel={selectedModel}
+      />
+      
       <Footer />
     </div>
   );

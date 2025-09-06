@@ -29,6 +29,7 @@ export default function Results() {
       const resumeText = localStorage.getItem("resumeText");
       const jobDescription = localStorage.getItem("jobDescription");
       const selectedModel = localStorage.getItem("selectedModel") || "gemini-1.5-flash";
+      const customInstructions = localStorage.getItem("customInstructions");
 
       if (!resumeText) {
         navigate("/input");
@@ -40,7 +41,8 @@ export default function Results() {
         const result = await resumeAI.evaluateResume({
           resumeText,
           jobDescription: jobDescription || undefined,
-          model: selectedModel
+          model: selectedModel,
+          customInstructions: customInstructions ? JSON.parse(customInstructions) : undefined
         });
         setEvaluation(result);
       } catch (err) {
