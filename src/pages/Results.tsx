@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Download, Target, AlertCircle, CheckCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Download, Copy, RefreshCw, Target, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { resumeAI } from "@/services/resumeAI";
@@ -15,6 +18,9 @@ interface EvaluationResult {
   missingKeywords: string[];
   suggestions: string[];
   rewrittenResume: string;
+  matchingKeywords?: string[];
+  improvements?: string[];
+  nextSteps?: string[];
 }
 
 export default function Results() {
@@ -133,150 +139,249 @@ export default function Results() {
         </motion.div>
 
         {/* Results Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-          {/* Evaluation Card */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                  <Target className="w-5 h-5 text-accent" />
-                </div>
-                <h2 className="text-xl font-semibold">Evaluation</h2>
-              </div>
-
-              {/* ATS Score */}
-              <motion.div 
-                className="mb-6"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.4 }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">ATS Score</span>
-                  <Badge variant={evaluation.atsScore >= 80 ? "default" : "secondary"} className="text-lg px-3 py-1">
-                    {evaluation.atsScore}/100
-                  </Badge>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <motion.div 
-                    className="bg-gradient-accent h-2 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${evaluation.atsScore}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-              </motion.div>
-
-              {/* Missing Keywords */}
-              <motion.div 
-                className="mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-              >
-                <h3 className="font-medium mb-3 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-500" />
-                  Missing Keywords
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {evaluation.missingKeywords.map((keyword, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.7 + index * 0.1 }}
-                    >
-                      <Badge variant="outline" className="text-sm">
-                        {keyword}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Suggestions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.8 }}
-              >
-                <h3 className="font-medium mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Top 3 Suggestions
-                </h3>
-                <ul className="space-y-2">
-                  {evaluation.suggestions.map((suggestion, index) => (
-                    <motion.li 
-                      key={index} 
-                      className="text-sm text-muted-foreground flex items-start gap-2"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.9 + index * 0.1 }}
-                    >
-                      <span className="w-5 h-5 bg-accent/10 rounded-full flex items-center justify-center text-xs font-medium text-accent mt-0.5">
-                        {index + 1}
-                      </span>
-                      {suggestion}
-                    </motion.li>
-                  ))}
-                </ul>
-              </motion.div>
-            </Card>
-          </motion.div>
-
-          {/* Rewritten Resume Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-accent" />
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* ATS Score Dashboard */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card className="p-6 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    evaluation.atsScore >= 80 ? 'bg-green-100 text-green-600' :
+                    evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    <Target className="w-5 h-5" />
                   </div>
-                  <h2 className="text-xl font-semibold">Tailored Resume</h2>
+                  <div>
+                    <h3 className="font-semibold">ATS Score</h3>
+                    <div className="text-2xl font-bold text-accent">{evaluation.atsScore}/100</div>
+                  </div>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => copyToClipboard(evaluation.rewrittenResume)}
-                    className="hover:shadow-swiss transition-all duration-300"
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => downloadAsText(evaluation.rewrittenResume, "tailored-resume.txt")}
-                    className="hover:shadow-swiss transition-all duration-300"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              </div>
+                <Progress value={evaluation.atsScore} className="mb-2" />
+                <p className="text-xs text-muted-foreground">
+                  {evaluation.atsScore >= 80 ? "Excellent compatibility" :
+                   evaluation.atsScore >= 60 ? "Good, needs improvement" : "Requires optimization"}
+                </p>
+              </Card>
+            </motion.div>
 
-              <motion.div 
-                className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
-              >
-                <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                  {evaluation.rewrittenResume}
-                </pre>
-              </motion.div>
-            </Card>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Card className="p-6 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Keywords Match</h3>
+                    <div className="text-2xl font-bold text-accent">
+                      {evaluation.matchingKeywords?.length || 0}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Keywords found in resume</p>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <Card className="p-6 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Missing Keywords</h3>
+                    <div className="text-2xl font-bold text-accent">
+                      {evaluation.missingKeywords?.length || 0}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Opportunities to add</p>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Detailed Analysis Grid */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Keyword Analysis */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <Card className="p-6 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-accent" />
+                  </div>
+                  <h2 className="text-xl font-semibold">Keyword Analysis</h2>
+                </div>
+
+                {/* Matching Keywords */}
+                {evaluation.matchingKeywords && evaluation.matchingKeywords.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <h4 className="font-semibold">Matching Keywords ({evaluation.matchingKeywords.length})</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {evaluation.matchingKeywords.map((keyword, index) => (
+                        <Badge key={index} variant="default" className="bg-green-100 text-green-800">
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Missing Keywords */}
+                {evaluation.missingKeywords.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                      <h4 className="font-semibold">Missing Keywords ({evaluation.missingKeywords.length})</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {evaluation.missingKeywords.map((keyword, index) => (
+                        <Badge key={index} variant="destructive" className="bg-red-100 text-red-800">
+                          {keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Consider adding these keywords to improve your ATS score
+                    </p>
+                  </div>
+                )}
+
+                <Separator className="my-6" />
+
+                {/* Suggestions */}
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Improvement Suggestions
+                  </h4>
+                  <ul className="space-y-3">
+                    {evaluation.suggestions.map((suggestion, index) => (
+                      <li key={index} className="text-sm flex items-start gap-3">
+                        <span className="w-6 h-6 bg-accent/10 rounded-full flex items-center justify-center text-xs font-medium text-accent flex-shrink-0 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Rewritten Resume Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <Card className="p-6 shadow-swiss bg-gradient-card">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-accent" />
+                    </div>
+                    <h2 className="text-xl font-semibold">Optimized Resume</h2>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => copyToClipboard(evaluation.rewrittenResume)}
+                      className="hover:shadow-swiss transition-all duration-300"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => downloadAsText(evaluation.rewrittenResume, "optimized-resume.txt")}
+                      className="hover:shadow-swiss transition-all duration-300"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+
+                <motion.div 
+                  className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.7 }}
+                >
+                  <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                    {evaluation.rewrittenResume}
+                  </pre>
+                </motion.div>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Additional Insights */}
+          {(evaluation.improvements || evaluation.nextSteps) && (
+            <motion.div 
+              className="grid md:grid-cols-2 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              {evaluation.improvements && (
+                <Card className="p-6 shadow-swiss bg-gradient-card">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-accent" />
+                    Key Improvements Made
+                  </h3>
+                  <ul className="space-y-2">
+                    {evaluation.improvements.map((improvement, index) => (
+                      <li key={index} className="text-sm flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        {improvement}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+
+              {evaluation.nextSteps && (
+                <Card className="p-6 shadow-swiss bg-gradient-card">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-accent" />
+                    Next Steps
+                  </h3>
+                  <ul className="space-y-2">
+                    {evaluation.nextSteps.map((step, index) => (
+                      <li key={index} className="text-sm flex items-start gap-2">
+                        <span className="w-5 h-5 bg-accent/10 rounded-full flex items-center justify-center text-xs font-medium text-accent mt-0.5 flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* Action Buttons */}

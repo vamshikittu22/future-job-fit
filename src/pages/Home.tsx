@@ -1,16 +1,45 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Target, Zap } from "lucide-react";
+import { CheckCircle, Target, Zap, FileText, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CreateResumeModal from "@/components/CreateResumeModal";
 
 export default function Home() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJDModal, setShowJDModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      
+      {/* Sticky Navigation Buttons */}
+      <div className="sticky top-4 z-50 flex justify-center gap-4 px-6 py-4">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 shadow-swiss hover:shadow-accent transition-all duration-200"
+        >
+          <FileText className="w-4 h-4" />
+          Create Resume
+        </Button>
+        <Link to="/input">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 shadow-swiss hover:shadow-accent transition-all duration-200"
+          >
+            <Briefcase className="w-4 h-4" />
+            JD-Tailored Resume
+          </Button>
+        </Link>
+      </div>
+      
       {/* Hero Section */}
-      <main className="container mx-auto px-6 py-16">
+      <main className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
             AI Resume Evaluator
@@ -64,6 +93,12 @@ export default function Home() {
           </Card>
         </div>
       </main>
+      
+      <CreateResumeModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+      />
+      
       <Footer />
     </div>
   );
