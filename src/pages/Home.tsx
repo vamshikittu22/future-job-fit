@@ -17,15 +17,16 @@ export default function Home() {
       
       {/* Sticky Navigation Buttons */}
       <div className="sticky top-4 z-50 flex justify-center gap-4 px-6 py-4">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 shadow-swiss hover:shadow-accent transition-all duration-200"
-        >
-          <FileText className="w-4 h-4" />
-          Create Resume
-        </Button>
+        <Link to="/builder">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2 shadow-swiss hover:shadow-accent transition-all duration-200"
+          >
+            <FileText className="w-4 h-4" />
+            Create Resume
+          </Button>
+        </Link>
         <Link to="/input">
           <Button
             variant="outline"
