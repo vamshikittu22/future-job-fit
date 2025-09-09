@@ -49,7 +49,14 @@ export default function ResumePreview({
   };
 
   const renderSummary = () => {
-    const summaryText = resumeData.summary?.summary || resumeData.summary || '';
+    // Handle nested summary structure properly
+    let summaryText = '';
+    if (typeof resumeData.summary === 'string') {
+      summaryText = resumeData.summary;
+    } else if (resumeData.summary && typeof resumeData.summary === 'object') {
+      summaryText = resumeData.summary.summary || '';
+    }
+    
     if (!summaryText) return null;
     
     return (

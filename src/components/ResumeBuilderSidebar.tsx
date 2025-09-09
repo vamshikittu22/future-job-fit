@@ -77,7 +77,12 @@ export default function ResumeBuilderSidebar({
         const personal = resumeData.personalInfo;
         return personal.name && personal.email ? 'complete' : personal.name || personal.email ? 'partial' : 'empty';
       case 'summary':
-        const summaryText = resumeData.summary?.summary || resumeData.summary || '';
+        let summaryText = '';
+        if (typeof resumeData.summary === 'string') {
+          summaryText = resumeData.summary;
+        } else if (resumeData.summary && typeof resumeData.summary === 'object') {
+          summaryText = resumeData.summary.summary || '';
+        }
         return summaryText ? 'complete' : 'empty';
       case 'skills':
         return resumeData.skills?.length > 0 ? 'complete' : 'empty';

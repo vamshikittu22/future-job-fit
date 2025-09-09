@@ -204,14 +204,21 @@ export default function ResumeSection({
   );
 
   const renderSummary = () => {
-    const summaryText = resumeData.summary?.summary || resumeData.summary || '';
+    // Handle nested summary structure properly
+    let summaryText = '';
+    if (typeof resumeData.summary === 'string') {
+      summaryText = resumeData.summary;
+    } else if (resumeData.summary && typeof resumeData.summary === 'object') {
+      summaryText = resumeData.summary.summary || '';
+    }
+    
     return (
       <div>
         <Label htmlFor="summary">Professional Summary</Label>
         <Textarea
           id="summary"
           value={summaryText}
-          onChange={(e) => updateResumeData('summary', e.target.value)}
+          onChange={(e) => updateResumeData('summary', { summary: e.target.value })}
           placeholder="Experienced software engineer with expertise in..."
           className="min-h-[120px]"
         />
