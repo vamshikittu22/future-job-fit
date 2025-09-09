@@ -16,7 +16,7 @@ export default function ResumePreview({
   currentPage 
 }: ResumePreviewProps) {
   const renderPersonalInfo = () => {
-    const { personalInfo } = resumeData;
+    const personalInfo = resumeData.personalInfo || resumeData.personal || {};
     
     return (
       <div className="text-center mb-6">

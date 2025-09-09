@@ -57,7 +57,7 @@ export default function ResumeSection({
 
   const handlePersonalInfoChange = (field: string, value: string) => {
     updateResumeData('personalInfo', {
-      ...resumeData.personalInfo,
+      ...(resumeData.personalInfo || {}),
       [field]: value
     });
   };
@@ -149,7 +149,7 @@ export default function ResumeSection({
         <Label htmlFor="name">Full Name *</Label>
         <Input
           id="name"
-          value={resumeData.personalInfo.name}
+          value={resumeData.personalInfo?.name || ''}
           onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
           placeholder="John Doe"
         />
@@ -159,7 +159,7 @@ export default function ResumeSection({
         <Input
           id="email"
           type="email"
-          value={resumeData.personalInfo.email}
+          value={resumeData.personalInfo?.email || ''}
           onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
           placeholder="john@example.com"
         />
@@ -168,7 +168,7 @@ export default function ResumeSection({
         <Label htmlFor="phone">Phone</Label>
         <Input
           id="phone"
-          value={resumeData.personalInfo.phone}
+          value={resumeData.personalInfo?.phone || ''}
           onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
           placeholder="+1 (555) 123-4567"
         />
@@ -177,7 +177,7 @@ export default function ResumeSection({
         <Label htmlFor="location">Location</Label>
         <Input
           id="location"
-          value={resumeData.personalInfo.location}
+          value={resumeData.personalInfo?.location || ''}
           onChange={(e) => handlePersonalInfoChange('location', e.target.value)}
           placeholder="New York, NY"
         />
@@ -186,7 +186,7 @@ export default function ResumeSection({
         <Label htmlFor="linkedin">LinkedIn</Label>
         <Input
           id="linkedin"
-          value={resumeData.personalInfo.linkedin}
+          value={resumeData.personalInfo?.linkedin || ''}
           onChange={(e) => handlePersonalInfoChange('linkedin', e.target.value)}
           placeholder="linkedin.com/in/johndoe"
         />
@@ -195,7 +195,7 @@ export default function ResumeSection({
         <Label htmlFor="website">Website</Label>
         <Input
           id="website"
-          value={resumeData.personalInfo.website}
+          value={resumeData.personalInfo?.website || ''}
           onChange={(e) => handlePersonalInfoChange('website', e.target.value)}
           placeholder="www.johndoe.com"
         />
