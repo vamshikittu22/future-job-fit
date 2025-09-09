@@ -29,28 +29,31 @@ export default function DynamicSection({
   onActivate
 }: DynamicSectionProps) {
   const [isExpanded, setIsExpanded] = useState(isActive);
+  
+  // Ensure data is always defined
+  const safeData = data || {};
 
   const handleUpdate = (field: string, value: any) => {
     onUpdate({
-      ...data,
+      ...safeData,
       [field]: value
     });
   };
 
   const addArrayItem = (field: string, defaultItem: any) => {
-    const currentArray = data[field] || [];
+    const currentArray = safeData[field] || [];
     handleUpdate(field, [...currentArray, { ...defaultItem, id: Date.now().toString() }]);
   };
 
   const updateArrayItem = (field: string, itemId: string, updates: any) => {
-    const currentArray = data[field] || [];
+    const currentArray = safeData[field] || [];
     handleUpdate(field, currentArray.map((item: any) => 
       item.id === itemId ? { ...item, ...updates } : item
     ));
   };
 
   const removeArrayItem = (field: string, itemId: string) => {
-    const currentArray = data[field] || [];
+    const currentArray = safeData[field] || [];
     handleUpdate(field, currentArray.filter((item: any) => item.id !== itemId));
   };
 
@@ -60,7 +63,7 @@ export default function DynamicSection({
         <Label htmlFor={`${sectionId}-name`}>Full Name</Label>
         <Input
           id={`${sectionId}-name`}
-          value={data.name || ''}
+          value={safeData.name || ''}
           onChange={(e) => handleUpdate('name', e.target.value)}
           placeholder="John Doe"
         />
@@ -69,7 +72,7 @@ export default function DynamicSection({
         <Label htmlFor={`${sectionId}-title`}>Professional Title</Label>
         <Input
           id={`${sectionId}-title`}
-          value={data.title || ''}
+          value={safeData.title || ''}
           onChange={(e) => handleUpdate('title', e.target.value)}
           placeholder="Software Developer"
         />
@@ -79,7 +82,7 @@ export default function DynamicSection({
         <Input
           id={`${sectionId}-email`}
           type="email"
-          value={data.email || ''}
+          value={safeData.email || ''}
           onChange={(e) => handleUpdate('email', e.target.value)}
           placeholder="john@example.com"
         />
@@ -88,7 +91,7 @@ export default function DynamicSection({
         <Label htmlFor={`${sectionId}-phone`}>Phone</Label>
         <Input
           id={`${sectionId}-phone`}
-          value={data.phone || ''}
+          value={safeData.phone || ''}
           onChange={(e) => handleUpdate('phone', e.target.value)}
           placeholder="+1 (555) 123-4567"
         />
@@ -97,7 +100,7 @@ export default function DynamicSection({
         <Label htmlFor={`${sectionId}-location`}>Location</Label>
         <Input
           id={`${sectionId}-location`}
-          value={data.location || ''}
+          value={safeData.location || ''}
           onChange={(e) => handleUpdate('location', e.target.value)}
           placeholder="San Francisco, CA"
         />
@@ -106,7 +109,7 @@ export default function DynamicSection({
         <Label htmlFor={`${sectionId}-linkedin`}>LinkedIn</Label>
         <Input
           id={`${sectionId}-linkedin`}
-          value={data.linkedin || ''}
+          value={safeData.linkedin || ''}
           onChange={(e) => handleUpdate('linkedin', e.target.value)}
           placeholder="linkedin.com/in/johndoe"
         />
@@ -119,20 +122,20 @@ export default function DynamicSection({
       <Label htmlFor={`${sectionId}-summary`}>Professional Summary</Label>
       <Textarea
         id={`${sectionId}-summary`}
-        value={data.summary || ''}
+        value={safeData.summary || ''}
         onChange={(e) => handleUpdate('summary', e.target.value)}
         placeholder="Brief professional summary highlighting your key skills and achievements..."
         className="min-h-[100px] resize-none"
       />
       <div className="text-xs text-muted-foreground mt-1">
-        {(data.summary || '').length}/500 characters
+        {(safeData.summary || '').length}/500 characters
       </div>
     </div>
   );
 
   const renderSkills = () => (
     <div className="space-y-4">
-      {(data.categories || []).map((category: any) => (
+      {(safeData.categories || []).map((category: any) => (
         <Card key={category.id} className="p-4">
           <div className="flex items-center justify-between mb-3">
             <Input
@@ -172,7 +175,7 @@ export default function DynamicSection({
 
   const renderExperience = () => (
     <div className="space-y-4">
-      {(data.experiences || []).map((exp: any) => (
+      {(safeData.experiences || []).map((exp: any) => (
         <Card key={exp.id} className="p-4">
           <div className="flex items-start justify-between mb-4">
             <div className="grid grid-cols-2 gap-4 flex-1">

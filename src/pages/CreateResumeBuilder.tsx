@@ -276,7 +276,7 @@ export default function CreateResumeBuilder() {
                           sectionId={sectionId}
                           index={index}
                           title={section.title}
-                          data={resumeData[sectionId as keyof ResumeData]}
+                          data={resumeData[sectionId as keyof ResumeData] || {}}
                           onUpdate={(data) => updateSectionData(sectionId as keyof ResumeData, data)}
                           onDelete={() => removeSection(sectionId)}
                           isActive={activeSection === sectionId}
