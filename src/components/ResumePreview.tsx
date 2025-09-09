@@ -49,7 +49,8 @@ export default function ResumePreview({
   };
 
   const renderSummary = () => {
-    if (!resumeData.summary) return null;
+    const summaryText = resumeData.summary?.summary || resumeData.summary || '';
+    if (!summaryText) return null;
     
     return (
       <div className="mb-6">
@@ -57,7 +58,7 @@ export default function ResumePreview({
           Professional Summary
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          {resumeData.summary}
+          {summaryText}
         </p>
       </div>
     );

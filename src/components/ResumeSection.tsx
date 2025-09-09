@@ -203,27 +203,30 @@ export default function ResumeSection({
     </div>
   );
 
-  const renderSummary = () => (
-    <div>
-      <Label htmlFor="summary">Professional Summary</Label>
-      <Textarea
-        id="summary"
-        value={resumeData.summary}
-        onChange={(e) => updateResumeData('summary', e.target.value)}
-        placeholder="Experienced software engineer with expertise in..."
-        className="min-h-[120px]"
-      />
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-muted-foreground">
-          {resumeData.summary.length} characters
-        </span>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4" />
-          AI Polish
-        </Button>
+  const renderSummary = () => {
+    const summaryText = resumeData.summary?.summary || resumeData.summary || '';
+    return (
+      <div>
+        <Label htmlFor="summary">Professional Summary</Label>
+        <Textarea
+          id="summary"
+          value={summaryText}
+          onChange={(e) => updateResumeData('summary', e.target.value)}
+          placeholder="Experienced software engineer with expertise in..."
+          className="min-h-[120px]"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">
+            {summaryText.length} characters
+          </span>
+          <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            AI Polish
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSkills = () => {
     const [newSkill, setNewSkill] = useState("");
