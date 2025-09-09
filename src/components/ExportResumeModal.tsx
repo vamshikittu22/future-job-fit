@@ -95,7 +95,7 @@ export default function ExportResumeModal({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `resume_${resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'unnamed'}.${format}`;
+      link.download = `resume_${resumeData.personal?.name?.replace(/\s+/g, '_') || 'unnamed'}.${format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -123,7 +123,15 @@ export default function ExportResumeModal({
   };
 
   const generateFileContent = () => {
-    const { personalInfo, summary, skills, experience, education, projects, achievements, certifications } = resumeData;
+    // Handle both possible data structures and provide safe defaults
+    const personalInfo = resumeData.personal || resumeData.personalInfo || {};
+    const summary = resumeData.summary?.summary || resumeData.summary || '';
+    const skills = resumeData.skills?.categories || resumeData.skills || [];
+    const experience = resumeData.experience?.experiences || resumeData.experience || [];
+    const education = resumeData.education?.items || resumeData.education || [];
+    const projects = resumeData.projects?.items || resumeData.projects || [];
+    const achievements = resumeData.achievements?.items || resumeData.achievements || [];
+    const certifications = resumeData.certifications?.items || resumeData.certifications || [];
     
     if (format === 'txt') {
       // Generate plain text resume
@@ -149,7 +157,18 @@ export default function ExportResumeModal({
       if (skills?.length > 0) {
         content += 'TECHNICAL SKILLS\n';
         content += '='.repeat(15) + '\n';
-        content += skills.join(', ') + '\n\n';
+        if (Array.isArray(skills) && skills[0]?.skills) {
+          // Handle categories structure
+          skills.forEach((category: any) => {
+            if (category.name && category.skills?.length > 0) {
+              content += `${category.name}: ${category.skills.join(', ')}\n`;
+            }
+          });
+        } else if (Array.isArray(skills)) {
+          // Handle simple array structure
+          content += skills.join(', ') + '\n';
+        }
+        content += '\n';
       }
       
       // Experience
@@ -159,9 +178,13 @@ export default function ExportResumeModal({
         experience.forEach((exp: any) => {
           content += `${exp.title || 'POSITION'}\n`;
           content += `${exp.company || 'COMPANY'} | ${exp.location || 'LOCATION'} | ${exp.duration || 'DURATION'}\n`;
-          if (exp.bullets?.length > 0) {
-            exp.bullets.forEach((bullet: string) => {
-              if (bullet.trim()) content += `• ${bullet}\n`;
+          if (exp.description) {
+            // Handle description text with bullet points
+            const bullets = exp.description.split('\n').filter((line: string) => line.trim());
+            bullets.forEach((bullet: string) => {
+              if (bullet.trim()) {
+                content += bullet.startsWith('•') ? `${bullet}\n` : `• ${bullet}\n`;
+              }
             });
           }
           content += '\n';
@@ -313,7 +336,7 @@ export default function ExportResumeModal({
                     <div className="flex justify-between">
                       <span>File name:</span>
                       <span className="font-medium">
-                        {resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume'}.{format}
+                        {resumeData.personal?.name?.replace(/\s+/g, '_') || 'resume'}.{format}
                       </span>
                     </div>
                   </div>
