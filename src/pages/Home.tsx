@@ -17,7 +17,7 @@ export default function Home() {
       
       {/* Sticky Navigation Buttons */}
       <div className="sticky top-4 z-50 flex justify-center gap-4 px-6 py-4">
-        <Link to="/builder">
+        <Link to="/create-resume">
           <Button
             variant="secondary"
             size="sm"
