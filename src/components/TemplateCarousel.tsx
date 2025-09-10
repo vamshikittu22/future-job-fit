@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Palette, Type } from "lucide-react";
+import { ChevronLeft, ChevronRight, Palette, Type, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Template {
   id: string;
@@ -98,219 +98,153 @@ export default function TemplateCarousel({
   resumeData
 }: TemplateCarouselProps) {
   const [showCustomization, setShowCustomization] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  
-  const categories = ['all', 'minimal', 'student', 'experienced', 'colorful', 'creative'];
-  
-  const filteredTemplates = selectedCategory === 'all' 
-    ? templates 
-    : templates.filter(t => t.category === selectedCategory);
-
-  const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t shadow-nav z-30">
-      {/* Header */}
-      <div className="px-6 py-4 border-b">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold">Choose Template</h3>
-            <p className="text-sm text-muted-foreground">
-              Select a design that matches your style
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Category Filter */}
-            <div className="flex items-center gap-2">
-              {categories.map(category => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  className="capitalize"
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Customization Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCustomization(!showCustomization)}
-              className="flex items-center gap-2"
-            >
-              <Palette className="w-4 h-4" />
-              Customize
-            </Button>
-          </div>
+    <div className={`bg-card/50 backdrop-blur border-t ${isCollapsed ? 'h-12' : 'h-64'} transition-all duration-300 overflow-hidden`}>
+      <div className="flex items-center justify-between p-2 border-b">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-sm">Templates</h3>
+          <Badge variant="outline" className="text-xs">
+            {templates.find(t => t.id === selectedTemplate)?.name || 'Custom'}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCustomization(!showCustomization)}
+            className="h-8 w-8 p-0"
+            title={showCustomization ? 'Hide customization' : 'Show customization'}
+          >
+            {showCustomization ? <Type className="w-4 h-4" /> : <Palette className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 p-0"
+            title={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            {isCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
         </div>
       </div>
-
-      {/* Template Grid */}
-      <div className="p-6">
-        <ScrollArea className="w-full">
-          <div className="flex gap-4 pb-4">
-            {filteredTemplates.map((template) => (
-              <Card
-                key={template.id}
-                className={`relative cursor-pointer transition-all duration-200 hover:shadow-swiss flex-shrink-0 ${
-                  selectedTemplate === template.id 
-                    ? 'ring-2 ring-primary shadow-accent' 
-                    : 'hover:ring-1 hover:ring-primary/50'
-                }`}
-                onClick={() => onTemplateChange(template.id)}
-              >
-                <div className="p-4 w-48">
-                  {/* Template Preview */}
-                  <div className="relative mb-3">
-                    <div 
-                      className="w-full h-32 rounded-lg bg-gradient-to-br border"
-                      style={{
-                        backgroundImage: `linear-gradient(135deg, ${template.colors.primary}20, ${template.colors.accent}10)`
-                      }}
-                    >
-                      {/* Mock Resume Content */}
-                      <div className="p-3 text-xs">
-                        <div 
-                          className="h-2 rounded mb-2"
-                          style={{ backgroundColor: template.colors.primary, width: '60%' }}
-                        />
-                        <div 
-                          className="h-1 rounded mb-1"
-                          style={{ backgroundColor: template.colors.secondary, width: '80%' }}
-                        />
-                        <div 
-                          className="h-1 rounded mb-2"
-                          style={{ backgroundColor: template.colors.secondary, width: '40%' }}
-                        />
-                        <div 
-                          className="h-1 rounded mb-1"
-                          style={{ backgroundColor: template.colors.accent, width: '70%' }}
-                        />
-                        <div 
-                          className="h-1 rounded"
-                          style={{ backgroundColor: template.colors.accent, width: '50%' }}
-                        />
+      
+      {!isCollapsed && (
+        <div className="p-4">
+          <ScrollArea className="w-full">
+            <div className="flex gap-4 pb-4">
+              {templates.map((template) => (
+                <Card
+                  key={template.id}
+                  className={`relative cursor-pointer transition-all duration-200 hover:shadow-swiss flex-shrink-0 ${
+                    selectedTemplate === template.id 
+                      ? 'ring-2 ring-primary shadow-accent' 
+                      : 'hover:ring-1 hover:ring-primary/50'
+                  }`}
+                  onClick={() => onTemplateChange(template.id)}
+                >
+                  <div className="p-4 w-48">
+                    {/* Template Preview */}
+                    <div className="relative mb-3">
+                      <div 
+                        className="w-full h-32 rounded-lg bg-gradient-to-br border"
+                        style={{
+                          backgroundImage: `linear-gradient(135deg, ${template.colors.primary}20, ${template.colors.accent}10)`
+                        }}
+                      >
+                        {/* Mock Resume Content */}
+                        <div className="p-3 text-xs">
+                          <div 
+                            className="h-2 rounded mb-2"
+                            style={{ backgroundColor: template.colors.primary, width: '60%' }}
+                          />
+                          <div 
+                            className="h-1 rounded mb-1"
+                            style={{ backgroundColor: template.colors.secondary, width: '80%' }}
+                          />
+                          <div 
+                            className="h-1 rounded mb-2"
+                            style={{ backgroundColor: template.colors.secondary, width: '40%' }}
+                          />
+                          <div 
+                            className="h-1 rounded mb-1"
+                            style={{ backgroundColor: template.colors.accent, width: '70%' }}
+                          />
+                          <div 
+                            className="h-1 rounded"
+                            style={{ backgroundColor: template.colors.accent, width: '50%' }}
+                          />
+                        </div>
                       </div>
+                      
+                      {selectedTemplate === template.id && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        </div>
+                      )}
                     </div>
                     
-                    {selectedTemplate === template.id && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full" />
-                      </div>
-                    )}
+                    {/* Template Info */}
+                    <div className="text-center">
+                      <h4 className="font-medium text-sm mb-1">{template.name}</h4>
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {template.category}
+                      </Badge>
+                    </div>
+                    
+                    {/* Color Palette */}
+                    <div className="flex justify-center gap-1 mt-2">
+                      <div 
+                        className="w-3 h-3 rounded-full border"
+                        style={{ backgroundColor: template.colors.primary }}
+                      />
+                      <div 
+                        className="w-3 h-3 rounded-full border"
+                        style={{ backgroundColor: template.colors.secondary }}
+                      />
+                      <div 
+                        className="w-3 h-3 rounded-full border"
+                        style={{ backgroundColor: template.colors.accent }}
+                      />
+                    </div>
                   </div>
-                  
-                  {/* Template Info */}
-                  <div className="text-center">
-                    <h4 className="font-medium text-sm mb-1">{template.name}</h4>
-                    <Badge variant="secondary" className="text-xs capitalize">
-                      {template.category}
-                    </Badge>
-                  </div>
-                  
-                  {/* Color Palette */}
-                  <div className="flex justify-center gap-1 mt-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border"
-                      style={{ backgroundColor: template.colors.primary }}
-                    />
-                    <div 
-                      className="w-3 h-3 rounded-full border"
-                      style={{ backgroundColor: template.colors.secondary }}
-                    />
-                    <div 
-                      className="w-3 h-3 rounded-full border"
-                      style={{ backgroundColor: template.colors.accent }}
-                    />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+                </Card>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
-      {/* Customization Panel */}
-      {showCustomization && selectedTemplateData && (
-        <div className="border-t bg-muted/30 p-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-3 gap-6">
-              {/* Font Selection */}
-              <div>
-                <Label className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Type className="w-4 h-4" />
-                  Font Family
-                </Label>
-                <div className="space-y-2">
-                  {['Inter', 'Roboto', 'Open Sans', 'Lato'].map(font => (
-                    <Button
-                      key={font}
-                      variant={selectedTemplateData.font === font ? "default" : "outline"}
-                      size="sm"
-                      className="w-full justify-start"
-                      style={{ fontFamily: font }}
-                    >
-                      {font}
-                    </Button>
-                  ))}
+          {showCustomization && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium mb-3">Customize Template</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Primary Color</Label>
+                  <div className="flex gap-2">
+                    {['#2563eb', '#7c3aed', '#dc2626', '#059669', '#7c2d12'].map((color) => (
+                      <button
+                        key={color}
+                        className="w-6 h-6 rounded-full border-2 border-transparent hover:border-primary"
+                        style={{ backgroundColor: color }}
+                        onClick={() => {}}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              {/* Primary Color */}
-              <div>
-                <Label className="text-sm font-medium mb-2">Primary Color</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    '#2563eb', '#7c3aed', '#059669', '#dc2626',
-                    '#ea580c', '#0891b2', '#7c2d12', '#1e293b'
-                  ].map(color => (
-                    <button
-                      key={color}
-                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                        selectedTemplateData.colors.primary === color 
-                          ? 'border-foreground scale-110' 
-                          : 'border-transparent hover:border-muted-foreground'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => {
-                        // Handle color change
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-              {/* Accent Color */}
-              <div>
-                <Label className="text-sm font-medium mb-2">Accent Color</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    '#60a5fa', '#a78bfa', '#34d399', '#f87171',
-                    '#fb923c', '#38bdf8', '#f59e0b', '#64748b'
-                  ].map(color => (
-                    <button
-                      key={color}
-                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                        selectedTemplateData.colors.accent === color 
-                          ? 'border-foreground scale-110' 
-                          : 'border-transparent hover:border-muted-foreground'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => {
-                        // Handle color change
-                      }}
-                    />
-                  ))}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Font</Label>
+                  <select className="w-full text-sm border rounded-md p-2 bg-background">
+                    <option>Inter</option>
+                    <option>Roboto</option>
+                    <option>Open Sans</option>
+                    <option>Lato</option>
+                  </select>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

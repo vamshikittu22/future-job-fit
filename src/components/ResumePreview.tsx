@@ -221,13 +221,18 @@ export default function ResumePreview({
           Achievements
         </h2>
         <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-          {resumeData.achievements.map((achievement: string, index: number) => (
-            achievement.trim() && (
+          {resumeData.achievements.map((achievement: any, index: number) => {
+            // Handle both string and object formats
+            const achievementText = typeof achievement === 'string' 
+              ? achievement 
+              : achievement.title || achievement.description || '';
+            
+            return achievementText.trim() && (
               <li key={index} className="leading-relaxed">
-                {achievement}
+                {achievementText}
               </li>
-            )
-          ))}
+            );
+          })}
         </ul>
       </div>
     );
@@ -242,17 +247,22 @@ export default function ResumePreview({
           Certifications
         </h2>
         <div className="flex flex-wrap gap-2">
-          {resumeData.certifications.map((cert: string, index: number) => (
-            cert.trim() && (
+          {resumeData.certifications.map((cert: any, index: number) => {
+            // Handle both string and object formats
+            const certText = typeof cert === 'string' 
+              ? cert 
+              : cert.name || cert.title || '';
+            
+            return certText.trim() && (
               <Badge 
                 key={index} 
                 variant="outline" 
                 className="text-xs px-2 py-1"
               >
-                {cert}
+                {certText}
               </Badge>
-            )
-          ))}
+            );
+          })}
         </div>
       </div>
     );

@@ -305,7 +305,7 @@ export default function ResumeBuilder() {
         selectedTemplate={selectedTemplate}
         onTemplateChange={setSelectedTemplate}
         resumeData={resumeData}
-      />
+      /> 
 
       {/* Modals */}
       <ImportResumeModal

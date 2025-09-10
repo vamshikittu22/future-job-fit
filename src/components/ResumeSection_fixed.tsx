@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,8 +21,7 @@ import {
   Trophy, 
   Award,
   Sparkles,
-  GripVertical,
-  X
+  GripVertical
 } from "lucide-react";
 
 const sectionIcons = {
@@ -55,12 +54,7 @@ export default function ResumeSection({
 }: ResumeSectionProps) {
   const [isExpanded, setIsExpanded] = useState(isActive);
   const [newSkill, setNewSkill] = useState("");
-  const [isAddingSkill, setIsAddingSkill] = useState(false);
   const Icon = sectionIcons[sectionId as keyof typeof sectionIcons];
-
-  useEffect(() => {
-    setIsExpanded(isActive);
-  }, [isActive]);
 
   const handlePersonalInfoChange = (field: string, value: string) => {
     updateResumeData('personalInfo', {
@@ -69,20 +63,18 @@ export default function ResumeSection({
     });
   };
 
-  const handleAddSkill = () => {
-    if (!newSkill.trim()) return;
-    
-    const currentSkills = Array.isArray(resumeData.skills) ? resumeData.skills : [];
-    const updatedSkills = [...currentSkills, newSkill.trim()];
-    updateResumeData("skills", updatedSkills);
-    setNewSkill("");
-    setIsAddingSkill(false);
+  const handleSkillsChange = (skills: string[]) => {
+    updateResumeData('skills', skills);
   };
 
-  const handleRemoveSkill = (indexToRemove: number) => {
-    const currentSkills = Array.isArray(resumeData.skills) ? resumeData.skills : [];
-    const updatedSkills = currentSkills.filter((_: any, index: number) => index !== indexToRemove);
-    updateResumeData("skills", updatedSkills);
+  const addSkill = (skill: string) => {
+    if (skill.trim() && !(resumeData.skills || []).includes(skill.trim())) {
+      handleSkillsChange([...(resumeData.skills || []), skill.trim()]);
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    handleSkillsChange((resumeData.skills || []).filter((skill: string) => skill !== skillToRemove));
   };
 
   const addExperience = () => {
@@ -276,107 +268,75 @@ export default function ResumeSection({
   );
 
   const renderSkills = () => {
-    const skills = resumeData.skills || [];
-    
     return (
       <div className="space-y-4">
         <div>
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Technical Skills</Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsAddingSkill(true)}
-              className="h-7 text-xs"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Skill
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Add your technical skills, programming languages, frameworks, and tools
-          </p>
+          <Label className="text-sm font-medium">Technical Skills</Label>
+          <p className="text-xs text-muted-foreground mb-3">Add your technical skills, programming languages, frameworks, and tools</p>
         </div>
         
-        {(isAddingSkill || skills.length === 0) && (
-          <div className="flex gap-2 items-center">
-            <Input
-              value={newSkill}
-              onChange={(e) => setNewSkill(e.target.value)}
-              placeholder="e.g., React, Python, AWS..."
-              className="flex-1"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddSkill();
-                } else if (e.key === 'Escape') {
-                  setIsAddingSkill(false);
+        <div className="flex gap-2">
+          <Input
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+            placeholder="e.g., React, Python, AWS..."
+            className="flex-1"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (newSkill.trim()) {
+                  addSkill(newSkill);
                   setNewSkill("");
                 }
-              }}
-              onBlur={() => {
-                if (!newSkill.trim()) {
-                  setIsAddingSkill(false);
-                }
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddSkill}
-              disabled={!newSkill.trim()}
-              className="h-9"
-            >
-              Add
-            </Button>
-          </div>
-        )}
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (newSkill.trim()) {
+                addSkill(newSkill);
+                setNewSkill("");
+              }
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </Button>
+        </div>
         
-        {skills.length > 0 && (
+        {(resumeData.skills || []).length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground">
-                Your Skills ({skills.length})
-              </Label>
-              {!isAddingSkill && skills.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsAddingSkill(true);
-                    setNewSkill("");
-                  }}
-                  className="h-6 text-xs"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add More
-                </Button>
-              )}
-            </div>
+            <Label className="text-xs text-muted-foreground">Your Skills ({(resumeData.skills || []).length})</Label>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill: string, index: number) => (
+              {(resumeData.skills || []).map((skill: string, index: number) => (
                 <Badge
                   key={`skill-${index}`}
                   variant="secondary"
-                  className="flex items-center gap-2 px-3 py-1 hover:bg-secondary/80 transition-colors group"
+                  className="flex items-center gap-2 px-3 py-1 hover:bg-secondary/80 transition-colors"
                 >
                   <span>{skill}</span>
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveSkill(index);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                    onClick={() => removeSkill(skill)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
                     aria-label={`Remove ${skill}`}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </Badge>
               ))}
             </div>
+          </div>
+        )}
+        
+        {(resumeData.skills || []).length === 0 && (
+          <div className="text-center py-8 border-2 border-dashed border-muted rounded-lg">
+            <Code className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No skills added yet</p>
+            <p className="text-xs text-muted-foreground">Add your first skill above</p>
           </div>
         )}
       </div>
@@ -686,6 +646,14 @@ export default function ResumeSection({
           ))}
         </div>
       )}
+      
+      {(resumeData.achievements || []).length === 0 && (
+        <div className="text-center py-8 border-2 border-dashed border-muted rounded-lg">
+          <Trophy className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No achievements added yet</p>
+          <p className="text-xs text-muted-foreground">Click "Add Achievement" to get started</p>
+        </div>
+      )}
     </div>
   );
 
@@ -749,6 +717,14 @@ export default function ResumeSection({
               </div>
             </Card>
           ))}
+        </div>
+      )}
+      
+      {(resumeData.certifications || []).length === 0 && (
+        <div className="text-center py-8 border-2 border-dashed border-muted rounded-lg">
+          <Award className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No certifications added yet</p>
+          <p className="text-xs text-muted-foreground">Click "Add Certification" to get started</p>
         </div>
       )}
     </div>
