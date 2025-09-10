@@ -127,6 +127,16 @@ export default function CreateResumeBuilder() {
     }));
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(sectionOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setSectionOrder(items);
+  };
+
   const handleSave = () => {
     localStorage.setItem('createResumeBuilder_data', JSON.stringify(resumeData));
     toast({
@@ -183,17 +193,26 @@ export default function CreateResumeBuilder() {
         {/* Main Content */}
         <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
           <div className="p-6">
-            {sectionOrder.map((sectionId, index) => (
-              <ResumeSection
-                key={sectionId}
-                sectionId={sectionId}
-                index={index}
-                resumeData={resumeData}
-                updateResumeData={updateResumeData}
-                isActive={activeSection === sectionId}
-                onActivate={() => setActiveSection(sectionId)}
-              />
-            ))}
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="resume-sections">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {sectionOrder.map((sectionId, index) => (
+                      <ResumeSection
+                        key={sectionId}
+                        sectionId={sectionId}
+                        index={index}
+                        resumeData={resumeData}
+                        updateResumeData={updateResumeData}
+                        isActive={activeSection === sectionId}
+                        onActivate={() => setActiveSection(sectionId)}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
 
           {/* Live Preview */}
