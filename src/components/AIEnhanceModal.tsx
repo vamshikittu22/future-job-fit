@@ -86,29 +86,29 @@ export default function AIEnhanceModal({
     switch (presetId) {
       case 'ats-optimized':
         // Add more keywords, standardize formatting
-        if (enhanced.summary) {
-          enhanced.summary = enhanced.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
+        if (enhanced.summary?.summary) {
+          enhanced.summary.summary = enhanced.summary.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
         }
         break;
       case 'concise':
         // Shorten content
-        if (enhanced.experience) {
-          enhanced.experience.forEach((exp: any) => {
-            exp.bullets = exp.bullets.map((bullet: string) => 
-              bullet.length > 100 ? bullet.substring(0, 97) + "..." : bullet
-            );
+        if (enhanced.experience?.experiences) {
+          enhanced.experience.experiences.forEach((exp: any) => {
+            if (exp.description && exp.description.length > 200) {
+              exp.description = exp.description.substring(0, 197) + "...";
+            }
           });
         }
         break;
       case 'impactful':
         // Add metrics and strong verbs
-        if (enhanced.experience) {
-          enhanced.experience.forEach((exp: any) => {
-            exp.bullets = exp.bullets.map((bullet: string) => 
-              bullet.replace(/^[A-Z]/, (match) => 
-                ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
-              )
-            );
+        if (enhanced.experience?.experiences) {
+          enhanced.experience.experiences.forEach((exp: any) => {
+            if (exp.description) {
+              exp.description = exp.description.replace(/^•\s*[a-z]/, (match: string) => 
+                '• ' + ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
+              );
+            }
           });
         }
         break;

@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Download, 
   FileText, 
@@ -55,6 +56,12 @@ export default function ExportResumeModal({
       description: "Editable format for further customization"
     },
     {
+      id: "json",
+      name: "JSON Data",
+      icon: FileType,
+      description: "Structured data for backup or transfer"
+    },
+    {
       id: "txt",
       name: "Plain Text",
       icon: FileType,
@@ -89,6 +96,7 @@ export default function ExportResumeModal({
       const blob = new Blob([content], { 
         type: format === 'pdf' ? 'application/pdf' : 
               format === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 
+              format === 'json' ? 'application/json' :
               'text/plain' 
       });
       
@@ -123,15 +131,19 @@ export default function ExportResumeModal({
   };
 
   const generateFileContent = () => {
+    if (format === 'json') {
+      return JSON.stringify(resumeData, null, 2);
+    }
+    
     // Handle both possible data structures and provide safe defaults
-    const personalInfo = resumeData.personal || resumeData.personalInfo || {};
-    const summary = resumeData.summary?.summary || resumeData.summary || '';
-    const skills = resumeData.skills?.categories || resumeData.skills || [];
-    const experience = resumeData.experience?.experiences || resumeData.experience || [];
-    const education = resumeData.education?.items || resumeData.education || [];
-    const projects = resumeData.projects?.items || resumeData.projects || [];
-    const achievements = resumeData.achievements?.items || resumeData.achievements || [];
-    const certifications = resumeData.certifications?.items || resumeData.certifications || [];
+    const personalInfo = resumeData.personal || {};
+    const summary = resumeData.summary?.summary || '';
+    const skillCategories = resumeData.skills?.categories || [];
+    const experience = resumeData.experience?.experiences || [];
+    const education = resumeData.education?.items || [];
+    const projects = resumeData.projects?.items || [];
+    const achievements = resumeData.achievements?.items || [];
+    const certifications = resumeData.certifications?.items || [];
     
     if (format === 'txt') {
       // Generate plain text resume
@@ -139,6 +151,7 @@ export default function ExportResumeModal({
       
       // Personal Info
       content += `${personalInfo.name || 'NAME'}\n`;
+      if (personalInfo.title) content += `${personalInfo.title}\n`;
       if (personalInfo.email) content += `Email: ${personalInfo.email}\n`;
       if (personalInfo.phone) content += `Phone: ${personalInfo.phone}\n`;
       if (personalInfo.location) content += `Location: ${personalInfo.location}\n`;
@@ -154,20 +167,14 @@ export default function ExportResumeModal({
       }
       
       // Skills
-      if (skills?.length > 0) {
+      if (skillCategories?.length > 0) {
         content += 'TECHNICAL SKILLS\n';
         content += '='.repeat(15) + '\n';
-        if (Array.isArray(skills) && skills[0]?.skills) {
-          // Handle categories structure
-          skills.forEach((category: any) => {
-            if (category.name && category.skills?.length > 0) {
-              content += `${category.name}: ${category.skills.join(', ')}\n`;
-            }
-          });
-        } else if (Array.isArray(skills)) {
-          // Handle simple array structure
-          content += skills.join(', ') + '\n';
-        }
+        skillCategories.forEach((category: any) => {
+          if (category.name && category.skills?.length > 0) {
+            content += `${category.name}: ${category.skills.join(', ')}\n`;
+          }
+        });
         content += '\n';
       }
       
@@ -179,13 +186,7 @@ export default function ExportResumeModal({
           content += `${exp.title || 'POSITION'}\n`;
           content += `${exp.company || 'COMPANY'} | ${exp.location || 'LOCATION'} | ${exp.duration || 'DURATION'}\n`;
           if (exp.description) {
-            // Handle description text with bullet points
-            const bullets = exp.description.split('\n').filter((line: string) => line.trim());
-            bullets.forEach((bullet: string) => {
-              if (bullet.trim()) {
-                content += bullet.startsWith('•') ? `${bullet}\n` : `• ${bullet}\n`;
-              }
-            });
+            content += `${exp.description}\n`;
           }
           content += '\n';
         });
@@ -203,6 +204,20 @@ export default function ExportResumeModal({
         });
       }
       
+      // Projects
+      if (projects?.length > 0) {
+        content += 'PROJECTS\n';
+        content += '='.repeat(8) + '\n';
+        projects.forEach((project: any) => {
+          content += `${project.name || 'PROJECT'}\n`;
+          content += `Technologies: ${project.tech || 'N/A'} | ${project.duration || 'DURATION'}\n`;
+          if (project.description) {
+            content += `${project.description}\n`;
+          }
+          content += '\n';
+        });
+      }
+      
       return content;
     }
     
@@ -214,7 +229,7 @@ export default function ExportResumeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5" />
@@ -222,173 +237,182 @@ export default function ExportResumeModal({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
-          {!isExporting && !exportComplete && (
-            <>
-              {/* Format Selection */}
-              <div>
-                <Label className="text-base font-semibold mb-4 block">Choose Format</Label>
-                <RadioGroup value={format} onValueChange={setFormat}>
-                  <div className="grid gap-3">
-                    {formatOptions.map((option) => {
-                      const Icon = option.icon;
-                      return (
-                        <div key={option.id} className="flex items-center space-x-3">
-                          <RadioGroupItem value={option.id} id={option.id} />
-                          <label
-                            htmlFor={option.id}
-                            className="flex-1 cursor-pointer"
-                          >
-                            <Card className={`p-4 transition-all ${
-                              format === option.id ? 'ring-1 ring-primary' : 'hover:bg-muted/50'
-                            }`}>
-                              <div className="flex items-center gap-3">
-                                <Icon className="w-6 h-6 text-primary" />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{option.name}</span>
-                                    {option.recommended && (
-                                      <Badge variant="default" className="text-xs">
-                                        Recommended
-                                      </Badge>
-                                    )}
+        <Tabs defaultValue="format" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="format">Format</TabsTrigger>
+            <TabsTrigger value="options">Options</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="format" className="space-y-6">
+            {!isExporting && !exportComplete && (
+              <>
+                {/* Format Selection */}
+                <div>
+                  <Label className="text-base font-semibold mb-4 block">Choose Format</Label>
+                  <RadioGroup value={format} onValueChange={setFormat}>
+                    <div className="grid gap-3">
+                      {formatOptions.map((option) => {
+                        const Icon = option.icon;
+                        return (
+                          <div key={option.id} className="flex items-center space-x-3">
+                            <RadioGroupItem value={option.id} id={option.id} />
+                            <label
+                              htmlFor={option.id}
+                              className="flex-1 cursor-pointer"
+                            >
+                              <Card className={`p-4 transition-all ${
+                                format === option.id ? 'ring-1 ring-primary' : 'hover:bg-muted/50'
+                              }`}>
+                                <div className="flex items-center gap-3">
+                                  <Icon className="w-6 h-6 text-primary" />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">{option.name}</span>
+                                      {option.recommended && (
+                                        <Badge variant="default" className="text-xs">
+                                          Recommended
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {option.description}
+                                    </p>
                                   </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    {option.description}
-                                  </p>
                                 </div>
-                              </div>
-                            </Card>
-                          </label>
-                        </div>
-                      );
-                    })}
+                              </Card>
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="options" className="space-y-6">
+            {/* Export Options */}
+            <div>
+              <Label className="text-base font-semibold mb-4 block flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Export Options
+              </Label>
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="font-medium">Preserve Colors</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Include template colors and styling
+                      </p>
+                    </div>
+                    <Switch
+                      checked={includeColors}
+                      onCheckedChange={setIncludeColors}
+                      disabled={format === 'txt' || format === 'json'}
+                    />
                   </div>
-                </RadioGroup>
-              </div>
-              
-              {/* Export Options */}
-              <div>
-                <Label className="text-base font-semibold mb-4 block flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Export Options
-                </Label>
-                <Card className="p-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="font-medium">Preserve Colors</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Include template colors and styling
-                        </p>
-                      </div>
-                      <Switch
-                        checked={includeColors}
-                        onCheckedChange={setIncludeColors}
-                        disabled={format === 'txt'}
-                      />
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="font-medium">Custom Fonts</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Use template-specific typography
+                      </p>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="font-medium">Custom Fonts</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Use template-specific typography
-                        </p>
-                      </div>
-                      <Switch
-                        checked={includeFonts}
-                        onCheckedChange={setIncludeFonts}
-                        disabled={format === 'txt'}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="font-medium">Advanced Layout</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Preserve spacing and positioning
-                        </p>
-                      </div>
-                      <Switch
-                        checked={includeLayout}
-                        onCheckedChange={setIncludeLayout}
-                        disabled={format === 'txt'}
-                      />
-                    </div>
+                    <Switch
+                      checked={includeFonts}
+                      onCheckedChange={setIncludeFonts}
+                      disabled={format === 'txt' || format === 'json'}
+                    />
                   </div>
-                </Card>
-              </div>
-              
-              {/* Export Preview */}
-              <div>
-                <Label className="text-base font-semibold mb-4 block">Export Summary</Label>
-                <Card className="p-4 bg-muted/30">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Format:</span>
-                      <span className="font-medium">{selectedFormat?.name}</span>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="font-medium">Advanced Layout</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Preserve spacing and positioning
+                      </p>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Template:</span>
-                      <span className="font-medium capitalize">{template}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>File name:</span>
-                      <span className="font-medium">
-                        {resumeData.personal?.name?.replace(/\s+/g, '_') || 'resume'}.{format}
-                      </span>
-                    </div>
+                    <Switch
+                      checked={includeLayout}
+                      onCheckedChange={setIncludeLayout}
+                      disabled={format === 'txt' || format === 'json'}
+                    />
                   </div>
-                </Card>
-              </div>
-            </>
-          )}
-          
-          {/* Export Progress */}
-          {isExporting && (
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Exporting your resume...</h3>
-                <Progress value={exportProgress} className="w-full" />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {exportProgress < 100 ? 'Processing...' : 'Almost done!'}
-                </p>
-              </div>
+                </div>
+              </Card>
             </div>
-          )}
-          
-          {/* Export Complete */}
-          {exportComplete && (
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <CheckCircle className="w-12 h-12 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-green-600 mb-2">Export Complete!</h3>
-                <p className="text-sm text-muted-foreground">
-                  Your resume has been downloaded successfully.
-                </p>
-              </div>
+            
+            {/* Export Preview */}
+            <div>
+              <Label className="text-base font-semibold mb-4 block">Export Summary</Label>
+              <Card className="p-4 bg-muted/30">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Format:</span>
+                    <span className="font-medium">{selectedFormat?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Template:</span>
+                    <span className="font-medium capitalize">{template}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>File name:</span>
+                    <span className="font-medium">
+                      {resumeData.personal?.name?.replace(/\s+/g, '_') || 'resume'}.{format}
+                    </span>
+                  </div>
+                </div>
+              </Card>
             </div>
-          )}
-          
-          {/* Actions */}
-          {!isExporting && !exportComplete && (
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleExport} className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Export {selectedFormat?.name}
-              </Button>
+          </TabsContent>
+        </Tabs>
+        
+        {/* Export Progress */}
+        {isExporting && (
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
             </div>
-          )}
-        </div>
+            <div>
+              <h3 className="font-semibold mb-2">Exporting your resume...</h3>
+              <Progress value={exportProgress} className="w-full" />
+              <p className="text-sm text-muted-foreground mt-2">
+                {exportProgress < 100 ? 'Processing...' : 'Almost done!'}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Export Complete */}
+        {exportComplete && (
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-green-600 mb-2">Export Complete!</h3>
+              <p className="text-sm text-muted-foreground">
+                Your resume has been downloaded successfully.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Actions */}
+        {!isExporting && !exportComplete && (
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport} className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Export {selectedFormat?.name}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

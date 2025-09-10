@@ -77,41 +77,28 @@ export default function ResumeBuilderSidebar({
   const getCompletionStatus = (sectionId: string) => {
     switch (sectionId) {
       case 'personal':
-        const personal = resumeData.personalInfo || {};
-        return personal.name && personal.email ? 'complete' : 'incomplete';
+        const personal = resumeData.personalInfo;
+        return personal.name && personal.email ? 'complete' : personal.name || personal.email ? 'partial' : 'empty';
       case 'summary':
-        return resumeData.summary ? 'complete' : 'incomplete';
+        let summaryText = '';
+        if (typeof resumeData.summary === 'string') {
+          summaryText = resumeData.summary;
+        } else if (resumeData.summary && typeof resumeData.summary === 'object') {
+          summaryText = resumeData.summary.summary || '';
+        }
+        return summaryText ? 'complete' : 'empty';
       case 'skills':
-        return (resumeData.skills || []).length > 0 ? 'complete' : 'incomplete';
+        return resumeData.skills?.length > 0 ? 'complete' : 'empty';
       case 'experience':
-        return (resumeData.experience || []).length > 0 ? 'complete' : 'incomplete';
+        return resumeData.experience?.length > 0 ? 'complete' : 'empty';
       case 'education':
-        return (resumeData.education || []).length > 0 ? 'complete' : 'incomplete';
+        return resumeData.education?.length > 0 ? 'complete' : 'empty';
       case 'projects':
-        return (resumeData.projects || []).length > 0 ? 'complete' : 'incomplete';
+        return resumeData.projects?.length > 0 ? 'complete' : 'empty';
       case 'achievements':
-        return (resumeData.achievements || []).length > 0 ? 'complete' : 'incomplete';
+        return resumeData.achievements?.length > 0 ? 'complete' : 'empty';
       case 'certifications':
-        return (resumeData.certifications || []).length > 0 ? 'complete' : 'incomplete';
-      default:
-        return 'incomplete';
-    }
-  };
-
-  const getSectionItemCount = (sectionId: string) => {
-    switch (sectionId) {
-      case 'skills':
-        return (resumeData.skills || []).length;
-      case 'experience':
-        return (resumeData.experience || []).length;
-      case 'education':
-        return (resumeData.education || []).length;
-      case 'projects':
-        return (resumeData.projects || []).length;
-      case 'achievements':
-        return (resumeData.achievements || []).length;
-      case 'certifications':
-        return (resumeData.certifications || []).length;
+        return resumeData.certifications?.length > 0 ? 'complete' : 'empty';
       default:
         return 0;
     }
@@ -126,6 +113,26 @@ export default function ResumeBuilderSidebar({
 
   const toggleSection = (section: 'resume' | 'ats') => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const getItemCount = (sectionId: string) => {
+    switch (sectionId) {
+      case 'experience':
+        return resumeData.experience?.experiences?.length || 0;
+      case 'education':
+        return resumeData.education?.items?.length || 0;
+      case 'projects':
+        return resumeData.projects?.items?.length || 0;
+      case 'skills':
+        return resumeData.skills?.categories?.reduce((total: number, cat: any) => 
+          total + (cat.skills?.length || 0), 0) || 0;
+      case 'achievements':
+        return resumeData.achievements?.items?.length || 0;
+      case 'certifications':
+        return resumeData.certifications?.items?.length || 0;
+      default:
+        return 0;
+    }
   };
 
   return (
@@ -146,103 +153,63 @@ export default function ResumeBuilderSidebar({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        {/* Resume Section */}
-        <div className="border-b">
-          <Button
-            variant="ghost"
-            className={`w-full justify-start p-4 h-auto ${expandedSection === 'resume' ? 'bg-accent' : ''}`}
-            onClick={() => toggleSection('resume')}
-          >
-            <div className="flex items-center w-full">
-              <FileText className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && (
-                <>
-                  <span className="ml-3 font-medium">Resume</span>
-                  <div className="ml-auto">
-                    {expandedSection === 'resume' ? 
-                      <ChevronDown className="w-4 h-4" /> : 
-                      <ChevronRight className="w-4 h-4" />
-                    }
-                  </div>
-                </>
-              )}
-            </div>
-          </Button>
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-2">
+            {sectionOrder.map((sectionId) => {
+              const config = sectionConfig[sectionId as keyof typeof sectionConfig];
+              const status = getCompletionStatus(sectionId);
+              const isActive = activeSection === sectionId;
+              const Icon = config.icon;
 
-          {/* Resume Sections - Only show when expanded and sidebar not collapsed */}
-          {expandedSection === 'resume' && !isCollapsed && (
-            <div className="max-h-[60vh] overflow-hidden hover:overflow-y-auto transition-all duration-200">
-              <div className="p-2 space-y-1">
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="sidebarSections">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-1">
-                        {localSectionOrder.map((sectionId, index) => {
-                          const config = sectionConfig[sectionId as keyof typeof sectionConfig];
-                          if (!config) return null;
-                          
-                          const status = getCompletionStatus(sectionId);
-                          const isActive = activeSection === sectionId;
-                          const Icon = config.icon;
-                          const itemCount = getSectionItemCount(sectionId);
-
-                          return (
-                            <Draggable key={sectionId} draggableId={sectionId} index={index}>
-                              {(provided) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className="group relative"
-                                >
-                                  <Button
-                                    variant={isActive ? 'secondary' : 'ghost'}
-                                    size="sm"
-                                    className={`w-full justify-start h-auto py-2 px-2 transition-colors ${
-                                      isActive ? 'bg-accent' : 'hover:bg-accent/50'
-                                    }`}
-                                    onClick={() => onSectionChange(sectionId)}
-                                  >
-                                    <div className="flex items-center w-full">
-                                      <div 
-                                        className="p-1 rounded-md mr-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                                        {...provided.dragHandleProps}
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                                      </div>
-                                      
-                                      <div className={`flex items-center justify-center w-8 h-8 rounded-md mr-2 flex-shrink-0 ${
-                                        isActive ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                                      }`}>
-                                        <Icon className="w-4 h-4" />
-                                      </div>
-                                      
-                                      <div className="flex-1 min-w-0 text-left">
-                                        <div className="flex items-center justify-between">
-                                          <span className="truncate text-sm font-medium">{config.label}</span>
-                                          {isActive && <ChevronRight className="w-4 h-4 ml-2 flex-shrink-0" />}
-                                        </div>
-                                        <div className="flex items-center justify-between mt-0.5">
-                                          <span className="text-xs text-muted-foreground truncate">
-                                            {itemCount > 0 ? `${itemCount} ${itemCount === 1 ? 'item' : 'items'}` : config.description}
-                                          </span>
-                                          {getStatusBadge(status)}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </Button>
-                                </div>
-                              )}
-                            </Draggable>
-                          );
-                        })}
-                        {provided.placeholder}
+              return (
+                <Card
+                  key={sectionId}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-swiss ${
+                    isActive 
+                      ? 'border-primary shadow-accent bg-primary/5' 
+                      : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => onSectionChange(sectionId)}
+                >
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          isActive 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted'
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm">{config.label}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {config.description}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
+                      {isActive && (
+                        <ChevronRight className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      {getStatusBadge(status)}
+                      <div className="text-xs text-muted-foreground">
+                        {sectionId === 'experience' && `${resumeData.experience?.length || 0} items`}
+                        {sectionId === 'education' && `${resumeData.education?.length || 0} items`}
+                        {sectionId === 'projects' && `${resumeData.projects?.length || 0} items`}
+                        {sectionId === 'skills' && `${resumeData.skills?.length || 0} skills`}
+                        {sectionId === 'achievements' && `${resumeData.achievements?.length || 0} items`}
+                        {sectionId === 'certifications' && `${resumeData.certifications?.length || 0} items`}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </ScrollArea>
 
               {/* Add Section Button */}
               <div className="p-2">

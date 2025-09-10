@@ -58,7 +58,7 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     let score = 0;
 
     // Check personal info completeness
-    const personalInfo = resumeData.personalInfo || {};
+    const personalInfo = resumeData.personal || {};
     if (personalInfo.name && personalInfo.email) {
       score += 15;
       strengths.push("Contact information is complete");
@@ -71,7 +71,7 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     }
 
     // Check summary
-    const summary = typeof resumeData.summary === 'string' ? resumeData.summary : resumeData.summary?.summary || '';
+    const summary = resumeData.summary?.summary || '';
     if (summary && summary.length > 50) {
       score += 15;
       strengths.push("Professional summary is present");
@@ -84,18 +84,12 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     }
 
     // Check skills section
-    let totalSkills = 0;
-    if (resumeData.skills) {
-      if (Array.isArray(resumeData.skills)) {
-        totalSkills = resumeData.skills.length;
-      } else if (typeof resumeData.skills === 'object') {
-        totalSkills = Object.values(resumeData.skills).flat().length;
-      }
-    }
+    const skillsCount = resumeData.skills?.categories?.reduce((total: number, cat: any) => 
+      total + (cat.skills?.length || 0), 0) || 0;
     
-    if (totalSkills >= 5) {
+    if (skillsCount >= 5) {
       score += 15;
-      strengths.push(`${totalSkills} skills listed`);
+      strengths.push(`${skillsCount} skills listed`);
     } else {
       issues.push({
         type: 'suggestion',
@@ -105,16 +99,16 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     }
 
     // Check experience section
-    const experience = resumeData.experience || [];
+    const experience = resumeData.experience?.experiences || [];
     if (experience.length > 0) {
       score += 20;
       strengths.push(`${experience.length} work experience entries`);
       
-      // Check for bullet points and action verbs
-      const hasBullets = experience.some((exp: any) => exp.bullets && exp.bullets.length > 0);
-      if (hasBullets) {
+      // Check for detailed descriptions
+      const hasDescriptions = experience.some((exp: any) => exp.description && exp.description.length > 50);
+      if (hasDescriptions) {
         score += 10;
-        strengths.push("Experience includes detailed bullet points");
+        strengths.push("Experience includes detailed descriptions");
       } else {
         issues.push({
           type: 'warning',
@@ -131,7 +125,7 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     }
 
     // Check education
-    if (resumeData.education && resumeData.education.length > 0) {
+    if (resumeData.education?.items?.length > 0) {
       score += 10;
       strengths.push("Education information included");
     } else {
@@ -172,9 +166,9 @@ export default function ATSScorePanel({ resumeData }: ATSScorePanelProps) {
     }
 
     // Projects section bonus
-    if (resumeData.projects && resumeData.projects.length > 0) {
+    if (resumeData.projects?.items?.length > 0) {
       score += 10;
-      strengths.push(`${resumeData.projects.length} projects showcased`);
+      strengths.push(`${resumeData.projects.items.length} projects showcased`);
     }
 
     setAnalysis({

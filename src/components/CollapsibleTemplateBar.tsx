@@ -25,28 +25,58 @@ const templates: Template[] = [
     colors: { primary: '#2563eb', secondary: '#64748b', accent: '#0ea5e9' }
   },
   {
-    id: 'attractive-1',
-    name: 'Modern Professional',
-    category: 'attractive',
-    colors: { primary: '#7c3aed', secondary: '#a855f7', accent: '#c084fc' }
-  },
-  {
-    id: 'colorful-1',
-    name: 'Creative Blue',
-    category: 'colorful',
-    colors: { primary: '#059669', secondary: '#10b981', accent: '#34d399' }
-  },
-  {
-    id: 'content-1',
-    name: 'Content Rich',
-    category: 'content-driven',
-    colors: { primary: '#1f2937', secondary: '#4b5563', accent: '#6b7280' }
+    id: 'minimal-2',
+    name: 'Clean Lines',
+    category: 'minimal',
+    colors: { primary: '#1e293b', secondary: '#64748b', accent: '#0ea5e9' }
   },
   {
     id: 'student-1',
     name: 'Fresh Graduate',
     category: 'student',
+    colors: { primary: '#7c3aed', secondary: '#a855f7', accent: '#c084fc' }
+  },
+  {
+    id: 'student-2',
+    name: 'Academic Focus',
+    category: 'student',
+    colors: { primary: '#059669', secondary: '#10b981', accent: '#34d399' }
+  },
+  {
+    id: 'experienced-1',
+    name: 'Executive',
+    category: 'experienced',
+    colors: { primary: '#1f2937', secondary: '#4b5563', accent: '#6b7280' }
+  },
+  {
+    id: 'experienced-2',
+    name: 'Senior Professional',
+    category: 'experienced',
+    colors: { primary: '#7c2d12', secondary: '#ea580c', accent: '#fb923c' }
+  },
+  {
+    id: 'colorful-1',
+    name: 'Creative Blue',
+    category: 'colorful',
+    colors: { primary: '#2563eb', secondary: '#3b82f6', accent: '#60a5fa' }
+  },
+  {
+    id: 'colorful-2',
+    name: 'Modern Green',
+    category: 'colorful',
+    colors: { primary: '#059669', secondary: '#10b981', accent: '#34d399' }
+  },
+  {
+    id: 'creative-1',
+    name: 'Designer',
+    category: 'creative',
     colors: { primary: '#dc2626', secondary: '#ef4444', accent: '#f87171' }
+  },
+  {
+    id: 'creative-2',
+    name: 'Artistic',
+    category: 'creative',
+    colors: { primary: '#7c2d12', secondary: '#ea580c', accent: '#fb923c' }
   }
 ];
 
