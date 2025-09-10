@@ -19,6 +19,7 @@ interface ResumeBuilderSidebarProps {
   onSectionChange: (section: string) => void;
   sectionOrder: string[];
   resumeData: any;
+  onAddCustomSection?: () => void;
 }
 
 const sectionConfig = {
@@ -68,7 +69,8 @@ export default function ResumeBuilderSidebar({
   activeSection,
   onSectionChange,
   sectionOrder,
-  resumeData
+  resumeData,
+  onAddCustomSection
 }: ResumeBuilderSidebarProps) {
   
   const getCompletionStatus = (sectionId: string) => {
@@ -179,6 +181,21 @@ export default function ResumeBuilderSidebar({
             })}
           </div>
         </ScrollArea>
+
+        {/* Add Custom Section */}
+        {onAddCustomSection && (
+          <div className="p-4 border-t">
+            <Button
+              variant="outline"
+              onClick={onAddCustomSection}
+              className="w-full flex items-center gap-2"
+              size="sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Custom Section
+            </Button>
+          </div>
+        )}
 
         {/* Section Summary */}
         <div className="p-4 border-t bg-muted/30">
