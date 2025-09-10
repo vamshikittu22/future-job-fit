@@ -4,7 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Minus, GripVertical, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Minus, GripVertical, Trash2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Draggable } from "@hello-pangea/dnd";
 
 interface DynamicSectionProps {
@@ -127,8 +129,14 @@ export default function DynamicSection({
         placeholder="Brief professional summary highlighting your key skills and achievements..."
         className="min-h-[100px] resize-none"
       />
-      <div className="text-xs text-muted-foreground mt-1">
-        {(safeData.summary || '').length}/500 characters
+      <div className="flex items-center justify-between mt-2">
+        <div className="text-xs text-muted-foreground">
+          {(safeData.summary || '').length}/500 characters
+        </div>
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          AI Polish
+        </Button>
       </div>
     </div>
   );
@@ -214,6 +222,12 @@ export default function DynamicSection({
             placeholder="• Developed and maintained web applications using React and TypeScript&#10;• Collaborated with cross-functional teams to deliver high-quality features&#10;• Improved application performance by 40% through optimization techniques"
             className="min-h-[100px] resize-none"
           />
+          <div className="flex justify-end mt-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              AI Enhance
+            </Button>
+          </div>
         </Card>
       ))}
       <Button
@@ -223,6 +237,207 @@ export default function DynamicSection({
       >
         <Plus className="h-4 w-4 mr-2" />
         Add Experience
+      </Button>
+    </div>
+  );
+
+  const renderEducation = () => (
+    <div className="space-y-4">
+      {(safeData.items || []).map((edu: any) => (
+        <Card key={edu.id} className="p-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="grid grid-cols-2 gap-4 flex-1">
+              <Input
+                value={edu.degree || ''}
+                onChange={(e) => updateArrayItem('items', edu.id, { degree: e.target.value })}
+                placeholder="Bachelor of Science in Computer Science"
+              />
+              <Input
+                value={edu.school || ''}
+                onChange={(e) => updateArrayItem('items', edu.id, { school: e.target.value })}
+                placeholder="University Name"
+              />
+              <Input
+                value={edu.year || ''}
+                onChange={(e) => updateArrayItem('items', edu.id, { year: e.target.value })}
+                placeholder="2018-2022"
+              />
+              <Input
+                value={edu.gpa || ''}
+                onChange={(e) => updateArrayItem('items', edu.id, { gpa: e.target.value })}
+                placeholder="3.8 (optional)"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeArrayItem('items', edu.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
+      ))}
+      <Button
+        variant="outline"
+        onClick={() => addArrayItem('items', { degree: '', school: '', year: '', gpa: '' })}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Education
+      </Button>
+    </div>
+  );
+
+  const renderProjects = () => (
+    <div className="space-y-4">
+      {(safeData.items || []).map((project: any) => (
+        <Card key={project.id} className="p-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="grid grid-cols-2 gap-4 flex-1">
+              <Input
+                value={project.name || ''}
+                onChange={(e) => updateArrayItem('items', project.id, { name: e.target.value })}
+                placeholder="Project Name"
+              />
+              <Input
+                value={project.tech || ''}
+                onChange={(e) => updateArrayItem('items', project.id, { tech: e.target.value })}
+                placeholder="React, Node.js, PostgreSQL"
+              />
+              <Input
+                value={project.duration || ''}
+                onChange={(e) => updateArrayItem('items', project.id, { duration: e.target.value })}
+                placeholder="2023"
+              />
+              <Input
+                value={project.link || ''}
+                onChange={(e) => updateArrayItem('items', project.id, { link: e.target.value })}
+                placeholder="github.com/user/project (optional)"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeArrayItem('items', project.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <Textarea
+            value={project.description || ''}
+            onChange={(e) => updateArrayItem('items', project.id, { description: e.target.value })}
+            placeholder="• Built full-stack e-commerce platform with payment integration&#10;• Implemented real-time inventory management system&#10;• Deployed using Docker and AWS ECS"
+            className="min-h-[80px] resize-none"
+          />
+        </Card>
+      ))}
+      <Button
+        variant="outline"
+        onClick={() => addArrayItem('items', { name: '', tech: '', duration: '', description: '', link: '' })}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Project
+      </Button>
+    </div>
+  );
+
+  const renderAchievements = () => {
+    const [newAchievement, setNewAchievement] = useState("");
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            value={newAchievement}
+            onChange={(e) => setNewAchievement(e.target.value)}
+            placeholder="Add an achievement..."
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && newAchievement.trim()) {
+                handleUpdate('items', [...(safeData.items || []), newAchievement.trim()]);
+                setNewAchievement("");
+              }
+            }}
+          />
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (newAchievement.trim()) {
+                handleUpdate('items', [...(safeData.items || []), newAchievement.trim()]);
+                setNewAchievement("");
+              }
+            }}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="space-y-2">
+          {(safeData.items || []).map((achievement: string, index: number) => (
+            <div key={index} className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
+              <span className="flex-1 text-sm">{achievement}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const newItems = (safeData.items || []).filter((_: string, i: number) => i !== index);
+                  handleUpdate('items', newItems);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCertifications = () => (
+    <div className="space-y-4">
+      {(safeData.items || []).map((cert: any) => (
+        <Card key={cert.id} className="p-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="grid grid-cols-2 gap-4 flex-1">
+              <Input
+                value={cert.name || ''}
+                onChange={(e) => updateArrayItem('items', cert.id, { name: e.target.value })}
+                placeholder="Certification Name"
+              />
+              <Input
+                value={cert.issuer || ''}
+                onChange={(e) => updateArrayItem('items', cert.id, { issuer: e.target.value })}
+                placeholder="Issuing Organization"
+              />
+              <Input
+                value={cert.date || ''}
+                onChange={(e) => updateArrayItem('items', cert.id, { date: e.target.value })}
+                placeholder="2023"
+              />
+              <Input
+                value={cert.link || ''}
+                onChange={(e) => updateArrayItem('items', cert.id, { link: e.target.value })}
+                placeholder="Verification link (optional)"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeArrayItem('items', cert.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
+      ))}
+      <Button
+        variant="outline"
+        onClick={() => addArrayItem('items', { name: '', issuer: '', date: '', link: '' })}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Certification
       </Button>
     </div>
   );
@@ -237,6 +452,14 @@ export default function DynamicSection({
         return renderSkills();
       case 'experience':
         return renderExperience();
+      case 'education':
+        return renderEducation();
+      case 'projects':
+        return renderProjects();
+      case 'achievements':
+        return renderAchievements();
+      case 'certifications':
+        return renderCertifications();
       default:
         return <div className="text-muted-foreground text-center py-8">Section content will be implemented here</div>;
     }
@@ -248,19 +471,19 @@ export default function DynamicSection({
         <Card
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`transition-all duration-200 ${
+          className={`transition-all duration-200 shadow-swiss ${
             snapshot.isDragging ? 'rotate-1 shadow-accent' : ''
           } ${isActive ? 'ring-2 ring-primary' : ''}`}
         >
           <div
-            className="flex items-center justify-between p-4 cursor-pointer border-b"
+            className="flex items-center justify-between p-4 cursor-pointer border-b hover:bg-muted/30 transition-colors"
             onClick={() => {
               setIsExpanded(!isExpanded);
               onActivate();
             }}
           >
             <div className="flex items-center gap-3">
-              <div {...provided.dragHandleProps}>
+              <div {...provided.dragHandleProps} className="cursor-grab hover:cursor-grabbing">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               <h3 className="font-semibold">{title}</h3>
@@ -272,18 +495,42 @@ export default function DynamicSection({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  // AI enhance functionality
                 }}
+                className="flex items-center gap-2"
               >
-                <Trash2 className="h-4 w-4" />
+                <Sparkles className="w-4 h-4" />
+                AI
               </Button>
+              
+              {!['personal', 'summary'].includes(sectionId) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
             </div>
           </div>
           
           {isExpanded && (
-            <div className="p-6">
-              {renderContent()}
-            </div>
+            <>
+              <Separator />
+              <div className="p-6">
+                {renderContent()}
+              </div>
+            </>
           )}
         </Card>
       )}

@@ -77,28 +77,25 @@ export default function ResumeBuilderSidebar({
   const getCompletionStatus = (sectionId: string) => {
     switch (sectionId) {
       case 'personal':
-        const personal = resumeData.personalInfo;
+        const personal = resumeData.personal || {};
         return personal.name && personal.email ? 'complete' : personal.name || personal.email ? 'partial' : 'empty';
       case 'summary':
-        let summaryText = '';
-        if (typeof resumeData.summary === 'string') {
-          summaryText = resumeData.summary;
-        } else if (resumeData.summary && typeof resumeData.summary === 'object') {
-          summaryText = resumeData.summary.summary || '';
-        }
+        const summaryText = resumeData.summary?.summary || '';
         return summaryText ? 'complete' : 'empty';
       case 'skills':
-        return resumeData.skills?.length > 0 ? 'complete' : 'empty';
+        const skillsCount = resumeData.skills?.categories?.reduce((total: number, cat: any) => 
+          total + (cat.skills?.length || 0), 0) || 0;
+        return skillsCount > 0 ? 'complete' : 'empty';
       case 'experience':
-        return resumeData.experience?.length > 0 ? 'complete' : 'empty';
+        return resumeData.experience?.experiences?.length > 0 ? 'complete' : 'empty';
       case 'education':
-        return resumeData.education?.length > 0 ? 'complete' : 'empty';
+        return resumeData.education?.items?.length > 0 ? 'complete' : 'empty';
       case 'projects':
-        return resumeData.projects?.length > 0 ? 'complete' : 'empty';
+        return resumeData.projects?.items?.length > 0 ? 'complete' : 'empty';
       case 'achievements':
-        return resumeData.achievements?.length > 0 ? 'complete' : 'empty';
+        return resumeData.achievements?.items?.length > 0 ? 'complete' : 'empty';
       case 'certifications':
-        return resumeData.certifications?.length > 0 ? 'complete' : 'empty';
+        return resumeData.certifications?.items?.length > 0 ? 'complete' : 'empty';
       default:
         return 'empty';
     }
@@ -112,6 +109,26 @@ export default function ResumeBuilderSidebar({
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">Partial</Badge>;
       default:
         return <Badge variant="outline" className="text-xs">Empty</Badge>;
+    }
+  };
+
+  const getItemCount = (sectionId: string) => {
+    switch (sectionId) {
+      case 'experience':
+        return resumeData.experience?.experiences?.length || 0;
+      case 'education':
+        return resumeData.education?.items?.length || 0;
+      case 'projects':
+        return resumeData.projects?.items?.length || 0;
+      case 'skills':
+        return resumeData.skills?.categories?.reduce((total: number, cat: any) => 
+          total + (cat.skills?.length || 0), 0) || 0;
+      case 'achievements':
+        return resumeData.achievements?.items?.length || 0;
+      case 'certifications':
+        return resumeData.certifications?.items?.length || 0;
+      default:
+        return 0;
     }
   };
 
@@ -129,9 +146,12 @@ export default function ResumeBuilderSidebar({
           <div className="space-y-2">
             {sectionOrder.map((sectionId) => {
               const config = sectionConfig[sectionId as keyof typeof sectionConfig];
+              if (!config) return null; // Skip custom sections for now
+              
               const status = getCompletionStatus(sectionId);
               const isActive = activeSection === sectionId;
               const Icon = config.icon;
+              const itemCount = getItemCount(sectionId);
 
               return (
                 <Card
@@ -168,12 +188,7 @@ export default function ResumeBuilderSidebar({
                     <div className="flex items-center justify-between">
                       {getStatusBadge(status)}
                       <div className="text-xs text-muted-foreground">
-                        {sectionId === 'experience' && `${resumeData.experience?.length || 0} items`}
-                        {sectionId === 'education' && `${resumeData.education?.length || 0} items`}
-                        {sectionId === 'projects' && `${resumeData.projects?.length || 0} items`}
-                        {sectionId === 'skills' && `${resumeData.skills?.length || 0} skills`}
-                        {sectionId === 'achievements' && `${resumeData.achievements?.length || 0} items`}
-                        {sectionId === 'certifications' && `${resumeData.certifications?.length || 0} items`}
+                        {itemCount > 0 && `${itemCount} items`}
                       </div>
                     </div>
                   </div>
