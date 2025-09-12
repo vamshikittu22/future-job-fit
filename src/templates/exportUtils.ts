@@ -1,13 +1,13 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Document, Paragraph, TextRun, Packer, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import { FormattedResumeData } from './resumeDataUtils';
 
 // PDF Export
 export const exportToPDF = async (data: FormattedResumeData, fileName: string = 'resume'): Promise<void> => {
-  // Create a temporary container for the resume
+  const exportId = `pdf-export-${Date.now()}`;
   const container = document.createElement('div');
+  container.id = exportId;
   container.style.position = 'fixed';
   container.style.left = '0';
   container.style.top = '0';
@@ -21,296 +21,227 @@ export const exportToPDF = async (data: FormattedResumeData, fileName: string = 
   container.style.visibility = 'hidden';
   document.body.appendChild(container);
 
+  let root: any = null;
+
   try {
-    // Import React and ReactDOM dynamically to avoid SSR issues
     const React = await import('react');
     const ReactDOM = await import('react-dom/client');
     const { BaseResumeTemplate } = await import('@/templates/BaseResumeTemplate');
 
-    // Create root and render the resume
-    const root = ReactDOM.createRoot(container);
+    root = ReactDOM.createRoot(container);
     root.render(React.createElement(BaseResumeTemplate, { 
       data,
       className: 'pdf-export' 
     }));
 
-    // Wait for rendering to complete
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Make container visible right before capture
     container.style.visibility = 'visible';
-    
-    // Create a new PDF with proper dimensions (A4)
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
     });
 
-    // Calculate dimensions
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    // Create canvas with higher resolution for better quality
-    const canvas = await html2canvas(container, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      removeContainer: false,
-      windowWidth: 794, // A4 width in pixels at 96dpi
-      windowHeight: 1123, // A4 height in pixels at 96dpi
-      onclone: (clonedDoc) => {
-        // Hide any elements that might cause duplication
-        const elements = clonedDoc.querySelectorAll('.pdf-export');
-        elements.forEach((el, index) => {
-          if (index > 0) {
-            (el as HTMLElement).style.display = 'none';
-          }
-        });
-      }
-    });
 
-    // Calculate dimensions for the PDF
-    const imgData = canvas.toDataURL('image/png');
+    // Function to capture a page
+    const capturePage = async (element: HTMLElement) => {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        removeContainer: false,
+        windowWidth: 794,
+        windowHeight: 1123,
+        onclone: (clonedDoc) => {
+          const containers = clonedDoc.querySelectorAll('div[id^="pdf-export-"]');
+          containers.forEach(el => {
+            if (el.id !== exportId) {
+              (el as HTMLElement).remove();
+            }
+          });
+        }
+      });
+      return canvas;
+    };
+
+    // Capture the main content
+    const mainCanvas = await capturePage(container);
+    const imgData = mainCanvas.toDataURL('image/png');
     const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    const imgHeight = (mainCanvas.height * pdfWidth) / mainCanvas.width;
 
-    // Add image to PDF
+    // Add first page
     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
 
-    // Save the PDF
+    // Check if we need additional pages
+    const contentHeight = mainCanvas.height * (pdfHeight / imgHeight);
+    if (contentHeight > pdfHeight) {
+      // Split content into sections that fit on a page
+      const sectionHeight = pdfHeight * 0.9; // 90% of page height
+      const sections = Math.ceil(contentHeight / sectionHeight);
+      
+      for (let i = 1; i < sections; i++) {
+        pdf.addPage();
+        const yOffset = -(sectionHeight * i);
+        pdf.addImage(imgData, 'PNG', 0, yOffset, imgWidth, imgHeight, undefined, 'FAST');
+      }
+    }
+
     pdf.save(`${fileName}.pdf`);
+
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw error;
   } finally {
-    // Clean up
+    if (root) {
+      root.unmount();
+    }
     if (container.parentNode) {
       document.body.removeChild(container);
     }
   }
 };
 
-// Word Export
+// Word Export using html-docx-js
 export const exportToWord = async (data: FormattedResumeData, fileName: string = 'resume'): Promise<void> => {
   try {
-    const { Document, Paragraph, TextRun, Packer, HeadingLevel, AlignmentType } = await import('docx');
+    // Import the library dynamically
+    const htmlDocx = (await import('html-docx-js/dist/html-docx')).default;
     
-    // Helper function to create a section with proper spacing
-    const createSection = (title: string, content: any[]) => {
-      return [
-        new Paragraph({
-          text: title,
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 400, after: 200 },
-        }),
-        ...content,
-        new Paragraph({ text: '' }), // Add some space after section
-      ];
-    };
+    // Create HTML content
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+          }
+          h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 24pt;
+          }
+          h2 { 
+            color: #34495e; 
+            margin: 20px 0 10px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 5px;
+            font-size: 18pt;
+          }
+          .section { 
+            margin-bottom: 20px; 
+          }
+          .job-title { 
+            font-weight: bold;
+            font-size: 12pt;
+            margin-top: 10px;
+          }
+          .company { 
+            font-style: italic;
+            font-size: 11pt;
+          }
+          .date { 
+            color: #7f8c8d;
+            font-size: 10pt;
+            margin-bottom: 5px;
+          }
+          ul { 
+            margin: 5px 0; 
+            padding-left: 20px;
+          }
+          li {
+            margin-bottom: 3px;
+          }
+          p {
+            margin: 5px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${escapeHtml(data.personalInfo.firstName)} ${escapeHtml(data.personalInfo.lastName)}</h1>
+          <div class="contact-info">
+            ${data.personalInfo.email ? `<span>${escapeHtml(data.personalInfo.email)}</span> | ` : ''}
+            ${escapeHtml(data.personalInfo.phone || '')}
+            ${data.personalInfo.location ? ` | ${escapeHtml(data.personalInfo.location)}` : ''}
+          </div>
+        </div>`;
 
-    // Create document
-    const doc = new Document({
-      sections: [
-        {
-          properties: {
-            page: {
-              margin: {
-                top: 1000,    // ~1 inch
-                right: 1000,  // ~1 inch
-                bottom: 1000, // ~1 inch
-                left: 1000,   // ~1 inch
-              },
-            },
-          },
-          children: [
-            // Header
-            new Paragraph({
-              text: `${data.personalInfo.firstName} ${data.personalInfo.lastName}`.toUpperCase(),
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 200 },
-            }),
-            
-            // Contact Information
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: data.personalInfo.email,
-                  size: 22,
-                }),
-                new TextRun({
-                  text: ' • ',
-                  size: 22,
-                }),
-                new TextRun({
-                  text: data.personalInfo.phone || '',
-                  size: 22,
-                }),
-                ...(data.personalInfo.location ? [
-                  new TextRun({
-                    text: ' • ',
-                    size: 22,
-                  }),
-                  new TextRun({
-                    text: data.personalInfo.location,
-                    size: 22,
-                  })
-                ] : []),
-                ...(data.personalInfo.website ? [
-                  new TextRun({
-                    text: ' • ',
-                    size: 22,
-                  }),
-                  new TextRun({
-                    text: data.personalInfo.website.replace(/^https?:\/\//, ''),
-                    size: 22,
-                    color: '0000FF',
-                    underline: {}
-                  })
-                ] : []),
-              ],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            
-            // Summary
-            ...(data.summary ? createSection('SUMMARY', [
-              new Paragraph({
-                text: data.summary,
-                spacing: { after: 200 },
-              })
-            ]) : []),
-            
-            // Experience
-            ...(data.experience.length > 0 ? createSection('EXPERIENCE', data.experience.flatMap(exp => [
-              new Paragraph({
-                text: exp.title,
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 200 },
-              }),
-              new Paragraph({
-                text: `${exp.company}${exp.location ? ` • ${exp.location}` : ''}`,
-                spacing: { after: 100 },
-              }),
-              new Paragraph({
-                text: `${exp.startDate} - ${exp.endDate || 'Present'}`,
-                spacing: { after: 200 },
-              }),
-              ...(exp.description ? [new Paragraph({
-                text: exp.description,
-                spacing: { after: 200 },
-              })] : []),
-              ...(exp.highlights?.map(item => 
-                new Paragraph({
-                  text: `• ${item}`,
-                  bullet: { level: 0 },
-                  spacing: { before: 100 },
-                })
-              ) || []),
-            ])) : []),
-            
-            // Education
-            ...(data.education.length > 0 ? createSection('EDUCATION', data.education.flatMap(edu => [
-              new Paragraph({
-                text: edu.degree,
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 200 },
-              }),
-              new Paragraph({
-                text: `${edu.school}${edu.location ? `, ${edu.location}` : ''}`,
-                spacing: { after: 100 },
-              }),
-              new Paragraph({
-                text: `${edu.startDate} - ${edu.endDate || 'Present'}${edu.gpa ? ` • GPA: ${edu.gpa}` : ''}`,
-                spacing: { after: 200 },
-              }),
-            ])) : []),
-            
-            // Skills
-            ...(Object.keys(data.skills).length > 0 ? createSection('SKILLS', [
-              new Paragraph({
-                children: Object.entries(data.skills).flatMap(([category, skills], i) => [
-                  new TextRun({
-                    text: `${category}: `,
-                    bold: true,
-                  }),
-                  new TextRun({
-                    text: `${skills.join(', ')}${i < Object.keys(data.skills).length - 1 ? ' \n' : ''}`,
-                  })
-                ]),
-              })
-            ]) : []),
-            
-            // Projects
-            ...(data.projects.length > 0 ? createSection('PROJECTS', data.projects.flatMap(project => [
-              new Paragraph({
-                text: project.name,
-                heading: HeadingLevel.HEADING_3,
-                spacing: { before: 200 },
-              }),
-              ...(project.description ? [new Paragraph({
-                text: project.description,
-                spacing: { after: 100 },
-              })] : []),
-              ...(project.technologies?.length ? [new Paragraph({
-                text: `Technologies: ${project.technologies.join(', ')}`,
-                italics: true,
-                spacing: { after: 200 },
-              })] : []),
-            ])) : []),
-            
-            // Certifications
-            ...(data.certifications.length > 0 ? createSection('CERTIFICATIONS', data.certifications.map(cert => 
-              new Paragraph({
-                text: `${cert.name}${cert.issuer ? `, ${cert.issuer}` : ''}${cert.date ? ` (${cert.date})` : ''}`,
-                bullet: { level: 0 },
-                spacing: { before: 100 },
-              })
-            )) : []),
-            
-            // Custom Sections
-            ...data.customSections.flatMap(section => 
-              createSection(section.title.toUpperCase(), [
-                new Paragraph({
-                  text: Array.isArray(section.content) 
-                    ? section.content.join('\n\n') 
-                    : section.content,
-                  spacing: { after: 200 },
-                })
-              ])
-            ),
-          ],
-        },
-      ],
-    });
+    // Add Summary
+    if (data.summary) {
+      htmlContent += `
+        <div class="section">
+          <h2>SUMMARY</h2>
+          <p>${escapeHtml(data.summary)}</p>
+        </div>`;
+    }
 
-    // Generate the document
-    const buffer = await Packer.toBlob(doc);
-    
-    // Create a blob URL and trigger download
-    saveAs(buffer, `${fileName}.docx`);
-    
+    // Add Experience
+    if (data.experience?.length > 0) {
+      htmlContent += `<div class="section"><h2>EXPERIENCE</h2>`;
+      data.experience.forEach(exp => {
+        htmlContent += `
+          <div class="job">
+            <div class="job-title">${escapeHtml(exp.title || '')}</div>
+            <div class="company">${escapeHtml(exp.company || '')}${exp.location ? `, ${escapeHtml(exp.location)}` : ''}</div>
+            <div class="date">${escapeHtml(exp.startDate || '')} - ${escapeHtml(exp.endDate || 'Present')}</div>
+            ${exp.description ? `<p>${escapeHtml(exp.description)}</p>` : ''}
+            ${exp.highlights?.length ? `
+              <ul>
+                ${exp.highlights.map(h => h ? `<li>${escapeHtml(h)}</li>` : '').join('')}
+              </ul>
+            ` : ''}
+          </div>`;
+      });
+      htmlContent += `</div>`;
+    }
+
+    // Close HTML
+    htmlContent += `</body></html>`;
+
+    // Convert HTML to DOCX and trigger download
+    const converted = htmlDocx.asBlob(htmlContent);
+    saveAs(converted, `${fileName}.docx`);
+
   } catch (error) {
     console.error('Error generating Word document:', error);
     throw error;
   }
 };
 
+// Helper function to escape HTML special characters
+function escapeHtml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Text Export
 export const exportToText = async (data: FormattedResumeData, fileName: string = 'resume'): Promise<void> => {
   try {
     let textContent = '';
 
-    // Add header
+    // Header
     textContent += `${data.personalInfo.firstName} ${data.personalInfo.lastName}\n`;
     if (data.personalInfo.title) {
       textContent += `${data.personalInfo.title}\n`;
     }
     textContent += '\n';
-    
-    // Add contact information
+
+    // Contact Info
     const contactInfo = [
       data.personalInfo.email,
       data.personalInfo.phone,
@@ -320,18 +251,17 @@ export const exportToText = async (data: FormattedResumeData, fileName: string =
     
     textContent += `${contactInfo}\n\n`;
 
-    // Add summary
+    // Summary
     if (data.summary) {
       textContent += `SUMMARY\n${'='.repeat(50)}\n${data.summary}\n\n`;
     }
 
-    // Add experience
-    if (data.experience.length > 0) {
-      textContent += `EXPERIENCE\n${'='.repeat(50)}\n`;
+    // Experience
+    if (data.experience?.length > 0) {
+      textContent += `EXPERIENCE\n${'='.repeat(50)}\n\n`;
       data.experience.forEach(exp => {
-        textContent += `\n${exp.title}\n`;
-        textContent += `${exp.company}${exp.location ? `, ${exp.location}` : ''}\n`;
-        textContent += `${exp.startDate} - ${exp.endDate || 'Present'}\n`;
+        textContent += `${exp.title}\n`;
+        textContent += `${exp.company}${exp.location ? `, ${exp.location}` : ''} | ${exp.startDate} - ${exp.endDate || 'Present'}\n`;
         if (exp.description) {
           textContent += `${exp.description}\n`;
         }
@@ -339,66 +269,6 @@ export const exportToText = async (data: FormattedResumeData, fileName: string =
           exp.highlights.forEach(highlight => {
             textContent += `• ${highlight}\n`;
           });
-        }
-        textContent += '\n';
-      });
-    }
-
-    // Add education
-    if (data.education.length > 0) {
-      textContent += `\nEDUCATION\n${'='.repeat(50)}\n`;
-      data.education.forEach(edu => {
-        textContent += `\n${edu.degree}\n`;
-        textContent += `${edu.school}${edu.location ? `, ${edu.location}` : ''}\n`;
-        textContent += `${edu.startDate} - ${edu.endDate || 'Present'}`;
-        if (edu.gpa) {
-          textContent += ` | GPA: ${edu.gpa}`;
-        }
-        textContent += '\n';
-      });
-    }
-
-    // Add skills
-    if (Object.keys(data.skills).length > 0) {
-      textContent += `\nSKILLS\n${'='.repeat(50)}\n\n`;
-      Object.entries(data.skills).forEach(([category, skills]) => {
-        textContent += `${category}: ${skills.join(', ')}\n`;
-      });
-    }
-
-    // Add projects
-    if (data.projects.length > 0) {
-      textContent += `\nPROJECTS\n${'='.repeat(50)}\n`;
-      data.projects.forEach(project => {
-        textContent += `\n${project.name}\n`;
-        if (project.description) {
-          textContent += `${project.description}\n`;
-        }
-        if (project.technologies?.length) {
-          textContent += `Technologies: ${project.technologies.join(', ')}\n`;
-        }
-      });
-    }
-
-    // Add certifications
-    if (data.certifications.length > 0) {
-      textContent += `\nCERTIFICATIONS\n${'='.repeat(50)}\n\n`;
-      data.certifications.forEach(cert => {
-        textContent += `• ${cert.name}`;
-        if (cert.issuer) textContent += `, ${cert.issuer}`;
-        if (cert.date) textContent += ` (${cert.date})`;
-        textContent += '\n';
-      });
-    }
-
-    // Add custom sections
-    if (data.customSections.length > 0) {
-      data.customSections.forEach(section => {
-        textContent += `\n${section.title.toUpperCase()}\n${'='.repeat(50)}\n\n`;
-        if (Array.isArray(section.content)) {
-          textContent += section.content.join('\n\n');
-        } else {
-          textContent += section.content;
         }
         textContent += '\n';
       });
@@ -436,5 +306,5 @@ export default {
   exportToPDF,
   exportToWord,
   exportToText,
-  exportResume,
+  exportResume
 };
