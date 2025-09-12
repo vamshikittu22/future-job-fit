@@ -131,7 +131,22 @@ export default function ResumePreview({
   const renderSkills = () => {
     const skills = resumeData.skills || [];
 
-    const skillsWithItems = skills.filter(
+    // Handle both old object format and new array format
+    let skillsArray;
+    if (Array.isArray(skills)) {
+      skillsArray = skills;
+    } else if (typeof skills === 'object' && skills !== null) {
+      // Convert object format to array format
+      skillsArray = Object.entries(skills).map(([name, items]) => ({
+        id: name,
+        name,
+        items: Array.isArray(items) ? items : []
+      }));
+    } else {
+      skillsArray = [];
+    }
+
+    const skillsWithItems = skillsArray.filter(
       (category: any) => category && Array.isArray(category.items) && category.items.length > 0
     );
 
