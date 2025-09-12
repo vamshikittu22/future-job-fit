@@ -233,9 +233,6 @@ interface ResumeSectionProps {
   onActivate?: () => void;
 }
 
-<<<<<<< Updated upstream
-export function ResumeSection({
-=======
 const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (section: any) => void }) => {
   const updateItem = (itemId: string, field: string, value: string) => {
     onUpdate({
@@ -276,7 +273,7 @@ const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (s
       )}
 
       <div className="space-y-4">
-        {section.items.map((item, index) => (
+        {section.items.map((item: any) => (
           <div key={item.id} className="space-y-2 border rounded-lg p-4 relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -327,7 +324,6 @@ const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (s
 };
 
 const ResumeSection = ({
->>>>>>> Stashed changes
   sectionId,
   index,
   resumeData,
@@ -336,170 +332,11 @@ const ResumeSection = ({
   onActivate,
 }: ResumeSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  // Removed isAddingSkill as it's not used
-  const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [skillsData, setSkillsData] = useState<SkillCategoryType[]>([]);
-
-  // Move CustomSectionEditor inside the component to access props
-  const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (section: any) => void }) => {
-    const updateItem = (itemId: string, field: string, value: string) => {
-      onUpdate({
-        ...section,
-        items: section.items.map(item => 
-          item.id === itemId ? { ...item, [field]: value } : item // Update specific field of an item
-        )
-      });
-    };
-
-    const addItem = () => {
-      onUpdate({
-        ...section,
-        items: [
-          ...section.items,
-          {
-            id: Date.now().toString(),
-            title: '',
-            subtitle: '', // New field
-            date: '',      // New field
-            description: '',
-            link: ''       // New field
-          }
-        ]
-      });
-    };
-
-    const removeItem = (itemId: string) => {
-      if (section.items.length > 1) {
-        onUpdate({
-          ...section,
-          items: section.items.filter(item => item.id !== itemId)
-        });
-      }
-    };
-
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          {/* Editable Section Title */}
-          <div>
-            <Label htmlFor={`custom-section-title-${section.id}`}>Section Title</Label>
-            <Input
-              id={`custom-section-title-${section.id}`}
-              value={section.title || ''}
-              onChange={(e) => onUpdate({ ...section, title: e.target.value })}
-              placeholder="e.g., Awards, Publications, Volunteer Experience"
-            />
-          </div>
-        </div>
-        
-        {/* Editable Section Description (Optional) */}
-        <div>
-          <Label htmlFor={`custom-section-description-${section.id}`}>Section Description (Optional)</Label>
-          <Textarea
-            id={`custom-section-description-${section.id}`}
-            value={section.description || ''}
-            onChange={(e) => onUpdate({ ...section, description: e.target.value })}
-            placeholder="A brief overview of this section..."
-            rows={2}
-          />
-        </div>
-
-        <Separator />
-
-        {/* Items within the Custom Section */}
-        <h4 className="font-medium text-lg">Items</h4>
-        <div className="space-y-6">
-          {(section.items || []).map((item: any, itemIndex: number) => (
-            <Card key={item.id} className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="font-medium">Item {itemIndex + 1}</h5>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeItem(item.id)}
-                  className="text-destructive hover:text-destructive"
-                  disabled={section.items.length <= 1}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`item-title-${item.id}`}>Title</Label>
-                  <Input
-                    id={`item-title-${item.id}`}
-                    value={item.title || ''}
-                    onChange={(e) => updateItem(item.id, 'title', e.target.value)}
-                    placeholder="e.g., Best Project Award"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`item-subtitle-${item.id}`}>Subtitle (Optional)</Label>
-                  <Input
-                    id={`item-subtitle-${item.id}`}
-                    value={item.subtitle || ''}
-                    onChange={(e) => updateItem(item.id, 'subtitle', e.target.value)}
-                    placeholder="e.g., Presented at Annual Conference"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`item-date-${item.id}`}>Date / Duration</Label>
-                  <Input
-                    id={`item-date-${item.id}`}
-                    value={item.date || ''}
-                    onChange={(e) => updateItem(item.id, 'date', e.target.value)}
-                    placeholder="e.g., 2023 or Jan 2023 - Dec 2023"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`item-link-${item.id}`}>Link (Optional)</Label>
-                  <Input
-                    id={`item-link-${item.id}`}
-                    value={item.link || ''}
-                    onChange={(e) => updateItem(item.id, 'link', e.target.value)}
-                    placeholder="https://example.com/award"
-                  />
-                </div>
-              </div>
-              <div className="mt-4">
-                <Label htmlFor={`item-description-${item.id}`}>Description</Label>
-                <Textarea
-                  id={`item-description-${item.id}`}
-                  value={item.description || ''}
-                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                  placeholder="Detailed description of the item..."
-                  rows={3}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 h-6 w-6 p-0" // Position remove button
-                onClick={() => removeItem(item.id)} // Call removeItem
-                disabled={section.items.length <= 1}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={addItem}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-          </Button>
-        </div>
-      </div>
-    );
-  };
+  const [customSections, setCustomSections] = useState<any[]>([]);
+  
+  // Get the appropriate icon for the section
+  const Icon = sectionIcons[sectionId as keyof typeof sectionIcons] || FileText;
 
   useEffect(() => {
     const initialSkills = Array.isArray(resumeData.skills) && resumeData.skills.length > 0
@@ -511,14 +348,6 @@ const ResumeSection = ({
         ];
     setSkillsData(initialSkills);
   }, [resumeData.skills]);
-  // Removed isAddingSkill as it's not used
-
-  const handleSkillsChange = (newSkills: SkillCategoryType[]) => {
-    setSkillsData(newSkills);
-    updateResumeData('skills', newSkills);
-  };
-
-  const Icon = sectionIcons[sectionId as keyof typeof sectionIcons] || FileText;
 
   useEffect(() => {
     setIsExpanded(isActive);
@@ -649,7 +478,8 @@ const ResumeSection = ({
         ? { ...cat, items: [...cat.items, skill] } 
         : cat
     );
-    handleSkillsChange(newSkills);
+    setSkillsData(newSkills);
+    updateResumeData('skills', newSkills);
   };
 
   const handleRemoveSkill = (categoryId: string, skillIndex: number) => {
@@ -661,19 +491,22 @@ const ResumeSection = ({
           }
         : cat
     );
-    handleSkillsChange(newSkills);
+    setSkillsData(newSkills);
+    updateResumeData('skills', newSkills);
   };
 
   const handleUpdateCategory = (id: string, updates: { name?: string; items?: string[] }) => {
     const newSkills = skillsData.map(cat => 
       cat.id === id ? { ...cat, ...updates } : cat
     );
-    handleSkillsChange(newSkills);
+    setSkillsData(newSkills);
+    updateResumeData('skills', newSkills);
   };
 
   const handleRemoveCategory = (id: string) => {
     const newSkills = skillsData.filter(cat => cat.id !== id);
-    handleSkillsChange(newSkills);
+    setSkillsData(newSkills);
+    updateResumeData('skills', newSkills);
   };
 
   const handleAddCategory = () => {
@@ -682,7 +515,8 @@ const ResumeSection = ({
       name: 'New Category',
       items: []
     };
-    handleSkillsChange([...skillsData, newCategory]);
+    setSkillsData([...skillsData, newCategory]);
+    updateResumeData('skills', [...skillsData, newCategory]);
   };
 
   const renderSkills = () => {
@@ -1278,169 +1112,203 @@ const ResumeSection = ({
     </div>
   );
 
-<<<<<<< Updated upstream
-=======
-  const addCustomSectionItem = (sectionIndex: number) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: [
-        ...(updatedSections[sectionIndex].items || []),
-        {
-          id: `item-${Date.now()}`,
-          title: '',
-          subtitle: '',
-          date: '',
-          description: ''
-        }
-      ]
+  const getSectionTitle = (id: string) => {
+    // First check if it's a custom section
+    if (id.startsWith('custom-') && resumeData?.customSections) {
+      const customSection = resumeData.customSections.find((s: any) => s.id === id);
+      if (customSection) {
+        return customSection.title || 'Custom Section';
+      }
+    }
+
+    const titles: { [key: string]: string } = {
+      personal: "Personal Information",
+      summary: "Professional Summary",
+      skills: "Technical Skills",
+      experience: "Work Experience",
+      education: "Education",
+      projects: "Projects",
+      achievements: "Achievements",
+      certifications: "Certifications"
     };
-    updateResumeData('customSections', updatedSections);
+    return titles[id] || id.charAt(0).toUpperCase() + id.slice(1);
   };
 
-  const removeCustomSectionItem = (sectionIndex: number, itemIndex: number) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const updateCustomSection = (sectionIndex: number, field: string, value: string) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      [field]: value
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const updateCustomSectionItem = (sectionIndex: number, itemIndex: number, field: string, value: string) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: updatedSections[sectionIndex].items.map((item: any, i: number) => 
-        i === itemIndex ? { ...item, [field]: value } : item
-      )
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const renderCustomSections = () => {
+  const renderCustomSectionContent = () => {
     if (!resumeData?.customSections) return null;
     
-    return resumeData.customSections.map((section: any, sectionIndex: number) => (
-      <Card key={section.id} className="mb-6">
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-lg">{section.title || 'Custom Section'}</h3>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const updatedSections = [...(resumeData.customSections || [])];
-                  updatedSections.splice(sectionIndex, 1);
+    const customSection = resumeData.customSections.find((s: any) => s.id === sectionId);
+    if (!customSection) return null;
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <Label>Section Title</Label>
+            <Input
+              value={customSection.title || ''}
+              onChange={(e) => {
+                const updatedSections = [...resumeData.customSections];
+                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                if (sectionIndex !== -1) {
+                  updatedSections[sectionIndex] = {
+                    ...updatedSections[sectionIndex],
+                    title: e.target.value
+                  };
                   updateResumeData('customSections', updatedSections);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+                }
+              }}
+              placeholder="Section Title"
+            />
           </div>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Section Title</Label>
-                <Input
-                  value={section.title}
-                  onChange={(e) => updateCustomSection(sectionIndex, 'title', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label>Description (Optional)</Label>
-                <Input
-                  value={section.description || ''}
-                  onChange={(e) => updateCustomSection(sectionIndex, 'description', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Items</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addCustomSectionItem(sectionIndex)}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Item
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {(section.items || []).map((item: any, itemIndex: number) => (
-                  <div key={item.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <Input
-                          placeholder="Item Title"
-                          value={item.title}
-                          onChange={(e) => updateCustomSectionItem(sectionIndex, itemIndex, 'title', e.target.value)}
-                          className="font-medium mb-2"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCustomSectionItem(sectionIndex, itemIndex)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <Label>Subtitle</Label>
-                        <Input
-                          value={item.subtitle || ''}
-                          onChange={(e) => updateCustomSectionItem(sectionIndex, itemIndex, 'subtitle', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Date</Label>
-                        <Input
-                          value={item.date || ''}
-                          onChange={(e) => updateCustomSectionItem(sectionIndex, itemIndex, 'date', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label>Description</Label>
-                      <Textarea
-                        value={item.description || ''}
-                        onChange={(e) => updateCustomSectionItem(sectionIndex, itemIndex, 'description', e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div>
+            <Label>Description (Optional)</Label>
+            <Textarea
+              value={customSection.description || ''}
+              onChange={(e) => {
+                const updatedSections = [...resumeData.customSections];
+                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                if (sectionIndex !== -1) {
+                  updatedSections[sectionIndex] = {
+                    ...updatedSections[sectionIndex],
+                    description: e.target.value
+                  };
+                  updateResumeData('customSections', updatedSections);
+                }
+              }}
+              placeholder="Section description"
+              rows={2}
+            />
           </div>
         </div>
-      </Card>
-    ));
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Label>Items</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const updatedSections = [...resumeData.customSections];
+                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                if (sectionIndex !== -1) {
+                  const newItem = {
+                    id: `item-${Date.now()}`,
+                    title: '',
+                    subtitle: '',
+                    date: '',
+                    description: ''
+                  };
+                  updatedSections[sectionIndex] = {
+                    ...updatedSections[sectionIndex],
+                    items: [...(updatedSections[sectionIndex].items || []), newItem]
+                  };
+                  updateResumeData('customSections', updatedSections);
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
+
+          {(customSection.items || []).map((item: any, itemIndex: number) => (
+            <div key={item.id} className="border rounded-lg p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <h4 className="font-medium">Item {itemIndex + 1}</h4>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const updatedSections = [...resumeData.customSections];
+                    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                    if (sectionIndex !== -1) {
+                      updatedSections[sectionIndex] = {
+                        ...updatedSections[sectionIndex],
+                        items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
+                      };
+                      updateResumeData('customSections', updatedSections);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    value={item.title || ''}
+                    onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'title', e.target.value)}
+                    placeholder="Item title"
+                  />
+                </div>
+                <div>
+                  <Label>Subtitle (Optional)</Label>
+                  <Input
+                    value={item.subtitle || ''}
+                    onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'subtitle', e.target.value)}
+                    placeholder="Item subtitle"
+                  />
+                </div>
+                <div>
+                  <Label>Date (Optional)</Label>
+                  <Input
+                    value={item.date || ''}
+                    onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'date', e.target.value)}
+                    placeholder="e.g., Jan 2023 - Present"
+                  />
+                </div>
+                <div>
+                  <Label>Link (Optional)</Label>
+                  <Input
+                    value={item.link || ''}
+                    onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'link', e.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={item.description || ''}
+                    onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'description', e.target.value)}
+                    placeholder="Detailed description"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
->>>>>>> Stashed changes
+  const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
+    if (!resumeData?.customSections) return;
+    
+    const updatedSections = [...resumeData.customSections];
+    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+    
+    if (sectionIndex !== -1) {
+      const updatedItems = [...(updatedSections[sectionIndex].items || [])];
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        [field]: value
+      };
+      
+      updatedSections[sectionIndex] = {
+        ...updatedSections[sectionIndex],
+        items: updatedItems
+      };
+      
+      updateResumeData('customSections', updatedSections);
+    }
+  };
+
   const renderSectionContent = () => {
     switch (sectionId) {
       case "personal":
@@ -1460,51 +1328,15 @@ const ResumeSection = ({
       case "certifications":
         return renderCertifications();
       default:
-<<<<<<< Updated upstream
-        if (sectionId.startsWith('custom-') && resumeData?.customSections) {
-          // Find the specific custom section
-          const customSectionIndex = parseInt(sectionId.replace('custom-', ''));
-          const customSection = resumeData.customSections[customSectionIndex];
-          
-          if (customSection) {
-            return (
-              <CustomSectionEditor
-                section={customSection}
-                onUpdate={(updatedSection) => {
-                  const updatedSections = [...resumeData.customSections];
-                  updatedSections[customSectionIndex] = updatedSection;
-                  updateResumeData('customSections', updatedSections);
-                }}
-              />
-            );
-          }
-        }
-      return ( // Fallback if section content is not implemented or custom section not found
-=======
         if (sectionId.startsWith('custom-')) {
-          return renderCustomSections();
+          return renderCustomSectionContent();
         }
         return (
->>>>>>> Stashed changes
           <div className="text-center py-8">
             <p className="text-muted-foreground">Select a section to edit</p>
           </div>
         );
     }
-  };
-
-  const getSectionTitle = (id: string) => {
-    const titles: { [key: string]: string } = {
-      personal: "Personal Information",
-      summary: "Professional Summary",
-      skills: "Technical Skills",
-      experience: "Work Experience",
-      education: "Education",
-      projects: "Projects",
-      achievements: "Achievements",
-      certifications: "Certifications"
-    };
-    return titles[id] || id.charAt(0).toUpperCase() + id.slice(1);
   };
 
   return (
