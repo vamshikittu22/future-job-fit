@@ -3,67 +3,125 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, ExternalLink } from "lucide-react";
+import { CustomSectionData } from "./CustomSectionModal";
 
 interface ResumePreviewProps {
   resumeData: any;
   template: string;
   currentPage: number;
+  sectionOrder: string[];
 }
+
+const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
+  if (!section.items || section.items.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        {section.title.toUpperCase()}
+      </h3>
+      {section.description && (
+        <p className="text-gray-800 mb-4">{section.description}</p>
+      )}
+      
+      <div className="space-y-4">
+        {section.items.map((item) => (
+          <div key={item.id} className="pb-4">
+            <div className="flex justify-between items-start">
+              <h4 className="font-bold text-gray-900">
+                {item.title}
+              </h4>
+              {item.date && (
+                <span className="text-sm text-gray-700 whitespace-nowrap ml-4">
+                  {item.date}
+                </span>
+              )}
+            </div>
+            {item.subtitle && (
+              <p className="text-sm text-gray-700 mt-1">
+                {item.subtitle}
+              </p>
+            )}
+            {item.description && (
+              <p className="text-sm text-gray-800 mt-2 whitespace-pre-line">
+                {item.description}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function ResumePreview({ 
   resumeData, 
   template, 
-  currentPage 
+  currentPage,
+  sectionOrder 
 }: ResumePreviewProps) {
   const renderPersonalInfo = () => {
     const personalInfo = resumeData.personal || {};
     
     return (
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-primary mb-2">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold text-gray-900">
           {personalInfo.name || "Your Name"}
         </h1>
         {personalInfo.title && (
-          <p className="text-lg text-muted-foreground mb-3">
+          <h2 className="text-xl font-semibold text-gray-800 mt-1">
             {personalInfo.title}
-          </p>
+          </h2>
         )}
-        <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground">
-          {personalInfo.email && <span>{personalInfo.email}</span>}
-          {personalInfo.phone && <span>•</span>}
-          {personalInfo.phone && <span>{personalInfo.phone}</span>}
-          {personalInfo.location && <span>•</span>}
-          {personalInfo.location && <span>{personalInfo.location}</span>}
+        <div className="flex flex-wrap justify-center gap-4 mt-2 text-gray-700">
+          {personalInfo.email && (
+            <a href={`mailto:${personalInfo.email}`} className="text-blue-900 hover:underline">
+              {personalInfo.email}
+            </a>
+          )}
+          {personalInfo.phone && (
+            <span>{personalInfo.phone}</span>
+          )}
+          {personalInfo.location && (
+            <span>{personalInfo.location}</span>
+          )}
+          {personalInfo.website && (
+            <a 
+              href={personalInfo.website.startsWith('http') ? personalInfo.website : `https://${personalInfo.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-900 hover:underline"
+            >
+              {personalInfo.website.replace(/^https?:\/\//, '')}
+            </a>
+          )}
+          {(personalInfo.links || []).map((link: any) => (
+            <a 
+              key={link.id}
+              href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-900 hover:underline"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
-        {(personalInfo.linkedin || personalInfo.website) && (
-          <div className="flex justify-center gap-4 mt-2 text-sm">
-            {personalInfo.linkedin && (
-              <span className="text-primary hover:underline cursor-pointer">
-                LinkedIn
-              </span>
-            )}
-            {personalInfo.website && (
-              <span className="text-primary hover:underline cursor-pointer">
-                Portfolio
-              </span>
-            )}
-          </div>
-        )}
       </div>
     );
   };
 
   const renderSummary = () => {
-    const summaryText = resumeData.summary?.summary || '';
+    const summaryText = resumeData.summary || '';
     
     if (!summaryText) return null;
     
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Professional Summary
-        </h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          SUMMARY
+        </h3>
+        <p className="whitespace-pre-line text-gray-800">
           {summaryText}
         </p>
       </div>
@@ -71,31 +129,26 @@ export default function ResumePreview({
   };
 
   const renderSkills = () => {
-    const skillCategories = resumeData.skills?.categories || [];
-    if (!skillCategories.length) return null;
-    
+    const skills = resumeData.skills || [];
+
+    const skillsWithItems = skills.filter(
+      (category: any) => category && Array.isArray(category.items) && category.items.length > 0
+    );
+
+    if (skillsWithItems.length === 0) return null;
+
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Technical Skills
-        </h2>
-        <div className="space-y-3">
-          {skillCategories.map((category: any, index: number) => (
-            <div key={index}>
-              {category.name && (
-                <h3 className="font-medium text-sm mb-2">{category.name}</h3>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {(category.skills || []).map((skill: string, skillIndex: number) => (
-                  <Badge 
-                    key={skillIndex} 
-                    variant="secondary" 
-                    className="text-xs px-2 py-1"
-                  >
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          TECHNICAL SKILLS
+        </h3>
+        <div className="space-y-2">
+          {skillsWithItems.map((category: any) => (
+            <div key={category.id || category.name} className="flex flex-wrap items-baseline gap-2">
+              <span className="font-bold">{category.name}:</span>
+              <span className="text-gray-800">
+                {category.items.join(', ')}
+              </span>
             </div>
           ))}
         </div>
@@ -104,70 +157,89 @@ export default function ResumePreview({
   };
 
   const renderExperience = () => {
-    const experiences = resumeData.experience?.experiences || [];
-    if (!experiences.length) return null;
+    const experiences = resumeData.experience || [];
+    if (experiences.length === 0) return null;
     
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Work Experience
-        </h2>
-        <div className="space-y-4">
-          {experiences.map((exp: any, index: number) => (
-            <div key={exp.id || index}>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-semibold text-sm">
-                    {exp.title || "Job Title"}
-                  </h3>
-                  <p className="text-sm text-primary font-medium">
-                    {exp.company || "Company Name"}
-                  </p>
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          PROFESSIONAL EXPERIENCE
+        </h3>
+        <div className="space-y-6">
+          {experiences.map((exp: any, index: number) => {
+            const title = exp.title || exp.position || 'Position';
+            const when = exp.duration || ((exp.startDate || exp.endDate) ? `${exp.startDate || ''}${exp.startDate || exp.endDate ? ' - ' : ''}${exp.endDate || 'Present'}` : '');
+            const bullets = Array.isArray(exp.bullets) ? exp.bullets.filter((b: string) => b && b.trim().length > 0) : [];
+            return (
+              <div key={exp.id || index}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold">{title}</h4>
+                    <div className="font-medium">
+                      {exp.company}
+                      {exp.location && ` • ${exp.location}`}
+                    </div>
+                  </div>
+                  {when && (
+                    <div className="text-sm font-medium whitespace-nowrap">
+                      {when}
+                    </div>
+                  )}
                 </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  <div>{exp.duration || "Duration"}</div>
-                  <div>{exp.location || "Location"}</div>
-                </div>
-              </div>
-              
-              {exp.description && (
-                <div className="text-sm text-muted-foreground leading-relaxed ml-2">
-                  <pre className="whitespace-pre-wrap font-sans">
+                {exp.description && (
+                  <div className="mt-2 text-sm text-gray-800">
                     {exp.description}
-                  </pre>
-                </div>
-              )}
-            </div>
-          ))}
+                  </div>
+                )}
+                {bullets.length > 0 && (
+                  <ul className="mt-2 pl-5 list-disc space-y-1">
+                    {bullets.map((bullet: string, i: number) => (
+                      <li key={i} className="text-sm text-gray-800">{bullet}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   };
 
   const renderEducation = () => {
-    const education = resumeData.education?.items || [];
-    if (!education.length) return null;
+    const education = resumeData.education || [];
+    if (education.length === 0) return null;
     
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Education
-        </h2>
-        <div className="space-y-3">
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          EDUCATION
+        </h3>
+        <div className="space-y-4">
           {education.map((edu: any, index: number) => (
-            <div key={edu.id || index} className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-sm">
-                  {edu.degree || "Degree"}
-                </h3>
-                <p className="text-sm text-primary">
-                  {edu.school || "School Name"}
-                </p>
+            <div key={edu.id || index}>
+              <div className="flex justify-between">
+                <h4 className="font-bold">{edu.degree}</h4>
+                <span className="text-sm font-medium">
+                  {edu.year || ((edu.startDate || edu.endDate) ? `${edu.startDate || ''}${edu.startDate || edu.endDate ? ' - ' : ''}${edu.endDate || 'Present'}` : '')}
+                </span>
               </div>
-              <div className="text-right text-xs text-muted-foreground">
-                <div>{edu.year || "Year"}</div>
-                {edu.gpa && <div>GPA: {edu.gpa}</div>}
+              <div className="font-medium">
+                {edu.school}
+                {edu.location && `, ${edu.location}`}
               </div>
+              {edu.gpa && (
+                <div className="text-sm text-gray-800">
+                  GPA: {edu.gpa}
+                </div>
+              )}
+              {Array.isArray(edu.bullets) && edu.bullets.length > 0 && (
+                <ul className="mt-2 pl-5 list-disc space-y-1">
+                  {edu.bullets.map((b: string, i: number) => (
+                    <li key={i} className="text-sm text-gray-800">{b}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
@@ -176,60 +248,82 @@ export default function ResumePreview({
   };
 
   const renderProjects = () => {
-    const projects = resumeData.projects?.items || [];
-    if (!projects.length) return null;
+    const projects = resumeData.projects || [];
+    if (projects.length === 0) return null;
     
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Projects
-        </h2>
-        <div className="space-y-4">
-          {projects.map((project: any, index: number) => (
-            <div key={project.id || index}>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-semibold text-sm flex items-center gap-2">
-                    {project.name || "Project Name"}
-                    {project.link && <ExternalLink className="w-3 h-3 text-muted-foreground" />}
-                  </h3>
-                  <p className="text-xs text-accent">
-                    {project.tech || "Technologies"}
-                  </p>
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          PROJECTS
+        </h3>
+        <div className="space-y-6">
+          {projects.map((project: any, index: number) => {
+            const when = project.duration || ((project.startDate || project.endDate) ? `${project.startDate || ''}${project.startDate || project.endDate ? ' - ' : ''}${project.endDate || 'Present'}` : '');
+            const bullets = Array.isArray(project.bullets) ? project.bullets.filter((b: string) => b && b.trim().length > 0) : [];
+            return (
+              <div key={project.id || index}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold">{project.name}</h4>
+                    {when && (
+                      <div className="text-sm font-medium text-gray-800">{when}</div>
+                    )}
+                  </div>
+                  {project.link && (
+                    <a 
+                      href={project.link.startsWith('http') ? project.link : `https://${project.link}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-900 hover:underline whitespace-nowrap"
+                    >
+                      View Project
+                    </a>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {project.duration || "Duration"}
-                </div>
+                {project.tech && (
+                  <div className="text-sm mt-1 text-gray-800">
+                    <span className="font-bold">Technologies:</span> {project.tech}
+                  </div>
+                )}
+                {project.description && (
+                  <p className="text-sm mt-2 text-gray-800">{project.description}</p>
+                )}
+                {bullets.length > 0 && (
+                  <ul className="mt-2 pl-5 list-disc space-y-1">
+                    {bullets.map((b: string, i: number) => (
+                      <li key={i} className="text-sm text-gray-800">{b}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              
-              {project.description && (
-                <div className="text-sm text-muted-foreground leading-relaxed ml-2">
-                  <pre className="whitespace-pre-wrap font-sans">
-                    {project.description}
-                  </pre>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   };
 
   const renderAchievements = () => {
-    const achievements = resumeData.achievements?.items || [];
-    if (!achievements.length) return null;
-    
+    const achievements = resumeData.achievements || [];
+    if (!achievements || achievements.length === 0) return null;
+
+    // Support legacy string[] and new object format { id, title, date }
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Achievements
-        </h2>
-        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-          {resumeData.achievements.map((achievement: string, index: number) => (
-            achievement.trim() && (
-              <li key={index} className="leading-relaxed">
-                {achievementText}
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          ACHIEVEMENTS
+        </h3>
+        <ul className="space-y-2 list-disc pl-5">
+          {achievements.map((ach: any, idx: number) => {
+            if (typeof ach === 'string') {
+              return <li key={idx} className="text-sm text-gray-800">{ach}</li>;
+            }
+            const text = ach.title || ach.text || '';
+            const date = ach.date ? ` • ${ach.date}` : '';
+            return (
+              <li key={ach.id || idx} className="text-sm text-gray-800">
+                {text}
+                {date}
               </li>
             );
           })}
@@ -239,68 +333,75 @@ export default function ResumePreview({
   };
 
   const renderCertifications = () => {
-    const certifications = resumeData.certifications?.items || [];
-    if (!certifications.length) return null;
+    const certifications = resumeData.certifications || [];
+    if (certifications.length === 0) return null;
     
     return (
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-primary mb-3 border-b border-primary/20 pb-1">
-          Certifications
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {resumeData.certifications.map((cert: string, index: number) => (
-            cert.trim() && (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className="text-xs px-2 py-1"
-              >
-                {cert}
-              </Badge>
-            )
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+          CERTIFICATIONS
+        </h3>
+        <div className="space-y-3">
+          {certifications.map((cert: any, index: number) => (
+            <div key={cert.id || index}>
+              <div className="font-bold">{cert.name}</div>
+              <div>
+                {cert.issuer}
+                {cert.date && ` • ${cert.date}`}
+              </div>
+              {cert.link && (
+                <a
+                  href={cert.link.startsWith('http') ? cert.link : `https://${cert.link}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-900 hover:underline text-xs"
+                >
+                  View Credential
+                </a>
+              )}
+            </div>
           ))}
         </div>
       </div>
     );
   };
 
+  const sectionComponents: { [key: string]: () => JSX.Element | null } = {
+    personal: renderPersonalInfo,
+    summary: renderSummary,
+    skills: renderSkills,
+    experience: renderExperience,
+    education: renderEducation,
+    projects: renderProjects,
+    certifications: renderCertifications,
+    achievements: renderAchievements,
+    custom: () => null, // We'll handle custom sections separately
+  };
+
+  const renderSections = () => {
+    // First render regular sections
+    const regularSections = sectionOrder
+      .filter(sectionId => sectionId !== 'custom' && !sectionId.startsWith('custom-'))
+      .map(sectionId => {
+        const Component = sectionComponents[sectionId];
+        return Component ? (
+          <div key={sectionId}>
+            {Component()}
+          </div>
+        ) : null;
+      });
+
+    // Then render custom sections
+    const customSections = resumeData.customSections?.map((section: CustomSectionData) => (
+      <CustomSectionPreview key={section.id} section={section} />
+    )) || [];
+
+    return [...regularSections, ...customSections];
+  };
+
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-swiss">
-      <div className="p-1 bg-muted/30 rounded-t-lg">
-        <div className="flex items-center justify-between text-xs text-muted-foreground px-3 py-2">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            <span>Resume Preview</span>
-          </div>
-          <Badge variant="secondary" className="text-xs">
-            Page {currentPage}
-          </Badge>
-        </div>
-      </div>
-      
-      <ScrollArea className="h-[600px]">
-        <div className="p-8 bg-background">
-          {/* A4 Page Simulation */}
-          <div className="min-h-[297mm] bg-white shadow-sm p-8 mx-auto" style={{ width: '210mm' }}>
-            {renderPersonalInfo()}
-            {renderSummary()}
-            {renderSkills()}
-            {renderExperience()}
-            {renderEducation()}
-            {renderProjects()}
-            {renderAchievements()}
-            {renderCertifications()}
-            
-            {/* Empty State */}
-            {!resumeData.personal?.name && (
-              <div className="text-center py-12 text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Start building your resume to see the preview</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </ScrollArea>
-    </Card>
+    <div className="resume-preview bg-white p-8 w-full h-full overflow-y-auto text-gray-900">
+      {renderSections()}
+    </div>
   );
 }

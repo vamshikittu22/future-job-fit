@@ -1,9 +1,6 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { 
   User, 
   FileText, 
@@ -11,256 +8,450 @@ import {
   Briefcase, 
   GraduationCap, 
   FolderOpen, 
-  Trophy, 
   Award, 
-  Plus, 
-  Target,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
-  GripVertical,
-  PanelLeftOpen,
-  PanelLeftClose
-} from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import ATSScorePanel from "./ATSScorePanel";
+  ChevronUp,
+  Target,
+  Layout,
+  Palette,
+  Minimize2,
+  RefreshCw,
+  Sparkles,
+  Plus,
+  Pencil,
+  Trash2,
+  X
+} from 'lucide-react';
+import { useATS } from '@/hooks/use-ats'; 
+import { ResumeData } from '@/lib/initialData';
 
-const sectionConfig = {
-  personal: { icon: User, label: "Personal Information", description: "Basic details" },
-  summary: { icon: FileText, label: "Professional Summary", description: "Career overview" },
-  skills: { icon: Code, label: "Technical Skills", description: "Your expertise" },
-  experience: { icon: Briefcase, label: "Work Experience", description: "Employment history" },
-  education: { icon: GraduationCap, label: "Education", description: "Academic background" },
-  projects: { icon: FolderOpen, label: "Projects", description: "Portfolio items" },
-  achievements: { icon: Trophy, label: "Achievements", description: "Notable accomplishments" },
-  certifications: { icon: Award, label: "Certifications", description: "Professional credentials" }
-};
+interface CustomSectionData {
+  id: string;
+  title: string;
+  description?: string;
+  items: Array<{
+    id: string;
+    title: string;
+    subtitle?: string;
+    date?: string;
+    description?: string;
+  }>;
+}
 
+// Props definition for the component
 interface ResumeBuilderSidebarProps {
   activeSection: string;
   onSectionChange: (sectionId: string) => void;
   sectionOrder: string[];
-  resumeData: any;
-  onAddCustomSection: () => void;
-  onReorderSections: (newOrder: string[]) => void;
+  resumeData: any; 
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onToggleTemplateCarousel: () => void;
+  onSelectTemplate: (templateId: string) => void;
+  selectedTemplate: string;
+  // Controlled accordion support
+  expandedSection?: string | null;
+  onExpandedChange?: (key: string | null) => void;
+  customSections: CustomSectionData[];
+  onAddCustomSection: (section: CustomSectionData) => void;
+  onEditCustomSection: (section: CustomSectionData) => void;
+  onRemoveCustomSection: (id: string) => void;
+  updateResumeData: (key: string, value: any) => void;
 }
 
+// Icon and name mappings for resume sections
+const sectionIcons = {
+  personal: User,
+  summary: FileText,
+  skills: Code,
+  experience: Briefcase,
+  education: GraduationCap,
+  projects: FolderOpen,
+  achievements: Award,
+  certifications: Award, 
+};
+
+const sectionNames = {
+  personal: 'Personal Info',
+  summary: 'Summary',
+  skills: 'Skills',
+  experience: 'Experience',
+  education: 'Education',
+  projects: 'Projects',
+  achievements: 'Achievements',
+  certifications: 'Certifications',
+};
+
+// The main sidebar component
 export default function ResumeBuilderSidebar({
   activeSection,
   onSectionChange,
   sectionOrder,
   resumeData,
-  onAddCustomSection,
-  onReorderSections,
   isCollapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  onToggleTemplateCarousel,
+  onSelectTemplate,
+  selectedTemplate,
+  expandedSection: expandedControlled,
+  onExpandedChange,
+  customSections,
+  onAddCustomSection,
+  onEditCustomSection,
+  onRemoveCustomSection,
+  updateResumeData,
 }: ResumeBuilderSidebarProps) {
-  const [localSectionOrder, setLocalSectionOrder] = useState(sectionOrder);
-  const [expandedSection, setExpandedSection] = useState<'resume' | 'ats' | null>('resume');
-
-  useEffect(() => {
-    setLocalSectionOrder(sectionOrder);
-  }, [sectionOrder]);
-
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-
-    const newOrder = Array.from(localSectionOrder);
-    const [reorderedItem] = newOrder.splice(result.source.index, 1);
-    newOrder.splice(result.destination.index, 0, reorderedItem);
-
-    setLocalSectionOrder(newOrder);
-    onReorderSections(newOrder);
+  const [expandedUncontrolled, setExpandedUncontrolled] = useState<string | null>('resume');
+  const expandedSection = expandedControlled !== undefined ? expandedControlled : expandedUncontrolled;
+  const setExpanded = (val: string | null) => {
+    if (onExpandedChange) onExpandedChange(val);
+    setExpandedUncontrolled(val);
   };
+  
+  // Use the new ATS hook with live resume data
+  const { atsScore, analysis } = useATS(resumeData);
 
-  const getCompletionStatus = (sectionId: string) => {
+  // Determines the completion status of a section to show a colored dot
+  const getCompletionStatus = (sectionId: string): 'complete' | 'partial' | 'empty' => {
     switch (sectionId) {
       case 'personal':
-        const personal = resumeData.personalInfo;
-        return personal.name && personal.email ? 'complete' : personal.name || personal.email ? 'partial' : 'empty';
+        const personal = resumeData.personal;
+        return personal?.name && personal?.email ? 'complete' : personal?.name || personal?.email ? 'partial' : 'empty';
       case 'summary':
-        let summaryText = '';
-        if (typeof resumeData.summary === 'string') {
-          summaryText = resumeData.summary;
-        } else if (resumeData.summary && typeof resumeData.summary === 'object') {
-          summaryText = resumeData.summary.summary || '';
+        const summaryText = resumeData.summary || '';
+        return summaryText.length > 50 ? 'complete' : summaryText.length > 0 ? 'partial' : 'empty';
+      case 'skills':
+        const skills = resumeData.skills || [];
+        // Handle both old and new skills format
+        let hasSkills = false;
+        if (Array.isArray(skills)) {
+          // New format: Array of categories with items
+          hasSkills = skills.some(category => 
+            category?.items && Array.isArray(category.items) && category.items.length > 0
+          );
+        } else if (typeof skills === 'object' && skills !== null) {
+          // Old format: { languages: [], frameworks: [], tools: [] }
+          hasSkills = Object.values(skills).some((s: any) => Array.isArray(s) && s.length > 0);
         }
-        return summaryText ? 'complete' : 'empty';
-      case 'skills':
-        return resumeData.skills?.length > 0 ? 'complete' : 'empty';
+        return hasSkills ? 'complete' : 'empty';
       case 'experience':
-        return resumeData.experience?.length > 0 ? 'complete' : 'empty';
+        return (resumeData.experience || []).length > 0 ? 'complete' : 'empty';
       case 'education':
-        return resumeData.education?.length > 0 ? 'complete' : 'empty';
-      case 'projects':
-        return resumeData.projects?.length > 0 ? 'complete' : 'empty';
-      case 'achievements':
-        return resumeData.achievements?.length > 0 ? 'complete' : 'empty';
-      case 'certifications':
-        return resumeData.certifications?.length > 0 ? 'complete' : 'empty';
+        return (resumeData.education || []).length > 0 ? 'complete' : 'empty';
       default:
-        return 0;
+        return (resumeData[sectionId] || []).length > 0 ? 'complete' : 'empty';
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'complete') {
-      return <Badge variant="default" className="text-xs bg-green-500">✓</Badge>;
-    }
-    return <Badge variant="secondary" className="text-xs">○</Badge>;
+  const getStatusColor = (status: string) => {
+    if (status === 'complete') return 'bg-green-500';
+    if (status === 'partial') return 'bg-yellow-500';
+    return 'bg-gray-300';
   };
 
-  const toggleSection = (section: 'resume' | 'ats') => {
-    setExpandedSection(expandedSection === section ? null : section);
+  // Toggles which section is currently expanded (accordion behavior)
+  const handleSectionToggle = (section: string) => {
+    setExpanded(expandedSection === section ? null : section);
   };
 
-  const getItemCount = (sectionId: string) => {
-    switch (sectionId) {
-      case 'experience':
-        return resumeData.experience?.experiences?.length || 0;
-      case 'education':
-        return resumeData.education?.items?.length || 0;
-      case 'projects':
-        return resumeData.projects?.items?.length || 0;
-      case 'skills':
-        return resumeData.skills?.categories?.reduce((total: number, cat: any) => 
-          total + (cat.skills?.length || 0), 0) || 0;
-      case 'achievements':
-        return resumeData.achievements?.items?.length || 0;
-      case 'certifications':
-        return resumeData.certifications?.items?.length || 0;
-      default:
-        return 0;
+  // Determines the color of the ATS score based on its value
+  const getATSScoreColor = (score: number) => {
+    if (score >= 85) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const addCustomSection = () => {
+    const newSection = {
+      id: `custom-${Date.now()}`,
+      title: 'New Custom Section',
+      description: '',
+      items: [
+        {
+          id: `item-${Date.now()}`,
+          title: '',
+          subtitle: '',
+          date: '',
+          description: ''
+        }
+      ]
+    };
+    
+    const updatedSections = [...(resumeData.customSections || []), newSection];
+    updateResumeData('customSections', updatedSections);
+    onSectionChange(newSection.id);
+    
+    // Auto-scroll to the new section
+    setTimeout(() => {
+      const element = document.getElementById(newSection.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
+  const removeCustomSection = (id: string) => {
+    const updatedSections = (resumeData.customSections || []).filter((section: any) => section.id !== id);
+    updateResumeData('customSections', updatedSections);
+    
+    // If the removed section was active, switch to the first available section
+    if (activeSection === id) {
+      onSectionChange(sectionOrder[0]);
     }
+  };
+
+  const renderCustomSections = () => {
+    if (!resumeData?.customSections?.length) return null;
+    
+    return (
+      <div className="mt-4">
+        <h3 className="px-4 mb-2 text-sm font-medium text-muted-foreground">Custom Sections</h3>
+        <div className="space-y-1">
+          {resumeData.customSections.map((section: any) => (
+            <div 
+              key={section.id}
+              className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-muted/50 ${
+                activeSection === section.id ? 'bg-muted' : ''
+              }`}
+              onClick={() => onSectionChange(section.id)}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Plus className="w-3 h-3 text-primary" />
+                </div>
+                <span className="text-sm font-medium">{section.title || 'Custom Section'}</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Are you sure you want to delete this section?')) {
+                    removeCustomSection(section.id);
+                  }
+                }}
+              >
+                <X className="w-3 h-3 text-muted-foreground" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-80'} fixed left-0 top-0 h-screen bg-card/50 backdrop-blur border-r transition-all duration-300 flex flex-col z-30`}>
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between min-h-[73px]">
-        {!isCollapsed && (
-          <h2 className="text-lg font-semibold">Navigation</h2>
-        )}
+    <aside className={`fixed top-16 left-0 bottom-0 w-80 bg-background border-r flex flex-col transition-all duration-300 ${
+      isCollapsed ? '-translate-x-full' : 'translate-x-0'
+    }`}>
+      {/* Collapse/Expand Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggleCollapse}
+        className="absolute -right-4 top-4 z-40 h-8 w-8 rounded-full border bg-background shadow-md"
+      >
+        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      </Button>
+
+      {/* Main scrollable area, activates on hover */}
+      <div className="flex-1 overflow-hidden group-hover/sidebar:overflow-y-auto scrollbar-hide">
+        {/* --- Resume Sections --- */}
+        <div className="border-b">
+          <div 
+            className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => !isCollapsed && handleSectionToggle('resume')}
+          >
+            <div className={`flex items-center gap-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+              <div className="flex items-center gap-4">
+                <FileText className={`h-6 w-6 text-primary`} />
+                {!isCollapsed && <span className="font-medium">Resume Sections</span>}
+              </div>
+              {!isCollapsed && (expandedSection === 'resume' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+            </div>
+          </div>
+
+          {!isCollapsed && expandedSection === 'resume' && (
+            <div className="p-2">
+              {sectionOrder.filter(id => id !== 'custom' && !id.startsWith('custom')).map((sectionId) => {
+                const Icon = sectionIcons[sectionId as keyof typeof sectionIcons];
+                const status = getCompletionStatus(sectionId);
+                return (
+                  <div
+                    key={sectionId}
+                    className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${activeSection === sectionId ? 'bg-primary/10' : ''}`}
+                    onClick={() => onSectionChange(sectionId)}
+                  >
+                    {(Icon ? <Icon className={`h-5 w-5 ${activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'}`} /> : <FileText className={`h-5 w-5 ${activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'}`} />)}
+                    <span className={`flex-1 text-sm ${activeSection === sectionId ? 'text-primary font-medium' : ''}`}>
+                      {sectionNames[sectionId as keyof typeof sectionNames]}
+                    </span>
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+                  </div>
+                );
+              })}
+              {renderCustomSections()}
+              <Button
+                variant="outline"
+                className="w-full justify-start mt-4"
+                onClick={addCustomSection}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Custom Section
+              </Button>
+              <Separator className="my-2" />
+            </div>
+          )}
+        </div>
+
+        {/* --- ATS Score Section (Live Data) --- */}
+        <div className="border-b">
+          <div 
+            className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => !isCollapsed && handleSectionToggle('ats')}
+          >
+            <div className={`flex items-center gap-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+              <div className="flex items-center gap-4">
+                <Target className={`h-6 w-6 text-primary`} />
+                {!isCollapsed && <span className="font-medium">ATS Score</span>}
+              </div>
+              {!isCollapsed && <span className={`font-bold text-sm ${getATSScoreColor(atsScore)}`}>{atsScore} / 100</span>}
+            </div>
+          </div>
+
+          {!isCollapsed && expandedSection === 'ats' && (
+            <div className="p-4 text-left space-y-4 bg-muted/30">
+              {/* Score Meter */}
+              <div className="relative w-28 h-28 mx-auto mb-2">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path className="text-gray-200" stroke="currentColor" strokeWidth="2" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path className={getATSScoreColor(atsScore)} stroke="currentColor" strokeWidth="2" strokeDasharray={`${atsScore}, 100`} strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-3xl font-bold ${getATSScoreColor(atsScore)}`}>{atsScore}%</span>
+                </div>
+              </div>
+
+              {/* Section Strength */}
+              {analysis.sections && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Section Strength</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {Object.entries(analysis.sections).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="capitalize">{key}</span>
+                        <span className={`font-medium ${getATSScoreColor(value as number)}`}>{Math.round(value as number)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Keywords Matched */}
+              {analysis.keywords && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Keywords Matched ({analysis.keywords.matched.length} / {analysis.keywords.total})</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {analysis.keywords.matched.slice(0, 10).map((k: string) => (
+                      <span key={k} className="px-2 py-1 text-xs rounded-full bg-muted text-foreground">{k}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actionable Suggestions */}
+              {analysis.suggestions && analysis.suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Actionable Suggestions</h4>
+                  <ul className="text-xs text-muted-foreground space-y-2">
+                    {analysis.suggestions.map((s: { text: string; priority: string }, i: number) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className={`mt-1 h-2 w-2 rounded-full ${s.priority === 'high' ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                        <span>{s.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* --- Templates Section --- */}
+        <div className="border-b">
+          <div 
+            className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => !isCollapsed && handleSectionToggle('templates')}
+          >
+            <div className={`flex items-center gap-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+              <div className="flex items-center gap-4">
+                <Layout className={`h-6 w-6 text-primary`} />
+                {!isCollapsed && <span className="font-medium">Templates</span>}
+              </div>
+              {!isCollapsed && (expandedSection === 'templates' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
+            </div>
+          </div>
+
+          {!isCollapsed && expandedSection === 'templates' && (
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {['modern', 'classic', 'creative', 'minimal'].map((template) => (
+                  <Button 
+                    key={template}
+                    variant={selectedTemplate === template ? 'default' : 'outline'}
+                    size="sm" 
+                    className="h-16 flex flex-col gap-1 capitalize"
+                    onClick={() => onSelectTemplate(template)}
+                  >
+                    <div className={`w-full h-8 rounded bg-gray-200`}></div>
+                    {template}
+                  </Button>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                <Palette className="w-4 h-4" />
+                Customize Your Resume
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={onToggleTemplateCarousel}>
+                <Minimize2 className="w-4 h-4" />
+                Minimize Carousel
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add Custom Section Button */}
+      <div className="p-4 border-t">
         <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleCollapse}
-          className="h-8 w-8"
-          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full flex items-center gap-2"
+          onClick={addCustomSection}
         >
-          {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+          <Plus className="w-4 h-4" />
+          Add Custom Section
         </Button>
       </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-2">
-            {sectionOrder.map((sectionId) => {
-              const config = sectionConfig[sectionId as keyof typeof sectionConfig];
-              const status = getCompletionStatus(sectionId);
-              const isActive = activeSection === sectionId;
-              const Icon = config.icon;
+      {/* Render custom sections */}
+      {renderCustomSections()}
 
-              return (
-                <Card
-                  key={sectionId}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-swiss ${
-                    isActive 
-                      ? 'border-primary shadow-accent bg-primary/5' 
-                      : 'hover:border-primary/50'
-                  }`}
-                  onClick={() => onSectionChange(sectionId)}
-                >
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          isActive 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-muted'
-                        }`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium text-sm">{config.label}</h3>
-                          <p className="text-xs text-muted-foreground">
-                            {config.description}
-                          </p>
-                        </div>
-                      </div>
-                      {isActive && (
-                        <ChevronRight className="w-4 h-4 text-primary" />
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      {getStatusBadge(status)}
-                      <div className="text-xs text-muted-foreground">
-                        {sectionId === 'experience' && `${resumeData.experience?.length || 0} items`}
-                        {sectionId === 'education' && `${resumeData.education?.length || 0} items`}
-                        {sectionId === 'projects' && `${resumeData.projects?.length || 0} items`}
-                        {sectionId === 'skills' && `${resumeData.skills?.length || 0} skills`}
-                        {sectionId === 'achievements' && `${resumeData.achievements?.length || 0} items`}
-                        {sectionId === 'certifications' && `${resumeData.certifications?.length || 0} items`}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </ScrollArea>
-
-              {/* Add Section Button */}
-              <div className="p-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center gap-2"
-                  onClick={onAddCustomSection}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Section
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ATS Score Section */}
-        <div>
-          <Button
-            variant="ghost"
-            className={`w-full justify-start p-4 h-auto ${expandedSection === 'ats' ? 'bg-accent' : ''}`}
-            onClick={() => toggleSection('ats')}
-          >
-            <div className="flex items-center w-full">
-              <Target className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && (
-                <>
-                  <span className="ml-3 font-medium">ATS Score</span>
-                  <div className="ml-auto flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">85%</Badge>
-                    {expandedSection === 'ats' ? 
-                      <ChevronDown className="w-4 h-4" /> : 
-                      <ChevronRight className="w-4 h-4" />
-                    }
-                  </div>
-                </>
-              )}
-            </div>
-          </Button>
-
-          {/* ATS Score Details - Only show when expanded and sidebar not collapsed */}
-          {expandedSection === 'ats' && !isCollapsed && (
-            <div className="max-h-[60vh] overflow-hidden hover:overflow-y-auto transition-all duration-200">
-              <div className="p-2">
-                <ATSScorePanel resumeData={resumeData} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      {/* CSS for hiding the scrollbar */}
+      <style>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </aside>
   );
 }

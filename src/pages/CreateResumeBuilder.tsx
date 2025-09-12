@@ -1,390 +1,271 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { FileText, Download, Upload, Save, Eye, Plus, Sparkles, Target, Settings, Palette } from "lucide-react";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
-import ResumeBuilderSidebar from "@/components/ResumeBuilderSidebar";
-import DynamicSection from "@/components/DynamicSection";
-import CollapsibleTemplateBar from "@/components/CollapsibleTemplateBar";
-import ResumePreview from "@/components/ResumePreview";
-import ImportResumeModal from "@/components/ImportResumeModal";
-import ExportResumeModal from "@/components/ExportResumeModal";
-import AIEnhanceModal from "@/components/AIEnhanceModal";
-import CustomSectionModal from "@/components/CustomSectionModal";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect, useCallback } from 'react';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { Button } from '@/components/ui/button';
+import ResumeSection from '@/components/ResumeSection';
+import ResumeBuilderSidebar from '@/components/ResumeBuilderSidebar';
+import ResumePreview from '@/components/ResumePreview';
+import { initialSections, initialResumeData } from '@/lib/initialData';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
+import ExportResumeModal from '@/components/ExportResumeModal';
+import ImportResumeModal from '@/components/ImportResumeModal';
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+import Footer from '@/components/Footer';
+import { Minimize2 } from 'lucide-react';
+import Navigation from '@/components/Navigation';
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { PanelLeft, Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface ResumeData {
-  personal: {
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin: string;
-    website: string;
-    photo?: string;
-  };
-  summary: string;
-  skills: {
-    languages: string[];
-    frameworks: string[];
-    tools: string[];
-  };
-  experience: Array<{
+interface CustomSectionData {
+  id: string;
+  title: string;
+  description?: string;
+  items: Array<{
     id: string;
     title: string;
-    company: string;
-    location: string;
-    duration: string;
-    bullets: string[];
-  }>;
-  education: Array<{
-    id: string;
-    degree: string;
-    school: string;
-    year: string;
-    gpa?: string;
-  }>;
-  projects: Array<{
-    id: string;
-    name: string;
-    tech: string;
-    duration: string;
-    bullets: string[];
-    link?: string;
-  }>;
-  achievements: string[];
-  certifications: Array<{
-    id: string;
-    name: string;
-    issuer: string;
-    date: string;
-    link?: string;
-  }>;
-  customSections: Array<{
-    id: string;
-    title: string;
-    type: 'textarea' | 'bullets' | 'structured';
-    content: any;
+    subtitle?: string;
+    date?: string;
+    description?: string;
   }>;
 }
 
-const initialResumeData: ResumeData = {
-  personal: {
-    name: "",
-    title: "",
-    email: "",
-    phone: "",
-    location: "",
-    linkedin: "",
-    website: ""
-  },
-  summary: "",
-  skills: {
-    languages: [],
-    frameworks: [],
-    tools: []
-  },
-  experience: [],
-  education: [],
-  projects: [],
-  achievements: [],
-  certifications: [],
-  customSections: []
-};
-
 export default function CreateResumeBuilder() {
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
-  const [activeSection, setActiveSection] = useState("personal");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [selectedTemplate, setSelectedTemplate] = useState("minimal-1");
-  const [showPreview, setShowPreview] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [showCustomSectionModal, setShowCustomSectionModal] = useState(false);
-  const [sectionOrder, setSectionOrder] = useState([
-    "personal",
-    "summary", 
-    "skills",
-    "experience",
-    "education",
-    "projects",
-    "achievements",
-    "certifications"
+  const [resumeData, setResumeData] = useLocalStorage("resumeData", initialResumeData);
+  const [sectionOrder, setSectionOrder] = useState<string[]>([
+    ...initialSections,
+    ...(resumeData.customSections?.map((section: any) => section.id) || [])
   ]);
+  const [activeSection, setActiveSection] = useState('personal');
+  const [showPreview, setShowPreview] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showTemplateCarousel, setShowTemplateCarousel] = useState(true);
+  const [expandedSidebarSection, setExpandedSidebarSection] = useState<string | null>('resume');
+  const [customSections, setCustomSections] = useState<CustomSectionData[]>([]);
+  const [editingCustomSection, setEditingCustomSection] = useState<CustomSectionData | null>(null);
   const { toast } = useToast();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
+  // Load persisted data
   useEffect(() => {
-    const savedData = localStorage.getItem('createResumeBuilder_data');
-    if (savedData) {
-      setResumeData(JSON.parse(savedData));
-    }
-    
-    const savedSection = localStorage.getItem('activeSection');
-    if (savedSection) {
-      setActiveSection(savedSection);
-    }
-    
-    const savedSidebarState = localStorage.getItem('isSidebarCollapsed');
-    if (savedSidebarState !== null) {
-      setIsSidebarCollapsed(savedSidebarState === 'true');
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('createResumeBuilder_data', JSON.stringify(resumeData));
-  }, [resumeData]);
-
-  useEffect(() => {
-    localStorage.setItem('activeSection', activeSection);
-  }, [activeSection]);
-
-  useEffect(() => {
-    localStorage.setItem('isSidebarCollapsed', String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  // Auto-save functionality
-  useEffect(() => {
-    const interval = setInterval(() => {
-      localStorage.setItem('createResumeBuilder_data', JSON.stringify(resumeData));
-      localStorage.setItem('createResumeBuilder_template', selectedTemplate);
-      localStorage.setItem('createResumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
-    }, 30000); // Auto-save every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [resumeData, selectedTemplate, sectionOrder]);
-
-  // Load saved data on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem('createResumeBuilder_data');
-    const savedTemplate = localStorage.getItem('createResumeBuilder_template');
-    const savedOrder = localStorage.getItem('createResumeBuilder_sectionOrder');
-    
-    if (savedData) {
-      try {
-        setResumeData(JSON.parse(savedData));
-      } catch (error) {
-        console.error("Failed to load saved data:", error);
-      }
-    }
-    if (savedTemplate) {
-      setSelectedTemplate(savedTemplate);
-    }
+    const savedData = localStorage.getItem('resumeData');
+    const savedOrder = localStorage.getItem('sectionOrder');
+    if (savedData) setResumeData(JSON.parse(savedData));
     if (savedOrder) {
       try {
-        setSectionOrder(JSON.parse(savedOrder));
-      } catch (error) {
-        console.error("Failed to load saved order:", error);
+        const loaded = JSON.parse(savedOrder);
+        setSectionOrder(loaded);
+      } catch {
+        setSectionOrder(initialSections);
       }
+    } else {
+      setSectionOrder(initialSections);
     }
   }, []);
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  // Initialize with default custom sections if none exist
+  useEffect(() => {
+    if (!resumeData.customSections) {
+      setResumeData({
+        ...resumeData,
+        customSections: [],
+      });
+    }
+  }, [resumeData, setResumeData]);
 
-    const items = Array.from(sectionOrder);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  useEffect(() => {
+    setSectionOrder([
+      ...initialSections,
+      ...(resumeData.customSections?.map((section: any) => section.id) || [])
+    ]);
+  }, [resumeData.customSections]);
 
-    setSectionOrder(items);
-    toast({
-      title: "Section reordered",
-      description: "Your resume sections have been reorganized.",
-    });
-  };
+  const handleSave = useCallback(() => {
+    localStorage.setItem('resumeData', JSON.stringify(resumeData));
+    localStorage.setItem('sectionOrder', JSON.stringify(sectionOrder));
+    toast({ title: 'Saved!', description: 'Your resume has been saved successfully.' });
+  }, [resumeData, sectionOrder, toast]);
 
-  const updateSectionData = (sectionId: string, data: any) => {
-    setResumeData(prev => ({
+  const updateSectionData = (section: string, data: any) => {
+    setResumeData((prev: any) => ({
       ...prev,
-      [sectionId]: data
+      [section]: data
     }));
   };
 
-  const handleSave = () => {
-    localStorage.setItem('createResumeBuilder_data', JSON.stringify(resumeData));
-    localStorage.setItem('createResumeBuilder_template', selectedTemplate);
-    localStorage.setItem('createResumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
-    toast({
-      title: "Draft saved",
-      description: "Your resume has been saved successfully.",
-    });
-  };
-
-  const handleImport = (importedData: any) => {
-    setResumeData(importedData);
-    toast({
-      title: "Resume imported",
-      description: "Your resume has been imported successfully.",
-    });
-  };
-
-  const handleEnhance = (enhancedData: any) => {
-    setResumeData(enhancedData);
-    toast({
-      title: "Resume enhanced",
-      description: "AI has enhanced your resume content.",
-    });
-  };
-
-  const addNewPage = () => {
-    setTotalPages(prev => prev + 1);
-    setCurrentPage(totalPages + 1);
-    toast({
-      title: "Page added",
-      description: `Added page ${totalPages + 1} to your resume.`,
-    });
-  };
-
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     
-    const newOrder = Array.from(sectionOrder);
-    const [moved] = newOrder.splice(result.source.index, 1);
-    newOrder.splice(result.destination.index, 0, moved);
-    setSectionOrder(newOrder);
+    const items = Array.from(sectionOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setSectionOrder(items);
   };
 
-  const handleSidebarReorder = (newOrder: string[]) => {
-    setSectionOrder(newOrder);
+  const handleAddCustomSection = () => {
+    const newSection = {
+      id: `custom-${Date.now()}`,
+      title: 'New Custom Section',
+      description: '',
+      items: [
+        {
+          id: `item-${Date.now()}`,
+          title: '',
+          subtitle: '',
+          date: '',
+          description: ''
+        }
+      ]
+    };
+    
+    const updatedSections = [...(resumeData.customSections || []), newSection];
+    updateSectionData('customSections', updatedSections);
+    setActiveSection(newSection.id);
+  };
+
+  const handleRemoveCustomSection = (id: string) => {
+    const updatedSections = (resumeData.customSections || []).filter((section: any) => section.id !== id);
+    updateSectionData('customSections', updatedSections);
+    
+    // If the removed section was active, switch to the first available section
+    if (activeSection === id) {
+      setActiveSection(sectionOrder[0]);
+    }
+  };
+
+  // Toggle sidebar on mobile
+  useEffect(() => {
+    setIsSidebarCollapsed(!isDesktop);
+  }, [isDesktop]);
+
+  const toggleTemplateCarousel = () => {
+    setShowTemplateCarousel(!showTemplateCarousel);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b shadow-nav">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <FileText className="w-6 h-6 text-primary" />
-              <h1 className="text-2xl font-bold">Resume Builder</h1>
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Draft
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
-                <Eye className="w-4 h-4 mr-2" />
-                {showPreview ? 'Hide' : 'Preview'}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)}>
-                <Upload className="w-4 h-4 mr-2" />
-                Import
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => setShowExportModal(true)}>
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-muted/20">
+      {/* Existing title bar with integrated tools */}
+      <Navigation
+        builderTools={{
+          onSave: handleSave,
+          onPreview: () => setShowPreview(!showPreview),
+          onExport: () => setIsExportOpen(true),
+          onImport: () => setShowImportModal(true),
+          onEnhanceAI: () => setShowAIModal(true),
+          onToggleATS: () => setExpandedSidebarSection(prev => (prev === 'ats' ? null : 'ats')),
+          showPreview,
+        }}
+      />
 
-      <div className="flex w-full">
-        {/* Sidebar Navigation */}
+      <div className="pt-16"> {/* Offset for sticky Navigation height (4rem) */}
         <ResumeBuilderSidebar
           activeSection={activeSection}
-          onSectionChange={handleSectionChange}
+          onSectionChange={setActiveSection}
           sectionOrder={sectionOrder}
           resumeData={resumeData}
-          onAddCustomSection={() => setShowCustomSectionModal(true)}
-          onReorderSections={handleSidebarReorder}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onToggleTemplateCarousel={() => setShowTemplateCarousel(!showTemplateCarousel)}
+          onSelectTemplate={setSelectedTemplate}
+          selectedTemplate={selectedTemplate}
+          expandedSection={expandedSidebarSection}
+          onExpandedChange={setExpandedSidebarSection}
+          updateResumeData={updateSectionData}
+          onAddCustomSection={handleAddCustomSection}
+          onRemoveCustomSection={handleRemoveCustomSection}
         />
 
         {/* Main Content */}
-        <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
-          <div className="p-6">
-            {sectionOrder.map((sectionId, index) => (
-              <ResumeSection
-                key={sectionId}
-                sectionId={sectionId}
-                index={index}
-                resumeData={resumeData}
-                updateResumeData={updateResumeData}
-                isActive={activeSection === sectionId}
-                onActivate={() => setActiveSection(sectionId)}
-              />
-            ))}
+        <main className={`${isSidebarCollapsed ? 'ml-20' : 'ml-80'} transition-all duration-300`}>
+          <div className={`${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="sections" direction="vertical">
+                {(provided) => (
+                  <div
+                    className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {sectionOrder.map((sectionId, index) => (
+                      <ResumeSection
+                        key={sectionId}
+                        sectionId={sectionId}
+                        index={index}
+                        resumeData={resumeData}
+                        updateResumeData={updateSectionData}
+                        isActive={activeSection === sectionId}
+                        onActivate={() => setActiveSection(sectionId)}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+
+            {/* Preview Pane */}
+            {showPreview && (
+              <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-hidden">
+                <ResumePreview 
+                  resumeData={resumeData} 
+                  template={selectedTemplate} 
+                  currentPage={currentPage}
+                  sectionOrder={sectionOrder}
+                />
+              </div>
+            )}
           </div>
+        </main>
+      </div> {/* Close pt-16 div */}
 
-          {/* Live Preview */}
-          {showPreview && (
-            <div className="border-l bg-muted/30 p-6">
-              <ResumePreview
-                resumeData={resumeData}
-                template={selectedTemplate}
-                currentPage={currentPage}
-              />
+      {/* Template Carousel */}
+      {showTemplateCarousel && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t shadow-lg">
+          <div className="h-32 p-4 flex items-center justify-between relative">
+            <div className="flex items-center gap-3">
+              {['modern', 'classic', 'creative', 'minimal'].map((template) => (
+                <Button
+                  key={template}
+                  variant={selectedTemplate === template ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-16 w-28 flex flex-col gap-1 capitalize"
+                  onClick={() => setSelectedTemplate(template)}
+                >
+                  <div className="w-full h-8 rounded bg-gray-200" />
+                  {template}
+                </Button>
+              ))}
             </div>
-          )}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setShowTemplateCarousel(false)}
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      )}
 
-        {/* ATS Score Panel */}
-        <ATSScorePanel resumeData={resumeData} />
-      </div>
-
-      {/* Floating Toolbar */}
-      <FloatingToolbar
-        onSave={handleSave}
-        onPreview={() => setShowPreview(!showPreview)}
-        onExport={() => setShowExportModal(true)}
-        onImport={() => setShowImportModal(true)}
-        onEnhanceAI={() => setShowAIModal(true)}
-        showPreview={showPreview}
+      {/* Modals, Toaster, Footer */}
+      <ImportResumeModal open={showImportModal} onOpenChange={setShowImportModal} />
+      <ExportResumeModal
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        resumeData={resumeData}
+        selectedTemplate={selectedTemplate}
       />
-
-      {/* Template Toggle */}
-      <Button
-        className="fixed bottom-6 left-6 z-40 shadow-swiss"
-        onClick={() => setShowTemplateCarousel(!showTemplateCarousel)}
-        variant="secondary"
-        size="sm"
-      >
-        <Settings className="w-4 h-4 mr-2" />
-        Templates
-      </Button>
-
-      {/* Modals */}
-      <ImportResumeModal 
-        open={showImportModal} 
-        onOpenChange={setShowImportModal} 
-        onImport={handleImport} 
-      />
-      
-      <ExportResumeModal 
-        open={showExportModal} 
-        onOpenChange={setShowExportModal} 
-        resumeData={resumeData} 
-        template={selectedTemplate} 
-      />
-      
-      <AIEnhanceModal 
-        open={showAIModal} 
-        onOpenChange={setShowAIModal} 
-        resumeData={resumeData} 
-        onEnhance={handleEnhance} 
-      />
-      
-      <CustomSectionModal 
-        open={showCustomSectionModal} 
-        onOpenChange={setShowCustomSectionModal} 
-        onAdd={addCustomSection} 
-      />
-
+      <AIEnhanceModal open={showAIModal} onOpenChange={setShowAIModal} />
+      <Toaster />
       <Footer />
     </div>
   );
