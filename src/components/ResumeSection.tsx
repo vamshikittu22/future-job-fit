@@ -9,6 +9,7 @@ import { Plus, Trash2, Pencil, X, Check, ChevronDown, ChevronUp, GripVertical, F
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+// Define the SkillCategoryType interface
 interface SkillCategoryProps {
   category: {
     id: string;
@@ -21,6 +22,7 @@ interface SkillCategoryProps {
   onRemoveSkill: (categoryId: string, skillIndex: number) => void;
 }
 
+// Define the SkillCategoryType interface
 interface SkillCategoryType {
   id: string;
   name: string;
@@ -240,6 +242,7 @@ export function ResumeSection({
   onActivate,
 }: ResumeSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  // Removed isAddingSkill as it's not used
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [skillsData, setSkillsData] = useState<SkillCategoryType[]>([]);
 
@@ -249,7 +252,7 @@ export function ResumeSection({
       onUpdate({
         ...section,
         items: section.items.map(item => 
-          item.id === itemId ? { ...item, [field]: value } : item
+          item.id === itemId ? { ...item, [field]: value } : item // Update specific field of an item
         )
       });
     };
@@ -259,7 +262,14 @@ export function ResumeSection({
         ...section,
         items: [
           ...section.items,
-          { id: Date.now().toString(), title: '', description: '' }
+          {
+            id: Date.now().toString(),
+            title: '',
+            subtitle: '', // New field
+            date: '',      // New field
+            description: '',
+            link: ''       // New field
+          }
         ]
       });
     };
@@ -276,42 +286,105 @@ export function ResumeSection({
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">{section.title}</h3>
+          {/* Editable Section Title */}
+          <div>
+            <Label htmlFor={`custom-section-title-${section.id}`}>Section Title</Label>
+            <Input
+              id={`custom-section-title-${section.id}`}
+              value={section.title || ''}
+              onChange={(e) => onUpdate({ ...section, title: e.target.value })}
+              placeholder="e.g., Awards, Publications, Volunteer Experience"
+            />
+          </div>
         </div>
         
-        {section.description && (
-          <p className="text-sm text-muted-foreground">{section.description}</p>
-        )}
+        {/* Editable Section Description (Optional) */}
+        <div>
+          <Label htmlFor={`custom-section-description-${section.id}`}>Section Description (Optional)</Label>
+          <Textarea
+            id={`custom-section-description-${section.id}`}
+            value={section.description || ''}
+            onChange={(e) => onUpdate({ ...section, description: e.target.value })}
+            placeholder="A brief overview of this section..."
+            rows={2}
+          />
+        </div>
 
-        <div className="space-y-4">
-          {section.items.map((item, index) => (
-            <div key={item.id} className="space-y-2 border rounded-lg p-4 relative">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Title</Label>
+        <Separator />
+
+        {/* Items within the Custom Section */}
+        <h4 className="font-medium text-lg">Items</h4>
+        <div className="space-y-6">
+          {(section.items || []).map((item: any, itemIndex: number) => (
+            <Card key={item.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="font-medium">Item {itemIndex + 1}</h5>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeItem(item.id)}
+                  className="text-destructive hover:text-destructive"
+                  disabled={section.items.length <= 1}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`item-title-${item.id}`}>Title</Label>
                   <Input
-                    value={item.title}
+                    id={`item-title-${item.id}`}
+                    value={item.title || ''}
                     onChange={(e) => updateItem(item.id, 'title', e.target.value)}
-                    placeholder="Item title"
+                    placeholder="e.g., Best Project Award"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={item.description || ''}
-                    onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                    placeholder="Item description"
-                    rows={2}
+                <div>
+                  <Label htmlFor={`item-subtitle-${item.id}`}>Subtitle (Optional)</Label>
+                  <Input
+                    id={`item-subtitle-${item.id}`}
+                    value={item.subtitle || ''}
+                    onChange={(e) => updateItem(item.id, 'subtitle', e.target.value)}
+                    placeholder="e.g., Presented at Annual Conference"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`item-date-${item.id}`}>Date / Duration</Label>
+                  <Input
+                    id={`item-date-${item.id}`}
+                    value={item.date || ''}
+                    onChange={(e) => updateItem(item.id, 'date', e.target.value)}
+                    placeholder="e.g., 2023 or Jan 2023 - Dec 2023"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`item-link-${item.id}`}>Link (Optional)</Label>
+                  <Input
+                    id={`item-link-${item.id}`}
+                    value={item.link || ''}
+                    onChange={(e) => updateItem(item.id, 'link', e.target.value)}
+                    placeholder="https://example.com/award"
                   />
                 </div>
               </div>
-              
+              <div className="mt-4">
+                <Label htmlFor={`item-description-${item.id}`}>Description</Label>
+                <Textarea
+                  id={`item-description-${item.id}`}
+                  value={item.description || ''}
+                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                  placeholder="Detailed description of the item..."
+                  rows={3}
+                />
+              </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 h-6 w-6 p-0"
-                onClick={() => removeItem(item.id)}
+                className="absolute top-2 right-2 h-6 w-6 p-0" // Position remove button
+                onClick={() => removeItem(item.id)} // Call removeItem
                 disabled={section.items.length <= 1}
               >
                 <X className="h-4 w-4" />
@@ -334,54 +407,6 @@ export function ResumeSection({
     );
   };
 
-  // Helper functions moved inside component to access props
-  const addCustomSectionItem = (sectionIndex: number) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: [
-        ...(updatedSections[sectionIndex].items || []),
-        {
-          id: `item-${Date.now()}`,
-          title: '',
-          subtitle: '',
-          date: '',
-          description: ''
-        }
-      ]
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const removeCustomSectionItem = (sectionIndex: number, itemIndex: number) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const updateCustomSection = (sectionIndex: number, field: string, value: string) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      [field]: value
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
-  const updateCustomSectionItem = (sectionIndex: number, itemIndex: number, field: string, value: string) => {
-    const updatedSections = [...(resumeData.customSections || [])];
-    updatedSections[sectionIndex] = {
-      ...updatedSections[sectionIndex],
-      items: updatedSections[sectionIndex].items.map((item: any, i: number) => 
-        i === itemIndex ? { ...item, [field]: value } : item
-      )
-    };
-    updateResumeData('customSections', updatedSections);
-  };
-
   useEffect(() => {
     const initialSkills = Array.isArray(resumeData.skills) && resumeData.skills.length > 0
       ? resumeData.skills
@@ -392,6 +417,7 @@ export function ResumeSection({
         ];
     setSkillsData(initialSkills);
   }, [resumeData.skills]);
+  // Removed isAddingSkill as it's not used
 
   const handleSkillsChange = (newSkills: SkillCategoryType[]) => {
     setSkillsData(newSkills);
@@ -1195,7 +1221,7 @@ export function ResumeSection({
             );
           }
         }
-        return (
+      return ( // Fallback if section content is not implemented or custom section not found
           <div className="text-center py-8">
             <p className="text-muted-foreground">Select a section to edit</p>
           </div>

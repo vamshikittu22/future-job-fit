@@ -47,6 +47,17 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
                 {item.description}
               </p>
             )}
+            {item.link && ( // Render link
+              <a
+                href={item.link.startsWith('http') ? item.link : `https://${item.link}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-900 hover:underline mt-1 block"
+              >
+                <ExternalLink className="inline-block w-3 h-3 mr-1" />
+                {item.link.replace(/^https?:\/\//, '')}
+              </a>
+            )}
           </div>
         ))}
       </div>
