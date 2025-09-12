@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import Footer from '@/components/Footer';
+import { Plus } from 'lucide-react';
 import { Minimize2 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -129,12 +130,22 @@ export default function CreateResumeBuilder() {
     const updatedSections = [...(resumeData.customSections || []), newSection];
     updateSectionData('customSections', updatedSections);
     setActiveSection(newSection.id);
+    setSectionOrder(prevOrder => [...prevOrder, newSection.id]); // Add new custom section to order
+
+    // Auto-scroll to the new section
+    setTimeout(() => {
+      const element = document.getElementById(newSection.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleRemoveCustomSection = (id: string) => {
     const updatedSections = (resumeData.customSections || []).filter((section: any) => section.id !== id);
     updateSectionData('customSections', updatedSections);
     
+    setSectionOrder(prevOrder => prevOrder.filter(sectionId => sectionId !== id)); // Remove from order
     // If the removed section was active, switch to the first available section
     if (activeSection === id) {
       setActiveSection(sectionOrder[0]);
@@ -165,7 +176,7 @@ export default function CreateResumeBuilder() {
         }}
       />
 
-      <div className="pt-16"> {/* Offset for sticky Navigation height (4rem) */}
+      <div className="pt-16"> {/* Offset for sticky Navigation height */}
         <ResumeBuilderSidebar
           activeSection={activeSection}
           onSectionChange={setActiveSection}
@@ -179,8 +190,6 @@ export default function CreateResumeBuilder() {
           expandedSection={expandedSidebarSection}
           onExpandedChange={setExpandedSidebarSection}
           updateResumeData={updateSectionData}
-          onAddCustomSection={handleAddCustomSection}
-          onRemoveCustomSection={handleRemoveCustomSection}
         />
 
         {/* Main Content */}
@@ -206,6 +215,16 @@ export default function CreateResumeBuilder() {
                       />
                     ))}
                     {provided.placeholder}
+                    {/* Add Custom Section Button here */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAddCustomSection}
+                      className="w-full mt-6"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Custom Section
+                    </Button>
                   </div>
                 )}
               </Droppable>
