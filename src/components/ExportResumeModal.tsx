@@ -19,11 +19,9 @@ import {
   X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
-import { Packer } from 'docx';
-import { Document, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { exportResume } from '@/templates/exportUtils';
+import { formatResumeData } from '@/templates/resumeDataUtils';
 
 interface ExportResumeModalProps {
   open: boolean;
@@ -343,212 +341,6 @@ export default function ExportResumeModal({
     );
   };
 
-  const generatePdf = async () => {
-    if (!resumePreviewRef.current) {
-      throw new Error('Resume preview element not found');
-    }
-    
-    try {
-      // Show the preview element
-      resumePreviewRef.current.style.display = 'block';
-      
-      // Wait for the next tick to ensure the element is rendered
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Create PDF with A4 dimensions (210mm x 297mm)
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-      
-      // Convert the preview element to canvas
-      const canvas = await html2canvas(resumePreviewRef.current, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        logging: true,
-        backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: resumePreviewRef.current.offsetWidth,
-        windowHeight: resumePreviewRef.current.offsetHeight,
-      });
-      
-      // Calculate dimensions to fit A4
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Add first page
-      pdf.addImage(canvas, 'PNG', 0, 0, imgWidth, imgHeight);
-      
-      // Add additional pages if content is taller than one page
-      let heightLeft = imgHeight;
-      while (heightLeft > 0) {
-        const position = heightLeft - pageHeight;
-        if (position > 0) {
-          pdf.addPage();
-          pdf.addImage(canvas, 'PNG', 0, -position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        } else {
-          break;
-        }
-      }
-      
-      // Hide the preview element
-      resumePreviewRef.current.style.display = 'none';
-      
-      return pdf;
-    } catch (error) {
-      console.error('PDF generation failed:', error);
-      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const generateDocx = async () => {
-    if (!resumeData) {
-      throw new Error('No resume data available');
-    }
-
-    const { personal, summary, skills, experience, education, projects, certifications, customSections } = resumeData;
-    
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            // Name
-            new Paragraph({
-              text: personal?.name || 'Resume',
-              heading: HeadingLevel.HEADING_1,
-              spacing: { after: 200 },
-            }),
-            
-            // Contact Information
-            ...(personal ? [
-              new Paragraph({
-                children: [
-                  ...(personal.email ? [new TextRun({ text: personal.email, break: 1 })] : []),
-                  ...(personal.phone ? [new TextRun({ text: personal.phone, break: 1 })] : []),
-                  ...(personal.location ? [new TextRun({ text: personal.location, break: 1 })] : []),
-                  ...(personal.linkedin ? [new TextRun({ text: personal.linkedin, break: 1 })] : []),
-                  ...(personal.website ? [new TextRun({ text: personal.website, break: 1 })] : []),
-                ],
-                spacing: { after: 400 },
-              })
-            ] : []),
-
-            // Summary
-            ...(summary ? [
-              new Paragraph({
-                text: 'Professional Summary',
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 200, after: 200 },
-              }),
-              new Paragraph({
-                text: summary,
-                spacing: { after: 400 },
-              })
-            ] : []),
-
-            // Skills
-            ...(Array.isArray(skills) && skills.filter((c: any) => Array.isArray(c.items) && c.items.length > 0).length > 0 ? [
-              new Paragraph({
-                text: 'Skills',
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 200, after: 200 },
-              }),
-              ...skills
-                .filter((c: any) => Array.isArray(c.items) && c.items.length > 0)
-                .map((category: any) => new Paragraph({
-                  text: `${category.name}: ${category.items.join(', ')}`,
-                  spacing: { after: 100 },
-                }))
-            ] : []),
-
-            // Experience
-            ...(experience?.length > 0 ? [
-              new Paragraph({
-                text: 'Experience',
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 200, after: 200 },
-              }),
-              ...experience.flatMap((exp: any) => [
-                new Paragraph({
-                  text: exp.title || 'Position',
-                  heading: HeadingLevel.HEADING_3,
-                  spacing: { before: 100 },
-                }),
-                new Paragraph({
-                  text: [
-                    exp.company || 'Company',
-                    exp.location ? ` | ${exp.location}` : '',
-                    (exp.duration || exp.startDate || exp.endDate) ? ` | ${exp.duration || `${exp.startDate || ''}${exp.startDate || exp.endDate ? ' - ' : ''}${exp.endDate || 'Present'}`}` : '',
-                  ].filter(Boolean).join(''),
-                  spacing: { after: 100 },
-                }),
-                ...(exp.bullets?.map((bullet: string) => 
-                  new Paragraph({
-                    text: bullet,
-                    bullet: { level: 0 },
-                    spacing: { after: 50 },
-                  })
-                ) || [])
-              ])
-            ] : []),
-          ],
-        },
-      ],
-    });
-    
-    // Add custom sections
-    if (Array.isArray(customSections) && customSections.length > 0) {
-      customSections.forEach((section: any) => {
-        doc.addSection({
-          properties: {},
-          children: [
-            new Paragraph({
-              text: (section.title || '').toUpperCase(),
-              heading: HeadingLevel.HEADING_2,
-              spacing: { before: 200, after: 200 },
-            }),
-            ...(section.description ? [
-              new Paragraph({
-                text: section.description,
-                spacing: { after: 400 },
-              })
-            ] : []),
-            ...(Array.isArray(section.items) && section.items.length > 0 ? [
-              ...section.items.flatMap((item: any) => [
-                new Paragraph({
-                  text: item.title,
-                  heading: HeadingLevel.HEADING_3,
-                  spacing: { before: 100 },
-                }),
-                new Paragraph({
-                  text: [
-                    item.subtitle,
-                    item.date,
-                  ].filter(Boolean).join(' | '),
-                  spacing: { after: 100 },
-                }),
-                ...(item.description ? [
-                  new Paragraph({
-                    text: item.description,
-                    spacing: { after: 400 },
-                  })
-                ] : []),
-              ])
-            ] : []),
-          ],
-        });
-      });
-    }
-    
-    return doc;
-  };
-
   const generateTextContent = () => {
     if (!resumeData) return 'No resume data available';
     
@@ -692,33 +484,25 @@ export default function ExportResumeModal({
       setExportComplete(true);
       
       const name = resumeData?.personal?.name?.replace(/\s+/g, '_') || 'resume';
-      const filename = `${name}_${new Date().toISOString().split('T')[0]}.${format}`;
-      
+      const baseName = `${name}_${new Date().toISOString().split('T')[0]}`;
+       
       switch (format) {
         case 'pdf':
-          const pdf = await generatePdf();
-          pdf.save(filename);
+          await exportResume(formatResumeData(resumeData), 'pdf', baseName);
           break;
           
         case 'docx':
-          const doc = await generateDocx();
-          const buffer = await Packer.toBuffer(doc);
-          const docxBlob = new Blob([buffer], { 
-            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-          });
-          saveAs(docxBlob, filename);
+          await exportResume(formatResumeData(resumeData), 'word', baseName);
           break;
           
         case 'json':
           const jsonContent = JSON.stringify(resumeData, null, 2);
           const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
-          saveAs(jsonBlob, filename);
+          saveAs(jsonBlob, `${baseName}.json`);
           break;
           
         case 'txt':
-          const textContent = generateTextContent();
-          const textBlob = new Blob([textContent], { type: 'text/plain' });
-          saveAs(textBlob, filename);
+          await exportResume(formatResumeData(resumeData), 'text', baseName);
           break;
           
         default:
@@ -727,7 +511,7 @@ export default function ExportResumeModal({
       
       toast({
         title: "Export successful",
-        description: `Your resume has been exported as ${filename}`,
+        description: `Your resume has been exported as ${baseName}.${format}`,
       });
       
     } catch (error) {

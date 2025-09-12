@@ -106,128 +106,106 @@ export const exportToPDF = async (data: FormattedResumeData, fileName: string = 
   }
 };
 
-// Word Export using html-docx-js
+// Word Export using docx (browser-safe)
 export const exportToWord = async (data: FormattedResumeData, fileName: string = 'resume'): Promise<void> => {
   try {
-    // Import the library dynamically
-    const htmlDocx = (await import('html-docx-js/dist/html-docx')).default;
-    
-    // Create HTML content
-    let htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-          }
-          h1 { 
-            color: #2c3e50; 
-            margin-bottom: 10px; 
-            font-size: 24pt;
-          }
-          h2 { 
-            color: #34495e; 
-            margin: 20px 0 10px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 5px;
-            font-size: 18pt;
-          }
-          .section { 
-            margin-bottom: 20px; 
-          }
-          .job-title { 
-            font-weight: bold;
-            font-size: 12pt;
-            margin-top: 10px;
-          }
-          .company { 
-            font-style: italic;
-            font-size: 11pt;
-          }
-          .date { 
-            color: #7f8c8d;
-            font-size: 10pt;
-            margin-bottom: 5px;
-          }
-          ul { 
-            margin: 5px 0; 
-            padding-left: 20px;
-          }
-          li {
-            margin-bottom: 3px;
-          }
-          p {
-            margin: 5px 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${escapeHtml(data.personalInfo.firstName)} ${escapeHtml(data.personalInfo.lastName)}</h1>
-          <div class="contact-info">
-            ${data.personalInfo.email ? `<span>${escapeHtml(data.personalInfo.email)}</span> | ` : ''}
-            ${escapeHtml(data.personalInfo.phone || '')}
-            ${data.personalInfo.location ? ` | ${escapeHtml(data.personalInfo.location)}` : ''}
-          </div>
-        </div>`;
+    const { Document, Paragraph, TextRun, Packer, HeadingLevel } = await import('docx');
 
-    // Add Summary
-    if (data.summary) {
-      htmlContent += `
-        <div class="section">
-          <h2>SUMMARY</h2>
-          <p>${escapeHtml(data.summary)}</p>
-        </div>`;
-    }
+    const sections: any[] = [
+      {
+        properties: {
+          page: {
+            margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 },
+          },
+        },
+        children: [
+          new Paragraph({
+            text: `${data.personalInfo.firstName} ${data.personalInfo.lastName}`,
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: data.personalInfo.email || '' }),
+              ...(data.personalInfo.phone ? [new TextRun({ text: ' | ' }), new TextRun({ text: data.personalInfo.phone })] : []),
+              ...(data.personalInfo.location ? [new TextRun({ text: ' | ' }), new TextRun({ text: data.personalInfo.location })] : []),
+              ...(data.personalInfo.website ? [new TextRun({ text: ' | ' }), new TextRun({ text: data.personalInfo.website })] : []),
+            ],
+          }),
+          ...(data.summary
+            ? [
+                new Paragraph({ text: 'SUMMARY', heading: HeadingLevel.HEADING_2 }),
+                new Paragraph({ text: data.summary }),
+              ]
+            : []),
+          ...(data.experience?.length
+            ? [
+                new Paragraph({ text: 'EXPERIENCE', heading: HeadingLevel.HEADING_2 }),
+                ...data.experience.flatMap((exp) => [
+                  new Paragraph({ text: exp.title, heading: HeadingLevel.HEADING_3 }),
+                  new Paragraph({
+                    text: `${exp.company}${exp.location ? `, ${exp.location}` : ''} | ${exp.startDate} - ${exp.endDate || 'Present'}`,
+                  }),
+                  ...(exp.description ? [new Paragraph({ text: exp.description })] : []),
+                  ...(exp.highlights?.map((h) => new Paragraph({ text: `• ${h}` })) || []),
+                ]),
+              ]
+            : []),
+          ...(data.education?.length
+            ? [
+                new Paragraph({ text: 'EDUCATION', heading: HeadingLevel.HEADING_2 }),
+                ...data.education.flatMap((edu) => [
+                  new Paragraph({ text: edu.degree, heading: HeadingLevel.HEADING_3 }),
+                  new Paragraph({ text: `${edu.school}${edu.location ? `, ${edu.location}` : ''}` }),
+                  new Paragraph({
+                    text: `${edu.startDate} - ${edu.endDate || 'Present'}${edu.gpa ? ` | GPA: ${edu.gpa}` : ''}`,
+                  }),
+                ]),
+              ]
+            : []),
+          ...(Object.keys(data.skills || {}).length
+            ? [
+                new Paragraph({ text: 'SKILLS', heading: HeadingLevel.HEADING_2 }),
+                ...Object.entries(data.skills).map(([k, v]) => new Paragraph({ text: `${k}: ${(v || []).join(', ')}` })),
+              ]
+            : []),
+          ...(data.projects?.length
+            ? [
+                new Paragraph({ text: 'PROJECTS', heading: HeadingLevel.HEADING_2 }),
+                ...data.projects.flatMap((p) => [
+                  new Paragraph({ text: p.name, heading: HeadingLevel.HEADING_3 }),
+                  ...(p.description ? [new Paragraph({ text: p.description })] : []),
+                  ...(p.technologies?.length ? [new Paragraph({ text: `Technologies: ${p.technologies.join(', ')}` })] : []),
+                ]),
+              ]
+            : []),
+          ...(data.certifications?.length
+            ? [
+                new Paragraph({ text: 'CERTIFICATIONS', heading: HeadingLevel.HEADING_2 }),
+                ...data.certifications.map((c) =>
+                  new Paragraph({ text: `${c.name}${c.issuer ? `, ${c.issuer}` : ''}${c.date ? ` (${c.date})` : ''}` })
+                ),
+              ]
+            : []),
+          ...(data.customSections?.length
+            ? data.customSections.flatMap((section) => [
+                new Paragraph({ text: section.title.toUpperCase(), heading: HeadingLevel.HEADING_2 }),
+                ...(Array.isArray(section.content)
+                  ? section.content.map((t) => new Paragraph({ text: t }))
+                  : [new Paragraph({ text: section.content as string })]),
+              ])
+            : []),
+        ],
+      },
+    ];
 
-    // Add Experience
-    if (data.experience?.length > 0) {
-      htmlContent += `<div class="section"><h2>EXPERIENCE</h2>`;
-      data.experience.forEach(exp => {
-        htmlContent += `
-          <div class="job">
-            <div class="job-title">${escapeHtml(exp.title || '')}</div>
-            <div class="company">${escapeHtml(exp.company || '')}${exp.location ? `, ${escapeHtml(exp.location)}` : ''}</div>
-            <div class="date">${escapeHtml(exp.startDate || '')} - ${escapeHtml(exp.endDate || 'Present')}</div>
-            ${exp.description ? `<p>${escapeHtml(exp.description)}</p>` : ''}
-            ${exp.highlights?.length ? `
-              <ul>
-                ${exp.highlights.map(h => h ? `<li>${escapeHtml(h)}</li>` : '').join('')}
-              </ul>
-            ` : ''}
-          </div>`;
-      });
-      htmlContent += `</div>`;
-    }
-
-    // Close HTML
-    htmlContent += `</body></html>`;
-
-    // Convert HTML to DOCX and trigger download
-    const converted = htmlDocx.asBlob(htmlContent);
-    saveAs(converted, `${fileName}.docx`);
-
+    const doc = new Document({ sections });
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${fileName}.docx`);
   } catch (error) {
     console.error('Error generating Word document:', error);
     throw error;
   }
 };
-
-// Helper function to escape HTML special characters
-function escapeHtml(unsafe: string): string {
-  if (!unsafe) return '';
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 // Text Export
 export const exportToText = async (data: FormattedResumeData, fileName: string = 'resume'): Promise<void> => {
