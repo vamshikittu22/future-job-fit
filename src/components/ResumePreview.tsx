@@ -17,9 +17,6 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
 
   return (
     <div className="mb-8">
-      <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
-        {section.title.toUpperCase()}
-      </h3>
       {section.description && (
         <p className="text-gray-800 mb-4">{section.description}</p>
       )}
@@ -47,15 +44,15 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
                 {item.description}
               </p>
             )}
-            {item.link && ( // Render link
-              <a
-                href={item.link.startsWith('http') ? item.link : `https://${item.link}`}
-                target="_blank"
+            {item.link && (
+              <a 
+                href={item.link} 
+                target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm text-blue-900 hover:underline mt-1 block"
+                className="text-blue-600 hover:underline text-sm mt-1 inline-flex items-center"
               >
-                <ExternalLink className="inline-block w-3 h-3 mr-1" />
-                {item.link.replace(/^https?:\/\//, '')}
+                {item.link}
+                <ExternalLink className="ml-1 h-3 w-3" />
               </a>
             )}
           </div>
@@ -71,6 +68,43 @@ export default function ResumePreview({
   currentPage,
   sectionOrder 
 }: ResumePreviewProps) {
+  const getTemplateStyles = (name: string) => {
+    switch ((name || 'minimal').toLowerCase()) {
+      case 'colorful':
+        return {
+          sectionTitle: 'text-lg font-bold border-b-2 border-indigo-600 pb-1 mb-3',
+          link: 'text-indigo-700 hover:underline',
+          accentText: 'text-indigo-700',
+        };
+      case 'experienced':
+        return {
+          sectionTitle: 'text-lg font-bold border-b-2 border-gray-600 pb-1 mb-3',
+          link: 'text-gray-800 hover:underline',
+          accentText: 'text-gray-800',
+        };
+      case 'student':
+        return {
+          sectionTitle: 'text-lg font-bold border-b-2 border-emerald-600 pb-1 mb-3',
+          link: 'text-emerald-700 hover:underline',
+          accentText: 'text-emerald-700',
+        };
+      case 'creative':
+        return {
+          sectionTitle: 'text-lg font-bold border-b-2 border-pink-600 pb-1 mb-3',
+          link: 'text-pink-700 hover:underline',
+          accentText: 'text-pink-700',
+        };
+      case 'minimal':
+      default:
+        return {
+          sectionTitle: 'text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3',
+          link: 'text-blue-900 hover:underline',
+          accentText: 'text-gray-900',
+        };
+    }
+  };
+  const styles = getTemplateStyles(template);
+
   const renderPersonalInfo = () => {
     const personalInfo = resumeData.personal || {};
     
@@ -86,7 +120,7 @@ export default function ResumePreview({
         )}
         <div className="flex flex-wrap justify-center gap-4 mt-2 text-gray-700">
           {personalInfo.email && (
-            <a href={`mailto:${personalInfo.email}`} className="text-blue-900 hover:underline">
+            <a href={`mailto:${personalInfo.email}`} className={styles.link}>
               {personalInfo.email}
             </a>
           )}
@@ -101,7 +135,7 @@ export default function ResumePreview({
               href={personalInfo.website.startsWith('http') ? personalInfo.website : `https://${personalInfo.website}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-900 hover:underline"
+              className={styles.link}
             >
               {personalInfo.website.replace(/^https?:\/\//, '')}
             </a>
@@ -112,7 +146,7 @@ export default function ResumePreview({
               href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-900 hover:underline"
+              className={styles.link}
             >
               {link.label}
             </a>
@@ -129,7 +163,7 @@ export default function ResumePreview({
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           SUMMARY
         </h3>
         <p className="whitespace-pre-line text-gray-800">
@@ -165,7 +199,7 @@ export default function ResumePreview({
 
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           TECHNICAL SKILLS
         </h3>
         <div className="space-y-2">
@@ -188,7 +222,7 @@ export default function ResumePreview({
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           PROFESSIONAL EXPERIENCE
         </h3>
         <div className="space-y-6">
@@ -238,7 +272,7 @@ export default function ResumePreview({
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           EDUCATION
         </h3>
         <div className="space-y-4">
@@ -279,7 +313,7 @@ export default function ResumePreview({
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           PROJECTS
         </h3>
         <div className="space-y-6">
@@ -300,7 +334,7 @@ export default function ResumePreview({
                       href={project.link.startsWith('http') ? project.link : `https://${project.link}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-900 hover:underline whitespace-nowrap"
+                      className={`text-sm ${styles.link} whitespace-nowrap`}
                     >
                       View Project
                     </a>
@@ -336,7 +370,7 @@ export default function ResumePreview({
     // Support legacy string[] and new object format { id, title, date }
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           ACHIEVEMENTS
         </h3>
         <ul className="space-y-2 list-disc pl-5">
@@ -364,7 +398,7 @@ export default function ResumePreview({
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3">
+        <h3 className={styles.sectionTitle}>
           CERTIFICATIONS
         </h3>
         <div className="space-y-3">
@@ -380,7 +414,7 @@ export default function ResumePreview({
                   href={cert.link.startsWith('http') ? cert.link : `https://${cert.link}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-900 hover:underline text-xs"
+                  className={`${styles.link} text-xs`}
                 >
                   View Credential
                 </a>
@@ -419,7 +453,10 @@ export default function ResumePreview({
 
     // Then render custom sections
     const customSections = resumeData.customSections?.map((section: CustomSectionData) => (
-      <CustomSectionPreview key={section.id} section={section} />
+      <div key={section.id}>
+        <h3 className={styles.sectionTitle}>{section.title.toUpperCase()}</h3>
+        <CustomSectionPreview section={section} />
+      </div>
     )) || [];
 
     return [...regularSections, ...customSections];

@@ -229,17 +229,26 @@ export const BaseResumeTemplate: React.FC<BaseResumeTemplateProps> = ({ data, cl
 
         {/* Custom Sections */}
         {customSections.map((section, i) => (
-          <Section key={i} title={section.title}>
+          <div key={i} className="mb-6">
+            {section.title && (
+              <h3 className="text-lg font-semibold mb-2">
+                {section.title}
+              </h3>
+            )}
             {Array.isArray(section.content) ? (
               <ul className="list-disc pl-5 space-y-1">
-                {section.content.map((item, j) => (
-                  <li key={j} className="text-gray-800">{item}</li>
+                {section.content.map((item, idx) => (
+                  <li key={idx} className="text-sm">
+                    {item}
+                  </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-800">{section.content}</p>
+              <p className="text-sm whitespace-pre-line">
+                {section.content}
+              </p>
             )}
-          </Section>
+          </div>
         ))}
       </main>
     </div>

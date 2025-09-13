@@ -485,26 +485,37 @@ export default function ExportResumeModal({
       
       const name = resumeData?.personal?.name?.replace(/\s+/g, '_') || 'resume';
       const baseName = `${name}_${new Date().toISOString().split('T')[0]}`;
-       
+      
+      console.log('=== EXPORT DEBUG ===');
+      console.log('1. Raw resume data from context:', JSON.stringify(resumeData, null, 2));
+      
+      // Create a deep copy to avoid modifying the original
+      const exportData = JSON.parse(JSON.stringify(resumeData));
+      
+      // Log the data being passed to the export function
+      console.log('2. Data being passed to export function:', JSON.stringify(exportData, null, 2));
+
       switch (format) {
-        case 'pdf':
-          await exportResume(formatResumeData(resumeData), 'pdf', baseName);
+        case 'pdf': {
+          console.log('3. Exporting as PDF with template:', template);
+          await exportResume(exportData, 'pdf', baseName, { template });
           break;
-          
-        case 'docx':
-          await exportResume(formatResumeData(resumeData), 'word', baseName);
+        }
+        case 'docx': {
+          console.log('3. Exporting as Word');
+          await exportResume(exportData, 'word', baseName, { template });
           break;
-          
-        case 'json':
-          const jsonContent = JSON.stringify(resumeData, null, 2);
+        }
+        case 'json': {
+          const jsonContent = JSON.stringify(exportData, null, 2);
           const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
           saveAs(jsonBlob, `${baseName}.json`);
           break;
-          
-        case 'txt':
-          await exportResume(formatResumeData(resumeData), 'text', baseName);
+        }
+        case 'txt': {
+          await exportResume(formatResumeData(exportData), 'text', baseName);
           break;
-          
+        }
         default:
           throw new Error(`Unsupported export format: ${format}`);
       }
