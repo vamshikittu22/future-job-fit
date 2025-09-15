@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container mx-auto px-6">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            Built with <span className="text-red-400">❤️</span> using GPT & Lovable
+            Built with <span className="text-red-400">❤️</span> using Next.js and Tailwind CSS.
           </p>
         </div>
       </div>
