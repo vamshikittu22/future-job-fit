@@ -1,24 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DragDropContext, Droppable } from '@hello-pangea/dnd';
-import { Button } from '@/components/ui/button';
+import AppNavigation from "@/components/AppNavigation";
+import { useResume } from '@/contexts/ResumeContext';
 import ResumeSection from '@/components/ResumeSection';
-import ResumeBuilderSidebar from '@/components/ResumeBuilderSidebar';
 import ResumePreview from '@/components/ResumePreview';
-import { initialSections, initialResumeData } from '@/lib/initialData';
-import AIEnhanceModal from '@/components/AIEnhanceModal';
-import ExportResumeModal from '@/components/ExportResumeModal';
+import ResumeBuilderSidebar from '@/components/ResumeBuilderSidebar';
 import ImportResumeModal from '@/components/ImportResumeModal';
+import ExportResumeModal from '@/components/ExportResumeModal';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { Toaster } from '@/components/ui/toaster';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import Footer from '@/components/Footer';
-import { Plus } from 'lucide-react';
-import { Minimize2 } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { PanelLeft, Menu } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Plus, RotateCcw, RotateCw, Sparkles, Minimize2 } from 'lucide-react';
+import ClearFormDialog from "@/components/ClearFormDialog";
 import { cn } from "@/lib/utils";
+import { initialSections, initialResumeData } from '@/lib/initialData';
 
 interface CustomSectionData {
   id: string;
@@ -34,7 +33,19 @@ interface CustomSectionData {
 }
 
 export default function CreateResumeBuilder() {
-  const [resumeData, setResumeData] = useLocalStorage("resumeData", initialResumeData);
+  // Use only the ResumeContext for resume data - remove duplicate useLocalStorage
+  const {
+    resumeData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    updateSection,
+    saveSnapshot,
+    restoreSnapshot,
+    getSavedVersions,
+    clearForm
+  } = useResume();
   const [sectionOrder, setSectionOrder] = useState<string[]>([
     ...initialSections,
     ...(resumeData.customSections?.map((section: any) => section.id) || [])
@@ -52,62 +63,24 @@ export default function CreateResumeBuilder() {
   const [customSections, setCustomSections] = useState<CustomSectionData[]>([]);
   const [editingCustomSection, setEditingCustomSection] = useState<CustomSectionData | null>(null);
   const { toast } = useToast();
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-
-  // Load persisted data
-  useEffect(() => {
-    const savedData = localStorage.getItem('resumeData');
-    const savedOrder = localStorage.getItem('sectionOrder');
-    if (savedData) setResumeData(JSON.parse(savedData));
-    if (savedOrder) {
-      try {
-        const loaded = JSON.parse(savedOrder);
-        setSectionOrder(loaded);
-      } catch {
-        setSectionOrder(initialSections);
-      }
-    } else {
-      setSectionOrder(initialSections);
-    }
-  }, []);
-
-  // Initialize with default custom sections if none exist
-  useEffect(() => {
-    if (!resumeData.customSections) {
-      setResumeData({
-        ...resumeData,
-        customSections: [],
-      });
-    }
-  }, [resumeData, setResumeData]);
-
-  useEffect(() => {
-    setSectionOrder([
-      ...initialSections,
-      ...(resumeData.customSections?.map((section: any) => section.id) || [])
-    ]);
-  }, [resumeData.customSections]);
-
   const handleSave = useCallback(() => {
-    localStorage.setItem('resumeData', JSON.stringify(resumeData));
     localStorage.setItem('sectionOrder', JSON.stringify(sectionOrder));
     toast({ title: 'Saved!', description: 'Your resume has been saved successfully.' });
-  }, [resumeData, sectionOrder, toast]);
+  }, [sectionOrder, toast]);
 
   const updateSectionData = (section: string, data: any) => {
-    setResumeData((prev: any) => ({
-      ...prev,
-      [section]: data
-    }));
+    updateSection(section as keyof typeof resumeData, data);
   };
+
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const items = Array.from(sectionOrder);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    
+
     setSectionOrder(items);
   };
 
@@ -126,7 +99,7 @@ export default function CreateResumeBuilder() {
         }
       ]
     };
-    
+
     const updatedSections = [...(resumeData.customSections || []), newSection];
     updateSectionData('customSections', updatedSections);
     setActiveSection(newSection.id);
@@ -144,7 +117,7 @@ export default function CreateResumeBuilder() {
   const handleRemoveCustomSection = (id: string) => {
     const updatedSections = (resumeData.customSections || []).filter((section: any) => section.id !== id);
     updateSectionData('customSections', updatedSections);
-    
+
     setSectionOrder(prevOrder => prevOrder.filter(sectionId => sectionId !== id)); // Remove from order
     // If the removed section was active, switch to the first available section
     if (activeSection === id) {
@@ -157,14 +130,52 @@ export default function CreateResumeBuilder() {
     setIsSidebarCollapsed(!isDesktop);
   }, [isDesktop]);
 
-  const toggleTemplateCarousel = () => {
-    setShowTemplateCarousel(!showTemplateCarousel);
+  const [showClearFormDialog, setShowClearFormDialog] = useState(false);
+
+  const handleClearForm = () => {
+    setShowClearFormDialog(true);
+  };
+
+  const handleSaveAndClear = () => {
+    // Save snapshot before clearing
+    saveSnapshot('Resume Backup Before Clear');
+    clearForm();
+    setShowClearFormDialog(false);
+    toast({
+      title: "Form Cleared",
+      description: "Your resume has been cleared and a backup was saved.",
+    });
+  };
+
+  const handleClearWithoutSaving = () => {
+    clearForm();
+    setShowClearFormDialog(false);
+    toast({
+      title: "Form Cleared",
+      description: "Your resume has been cleared without saving a backup.",
+    });
+  };
+
+  const handleRestoreVersion = (version: any) => {
+    const success = restoreSnapshot(version.id);
+    if (success) {
+      toast({
+        title: "Version Restored",
+        description: `Restored: ${version.name}`,
+      });
+    } else {
+      toast({
+        title: "Restore Failed",
+        description: "Could not restore the selected version.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Existing title bar with integrated tools */}
-      <Navigation
+      <AppNavigation
         builderTools={{
           onSave: handleSave,
           onPreview: () => setShowPreview(!showPreview),
@@ -172,7 +183,27 @@ export default function CreateResumeBuilder() {
           onImport: () => setShowImportModal(true),
           onEnhanceAI: () => setShowAIModal(true),
           onToggleATS: () => setExpandedSidebarSection(prev => (prev === 'ats' ? null : 'ats')),
+          onClearForm: handleClearForm,
+          onRestoreVersion: handleRestoreVersion,
+          savedVersions: getSavedVersions(),
           showPreview,
+          // Add undo/redo functionality
+          onUndo: () => {
+            undo();
+            toast({
+              title: "Undo",
+              description: canUndo ? "Action undone!" : "No actions to undo",
+            });
+          },
+          onRedo: () => {
+            redo();
+            toast({
+              title: "Redo",
+              description: canRedo ? "Action redone!" : "No actions to redo",
+            });
+          },
+          canUndo,
+          canRedo,
         }}
       />
 
@@ -190,6 +221,10 @@ export default function CreateResumeBuilder() {
           expandedSection={expandedSidebarSection}
           onExpandedChange={setExpandedSidebarSection}
           updateResumeData={updateSectionData}
+          customSections={customSections}
+          onAddCustomSection={handleAddCustomSection}
+          onEditCustomSection={(section) => setEditingCustomSection(section)}
+          onRemoveCustomSection={handleRemoveCustomSection}
         />
 
         {/* Main Content */}
@@ -263,29 +298,70 @@ export default function CreateResumeBuilder() {
                 </Button>
               ))}
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setShowTemplateCarousel(false)}
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Test Button to populate history */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Add a test action to populate history
+                  updateSection('summary', (resumeData.summary || '') + ' Test action for undo/redo.');
+                  toast({
+                    title: "Test Action Added",
+                    description: "Try clicking Undo to reverse this action!",
+                  });
+                }}
+                className="flex items-center gap-2"
+              >
+                <span className="font-mono text-xs">🧪 Test Undo/Redo</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setShowTemplateCarousel(false)}
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Modals, Toaster, Footer */}
-      <ImportResumeModal open={showImportModal} onOpenChange={setShowImportModal} />
+      <ImportResumeModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        onImport={(data) => {
+          // Handle import logic here
+          console.log('Import data:', data);
+        }}
+      />
       <ExportResumeModal
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
         resumeData={resumeData}
-        selectedTemplate={selectedTemplate}
+        template={selectedTemplate}
       />
-      <AIEnhanceModal open={showAIModal} onOpenChange={setShowAIModal} />
+      <AIEnhanceModal
+        open={showAIModal}
+        onOpenChange={setShowAIModal}
+        resumeData={resumeData}
+        onEnhance={(enhancedData) => {
+          // Handle enhanced data
+          console.log('Enhanced data:', enhancedData);
+        }}
+      />
       <Toaster />
       <Footer />
+
+      {/* Clear Form Dialog */}
+      <ClearFormDialog
+        open={showClearFormDialog}
+        onOpenChange={setShowClearFormDialog}
+        onSaveAndClear={handleSaveAndClear}
+        onClearWithoutSaving={handleClearWithoutSaving}
+      />
     </div>
   );
 }

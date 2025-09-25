@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { FileText, Download, Upload, Save, Eye, Plus } from "lucide-react";
-import Navigation from "@/components/Navigation";
+import { FileText, Download, Upload, Save, Eye, Plus, RotateCcw, RotateCw, Sparkles } from "lucide-react";
+import AppNavigation from "@/components/AppNavigation";
 import Footer from "@/components/Footer";
 import ResumeBuilderSidebar from "@/components/ResumeBuilderSidebar";
 import ResumeSection from "@/components/ResumeSection";
@@ -12,48 +12,15 @@ import TemplateCarousel from "@/components/TemplateCarousel";
 import ResumePreview from "@/components/ResumePreview";
 import ImportResumeModal from "@/components/ImportResumeModal";
 import ExportResumeModal from "@/components/ExportResumeModal";
+import { useResume } from "@/contexts/ResumeContext";
 import { useToast } from "@/hooks/use-toast";
 
-interface ResumeData {
-  personalInfo: {
-    name: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin: string;
-    website: string;
-  };
-  summary: string;
-  skills: string[];
-  experience: Array<{
-    id: string;
-    title: string;
-    company: string;
-    location: string;
-    duration: string;
-    bullets: string[];
-  }>;
-  education: Array<{
-    id: string;
-    degree: string;
-    school: string;
-    year: string;
-    gpa?: string;
-  }>;
-  projects: Array<{
-    id: string;
-    name: string;
-    tech: string;
-    duration: string;
-    bullets: string[];
-  }>;
-  achievements: string[];
-  certifications: string[];
-}
+// Import ResumeData type from ResumeContext
+import { ResumeData } from '@/contexts/ResumeContext';
 
 const initialResumeData: ResumeData = {
-  personalInfo: {
-    name: "",
+  personal: {
+    fullName: "",
     email: "",
     phone: "",
     location: "",
@@ -66,11 +33,12 @@ const initialResumeData: ResumeData = {
   education: [],
   projects: [],
   achievements: [],
-  certifications: []
+  certifications: [],
+  languages: []
 };
 
 export default function ResumeBuilder() {
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+  const { resumeData, updateSection, undo, redo, canUndo, canRedo } = useResume();
   const [activeSection, setActiveSection] = useState("personal");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -93,7 +61,7 @@ export default function ResumeBuilder() {
   // Auto-save functionality
   useEffect(() => {
     const interval = setInterval(() => {
-      localStorage.setItem('resumeBuilder_data', JSON.stringify(resumeData));
+      localStorage.setItem('resume_builder_draft', JSON.stringify(resumeData));
       localStorage.setItem('resumeBuilder_template', selectedTemplate);
       localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
     }, 30000); // Auto-save every 30 seconds
@@ -103,12 +71,20 @@ export default function ResumeBuilder() {
 
   // Load saved data on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('resumeBuilder_data');
+    const savedData = localStorage.getItem('resume_builder_draft');
     const savedTemplate = localStorage.getItem('resumeBuilder_template');
     const savedOrder = localStorage.getItem('resumeBuilder_sectionOrder');
     
     if (savedData) {
-      setResumeData(JSON.parse(savedData));
+      try {
+        const parsedData = JSON.parse(savedData);
+        // Update each section individually
+        Object.entries(parsedData).forEach(([key, value]) => {
+          updateSection(key as keyof ResumeData, value);
+        });
+      } catch (error) {
+        console.error('Failed to parse saved resume data:', error);
+      }
     }
     if (savedTemplate) {
       setSelectedTemplate(savedTemplate);
@@ -116,7 +92,7 @@ export default function ResumeBuilder() {
     if (savedOrder) {
       setSectionOrder(JSON.parse(savedOrder));
     }
-  }, []);
+  }, [updateSection]);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -133,14 +109,11 @@ export default function ResumeBuilder() {
   };
 
   const updateResumeData = (section: keyof ResumeData, data: any) => {
-    setResumeData(prev => ({
-      ...prev,
-      [section]: data
-    }));
+    updateSection(section, data);
   };
 
   const handleSave = () => {
-    localStorage.setItem('resumeBuilder_data', JSON.stringify(resumeData));
+    localStorage.setItem('resume_builder_draft', JSON.stringify(resumeData));
     localStorage.setItem('resumeBuilder_template', selectedTemplate);
     localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
     toast({
@@ -156,178 +129,153 @@ export default function ResumeBuilder() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      {/* Header with Actions */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <FileText className="w-6 h-6 text-primary" />
-              <h1 className="text-2xl font-bold">Resume Builder</h1>
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
+      <AppNavigation />
+      <main className="container mx-auto px-4 py-8">
+        {/* Header with Actions */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <FileText className="w-6 h-6 text-primary" />
+                <h1 className="text-2xl font-bold">Resume Builder</h1>
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowImportModal(true)}
-                className="flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                Import
-              </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                {showPreview ? 'Hide' : 'Preview'}
-              </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                className="flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Save
-              </Button>
-              
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowExportModal(true)}
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-              
-              {currentPage === totalPages && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addNewPage}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Page
-                </Button>
-              )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <ResumeBuilderSidebar
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          sectionOrder={sectionOrder}
+        <div className="flex mt-6">
+          {/* Sidebar Navigation */}
+          <ResumeBuilderSidebar
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            sectionOrder={sectionOrder}
+            resumeData={resumeData}
+            isCollapsed={false}
+            onToggleCollapse={() => {}}
+            onToggleTemplateCarousel={() => {}}
+            onSelectTemplate={setSelectedTemplate}
+            selectedTemplate={selectedTemplate}
+            expandedSection={null}
+            onExpandedChange={() => {}}
+            customSections={resumeData.customSections || []}
+            onAddCustomSection={(section) => updateSection('customSections', [...(resumeData.customSections || []), section])}
+            onEditCustomSection={(section) => {
+              const updated = (resumeData.customSections || []).map(s => s.id === section.id ? section : s);
+              updateSection('customSections', updated);
+            }}
+            onRemoveCustomSection={(id) => {
+              const updated = (resumeData.customSections || []).filter(s => s.id !== id);
+              updateSection('customSections', updated);
+            }}
+            updateResumeData={updateResumeData}
+          />
+
+          {/* Main Content */}
+          <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
+            {/* Builder Content */}
+            <div className="p-6">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="sections">
+                  {(provided) => (
+                    <div 
+                      {...provided.droppableProps} 
+                      ref={provided.innerRef} 
+                      className="space-y-6"
+                    >
+                      {sectionOrder.map((sectionId, index) => (
+                        <ResumeSection
+                          key={sectionId}
+                          sectionId={sectionId}
+                          index={index}
+                          resumeData={resumeData}
+                          updateResumeData={updateResumeData}
+                          isActive={activeSection === sectionId}
+                          onActivate={() => setActiveSection(sectionId)}
+                        />
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+
+              {/* Page Navigation */}
+              {totalPages > 1 && (
+                <Card className="mt-8 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Multi-page Resume
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            {/* Live Preview */}
+            {showPreview && (
+              <div className="border-l bg-muted/30">
+                <div className="sticky top-24 p-6">
+                  <ResumePreview
+                    resumeData={resumeData}
+                    template={selectedTemplate}
+                    currentPage={currentPage}
+                    sectionOrder={sectionOrder}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Template Carousel - Bottom Panel */}
+        <TemplateCarousel
+          selectedTemplate={selectedTemplate}
+          onTemplateChange={setSelectedTemplate}
           resumeData={resumeData}
         />
 
-        {/* Main Content */}
-        <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
-          {/* Builder Content */}
-          <div className="p-6">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="sections">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-6">
-                    {sectionOrder.map((sectionId, index) => (
-                      <ResumeSection
-                        key={sectionId}
-                        sectionId={sectionId}
-                        index={index}
-                        resumeData={resumeData}
-                        updateResumeData={updateResumeData}
-                        isActive={activeSection === sectionId}
-                        onActivate={() => setActiveSection(sectionId)}
-                      />
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+        {/* Modals */}
+        <ImportResumeModal
+          open={showImportModal}
+          onOpenChange={setShowImportModal}
+          onImport={(data) => {
+            // Update each section of the resume data
+            Object.entries(data).forEach(([key, value]) => {
+              updateSection(key as keyof ResumeData, value);
+            });
+            toast({
+              title: "Resume imported",
+              description: "Your resume has been imported successfully.",
+            });
+          }}
+        />
 
-            {/* Page Navigation */}
-            {totalPages > 1 && (
-              <Card className="mt-8 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    Multi-page Resume
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            )}
-          </div>
+        <ExportResumeModal
+          open={showExportModal}
+          onOpenChange={setShowExportModal}
+          resumeData={resumeData}
+          template={selectedTemplate}
+        />
 
-          {/* Live Preview */}
-          {showPreview && (
-            <div className="border-l bg-muted/30">
-              <div className="sticky top-24 p-6">
-                <ResumePreview
-                  resumeData={resumeData}
-                  template={selectedTemplate}
-                  currentPage={currentPage}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Template Carousel - Bottom Panel */}
-      <TemplateCarousel
-        selectedTemplate={selectedTemplate}
-        onTemplateChange={setSelectedTemplate}
-        resumeData={resumeData}
-      /> 
-
-      {/* Modals */}
-      <ImportResumeModal
-        open={showImportModal}
-        onOpenChange={setShowImportModal}
-        onImport={(data) => {
-          setResumeData(data);
-          toast({
-            title: "Resume imported",
-            description: "Your resume has been imported successfully.",
-          });
-        }}
-      />
-
-      <ExportResumeModal
-        open={showExportModal}
-        onOpenChange={setShowExportModal}
-        resumeData={resumeData}
-        template={selectedTemplate}
-      />
-
-      <Footer />
+        <Footer />
+      </main>
     </div>
   );
 }

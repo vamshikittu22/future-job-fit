@@ -1,9 +1,24 @@
+import React, { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, ExternalLink } from "lucide-react";
-import { CustomSectionData } from "./CustomSectionModal";
+import { cn } from "@/lib/utils";
+
+interface CustomSectionData {
+  id: string;
+  title: string;
+  description?: string;
+  items: Array<{
+    id: string;
+    title: string;
+    subtitle?: string;
+    date?: string;
+    description?: string;
+    link?: string;
+  }>;
+}
 
 interface ResumePreviewProps {
   resumeData: any;
@@ -68,6 +83,20 @@ export default function ResumePreview({
   currentPage,
   sectionOrder 
 }: ResumePreviewProps) {
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  // Force static styling for resume preview - not affected by theme
+  const previewClasses = cn(
+    'resume-preview',
+    'print:bg-white print:text-black',
+    'bg-white text-gray-900',
+    'p-8 max-w-4xl mx-auto',
+    'shadow-lg my-8',
+    'print:shadow-none print:my-0 print:p-0',
+    'transition-none', // Disable theme transitions for preview
+    'h-[calc(100vh-200px)] overflow-y-auto print:h-auto print:overflow-visible',
+    'resume-container' // For custom scrollbar
+  );
   const getTemplateStyles = (name: string) => {
     switch ((name || 'minimal').toLowerCase()) {
       case 'colorful':
@@ -106,52 +135,49 @@ export default function ResumePreview({
   const styles = getTemplateStyles(template);
 
   const renderPersonalInfo = () => {
-    const personalInfo = resumeData.personal || {};
-    
+    const { personal } = resumeData;
+    if (!personal) return null;
+
+    const contactItems = [
+      { icon: '✉️', value: personal.email },
+      { icon: '📱', value: personal.phone },
+      { icon: '📍', value: personal.location },
+      { icon: '🔗', value: personal.website, isLink: true },
+      { icon: '💼', value: personal.linkedin, isLink: true, prefix: 'linkedin.com/in/' },
+      { icon: '🐙', value: personal.github, isLink: true, prefix: 'github.com/' },
+    ].filter(item => item.value);
+
     return (
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {personalInfo.name || "Your Name"}
-        </h1>
-        {personalInfo.title && (
-          <h2 className="text-xl font-semibold text-gray-800 mt-1">
-            {personalInfo.title}
+      <div className="mb-6">
+        <div className="text-center mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-1">
+            {personal.name || 'Your Name'}
           </h2>
-        )}
-        <div className="flex flex-wrap justify-center gap-4 mt-2 text-gray-700">
-          {personalInfo.email && (
-            <a href={`mailto:${personalInfo.email}`} className={styles.link}>
-              {personalInfo.email}
-            </a>
+          {personal.title && (
+            <h3 className="text-lg text-gray-700">{personal.title}</h3>
           )}
-          {personalInfo.phone && (
-            <span>{personalInfo.phone}</span>
-          )}
-          {personalInfo.location && (
-            <span>{personalInfo.location}</span>
-          )}
-          {personalInfo.website && (
-            <a 
-              href={personalInfo.website.startsWith('http') ? personalInfo.website : `https://${personalInfo.website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              {personalInfo.website.replace(/^https?:\/\//, '')}
-            </a>
-          )}
-          {(personalInfo.links || []).map((link: any) => (
-            <a 
-              key={link.id}
-              href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              {link.label}
-            </a>
+        </div>
+        
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-700 mb-4">
+          {contactItems.map((item, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <span className="opacity-70">{item.icon}</span>
+              {item.isLink ? (
+                <a 
+                  href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
+                </a>
+              ) : (
+                <span>{item.value}</span>
+              )}
+            </div>
           ))}
         </div>
+        <Separator className="my-4" />
       </div>
     );
   };
@@ -442,10 +468,10 @@ export default function ResumePreview({
     // First render regular sections
     const regularSections = sectionOrder
       .filter(sectionId => sectionId !== 'custom' && !sectionId.startsWith('custom-'))
-      .map(sectionId => {
+      .map((sectionId) => {
         const Component = sectionComponents[sectionId];
         return Component ? (
-          <div key={sectionId}>
+          <div key={sectionId} className="section-container">
             {Component()}
           </div>
         ) : null;
@@ -453,7 +479,7 @@ export default function ResumePreview({
 
     // Then render custom sections
     const customSections = resumeData.customSections?.map((section: CustomSectionData) => (
-      <div key={section.id}>
+      <div key={section.id} className="section-container">
         <h3 className={styles.sectionTitle}>{section.title.toUpperCase()}</h3>
         <CustomSectionPreview section={section} />
       </div>
@@ -462,9 +488,86 @@ export default function ResumePreview({
     return [...regularSections, ...customSections];
   };
 
-  return (
-    <div className="resume-preview bg-white p-8 w-full h-full overflow-y-auto text-gray-900">
+  // Calculate content for page break detection
+  const renderContent = () => (
+    <div className="space-y-8 print:space-y-6">
       {renderSections()}
     </div>
+  );
+
+  // Add print styles directly to the document head
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'resume-print-styles';
+    style.textContent = `
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      @media print {
+        html, body, body * {
+          visibility: hidden;
+        }
+        .resume-preview, .resume-preview * {
+          visibility: visible;
+        }
+        .resume-preview {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          box-shadow: none;
+        }
+        .resume-content {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        /* Prevent breaking inside sections */
+        .section-container {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        /* Allow breaking between sections */
+        .resume-content > div:not(:first-child) {
+          page-break-before: auto;
+          break-before: auto;
+        }
+      }
+      /* Screen styles */
+      .resume-container {
+        scrollbar-width: thin;
+        scrollbar-color: #9ca3af #e5e7eb;
+      }
+      .resume-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .resume-container::-webkit-scrollbar-track {
+        background: #e5e7eb;
+        border-radius: 3px;
+      }
+      .resume-container::-webkit-scrollbar-thumb {
+        background-color: #9ca3af;
+        border-radius: 3px;
+      }`;
+
+    document.head.appendChild(style);
+    return () => {
+      const existingStyle = document.getElementById('resume-print-styles');
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
+    };
+  }, []);
+
+  return (
+    <Card className={previewClasses} ref={pageRef}>
+      <div className="resume-content">
+        {renderContent()}
+      </div>
+    </Card>
   );
 }

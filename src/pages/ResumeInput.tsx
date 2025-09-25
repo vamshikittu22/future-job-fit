@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { FileText, Briefcase, Settings, Eye, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import Navigation from "@/components/Navigation";
+import AppNavigation from "@/components/AppNavigation";
 import Footer from "@/components/Footer";
 import ModelSelector from "@/components/ModelSelector";
 import CustomizeAIButton from "@/components/CustomizeAIButton";
@@ -157,7 +157,7 @@ PREFERRED:
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <AppNavigation />
       <motion.div 
         className="container mx-auto px-6 py-8"
         initial={{ opacity: 0, y: 20 }}

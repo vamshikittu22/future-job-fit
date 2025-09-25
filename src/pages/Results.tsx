@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import Navigation from "@/components/Navigation";
+import AppNavigation from "@/components/AppNavigation";
 import Footer from "@/components/Footer";
 import { resumeAI } from "@/services/resumeAI";
 
@@ -82,7 +82,7 @@ export default function Results() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation />
+        <AppNavigation />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
@@ -98,7 +98,7 @@ export default function Results() {
   if (error || !evaluation) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation />
+        <AppNavigation />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
@@ -118,7 +118,7 @@ export default function Results() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <AppNavigation />
       <motion.div 
         className="container mx-auto px-6 py-8"
         initial={{ opacity: 0 }}

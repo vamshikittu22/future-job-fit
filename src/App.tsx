@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
-import Index from "./pages/Index";
+import { ResumeProvider } from "@/contexts/ResumeContext";
 import Home from "./pages/Home";
 import ResumeInput from "./pages/ResumeInput";
 import Results from "./pages/Results";
@@ -18,19 +18,21 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/input" element={<ResumeInput />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/builder" element={<ResumeBuilder />} />
-            <Route path="/create-resume" element={<CreateResumeBuilder />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <ResumeProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/input" element={<ResumeInput />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/builder" element={<ResumeBuilder />} />
+              <Route path="/create-resume" element={<CreateResumeBuilder />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ResumeProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>

@@ -3,9 +3,9 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle, Target, Zap, FileText, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CreateResumeModal from "@/components/CreateResumeModal";
+import AppNavigation from "@/components/AppNavigation";
 
 export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <AppNavigation />
       
       {/* Sticky Navigation Buttons */}
       <div className="sticky top-4 z-50 flex justify-center gap-4 px-6 py-4">

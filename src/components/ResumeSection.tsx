@@ -339,14 +339,35 @@ const ResumeSection = ({
   const Icon = sectionIcons[sectionId as keyof typeof sectionIcons] || FileText;
 
   useEffect(() => {
-    const initialSkills = Array.isArray(resumeData.skills) && resumeData.skills.length > 0
-      ? resumeData.skills
-      : [
+    // Convert new skills object structure to old array structure for compatibility
+    if (resumeData.skills && typeof resumeData.skills === 'object' && !Array.isArray(resumeData.skills)) {
+      // New structure: { languages: [], frameworks: [], tools: [] }
+      const allSkills = [
+        ...resumeData.skills.languages.map(skill => ({ id: 'languages', name: 'Languages', items: resumeData.skills.languages })),
+        ...resumeData.skills.frameworks.map(skill => ({ id: 'frameworks', name: 'Frameworks', items: resumeData.skills.frameworks })),
+        ...resumeData.skills.tools.map(skill => ({ id: 'tools', name: 'Tools', items: resumeData.skills.tools }))
+      ];
+      
+      if (allSkills.length > 0) {
+        setSkillsData(allSkills);
+      } else {
+        setSkillsData([
           { id: 'languages', name: 'Languages', items: [] },
           { id: 'frameworks', name: 'Frameworks', items: [] },
           { id: 'tools', name: 'Tools', items: [] }
-        ];
-    setSkillsData(initialSkills);
+        ]);
+      }
+    } else if (Array.isArray(resumeData.skills) && resumeData.skills.length > 0) {
+      // Old array structure
+      setSkillsData(resumeData.skills);
+    } else {
+      // Default empty structure
+      setSkillsData([
+        { id: 'languages', name: 'Languages', items: [] },
+        { id: 'frameworks', name: 'Frameworks', items: [] },
+        { id: 'tools', name: 'Tools', items: [] }
+      ]);
+    }
   }, [resumeData.skills]);
 
   useEffect(() => {

@@ -71,11 +71,11 @@ interface BuilderToolsProps {
   canRedo?: boolean;
 }
 
-interface NavigationProps {
+interface AppNavigationProps {
   builderTools?: BuilderToolsProps;
 }
 
-function NavigationContent({ builderTools }: NavigationProps) {
+function NavigationContent({ builderTools }: AppNavigationProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -203,7 +203,7 @@ function NavigationContent({ builderTools }: NavigationProps) {
   );
 }
 
-export default function Navigation(props: NavigationProps) {
+export default function AppNavigation(props: AppNavigationProps) {
   return (
     <NavigationErrorBoundary>
       <NavigationContent {...props} />
