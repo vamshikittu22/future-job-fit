@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { printResume } from "@/lib/printUtils";
 
 interface CustomSectionData {
   id: string;
@@ -85,17 +87,24 @@ export default function ResumePreview({
 }: ResumePreviewProps) {
   const pageRef = useRef<HTMLDivElement>(null);
 
+  // Print function
+  const handlePrint = () => {
+    const resumeElement = pageRef.current?.querySelector('.resume-content') as HTMLElement;
+    if (!resumeElement) return;
+    
+    printResume(resumeElement, resumeData.personal?.name || 'My Resume');
+  };
+
   // Force static styling for resume preview - not affected by theme
   const previewClasses = cn(
-    'resume-preview',
-    'print:bg-white print:text-black',
     'bg-white text-gray-900',
     'p-8 max-w-4xl mx-auto',
     'shadow-lg my-8',
     'print:shadow-none print:my-0 print:p-0',
-    'transition-none', // Disable theme transitions for preview
-    'h-[calc(100vh-200px)] overflow-y-auto print:h-auto print:overflow-visible',
-    'resume-container' // For custom scrollbar
+    'transition-none',
+    'h-[calc(100vh-200px)] overflow-y-auto',
+    'resume-container',
+    'relative' // For positioning the print button
   );
   const getTemplateStyles = (name: string) => {
     switch ((name || 'minimal').toLowerCase()) {
@@ -495,79 +504,55 @@ export default function ResumePreview({
     </div>
   );
 
-  // Add print styles directly to the document head
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.id = 'resume-print-styles';
-    style.textContent = `
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      @media print {
-        html, body, body * {
-          visibility: hidden;
-        }
-        .resume-preview, .resume-preview * {
-          visibility: visible;
-        }
-        .resume-preview {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          margin: 0;
-          padding: 0;
-          box-shadow: none;
-        }
-        .resume-content {
-          width: 100%;
-          margin: 0;
-          padding: 0;
-        }
-        /* Prevent breaking inside sections */
-        .section-container {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-        /* Allow breaking between sections */
-        .resume-content > div:not(:first-child) {
-          page-break-before: auto;
-          break-before: auto;
-        }
-      }
-      /* Screen styles */
-      .resume-container {
-        scrollbar-width: thin;
-        scrollbar-color: #9ca3af #e5e7eb;
-      }
-      .resume-container::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      .resume-container::-webkit-scrollbar-track {
-        background: #e5e7eb;
-        border-radius: 3px;
-      }
-      .resume-container::-webkit-scrollbar-thumb {
-        background-color: #9ca3af;
-        border-radius: 3px;
-      }`;
-
-    document.head.appendChild(style);
-    return () => {
-      const existingStyle = document.getElementById('resume-print-styles');
-      if (existingStyle) {
-        document.head.removeChild(existingStyle);
-      }
-    };
-  }, []);
+  // Screen styles for the resume container
+  const screenStyles = `
+    .resume-container {
+      scrollbar-width: thin;
+      scrollbar-color: #9ca3af #e5e7eb;
+    }
+    .resume-container::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .resume-container::-webkit-scrollbar-track {
+      background: #e5e7eb;
+      border-radius: 3px;
+    }
+    .resume-container::-webkit-scrollbar-thumb {
+      background-color: #9ca3af;
+      border-radius: 3px;
+    }
+  `;
 
   return (
-    <Card className={previewClasses} ref={pageRef}>
-      <div className="resume-content">
-        {renderContent()}
+    <div className="relative">
+      <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
+      
+      <Button 
+        onClick={handlePrint}
+        className="fixed bottom-8 right-8 print:hidden z-50 shadow-lg"
+        size="lg"
+      >
+        <Printer className="mr-2 h-4 w-4" />
+        Print / Save as PDF
+      </Button>
+      
+      <div className="text-xs text-gray-500 mb-2 print:hidden">
+        <p>Tip: For best results when printing/saving as PDF:</p>
+        <ol className="list-decimal pl-5 mt-1">
+          <li>Click the "Print / Save as PDF" button above</li>
+          <li>In the print dialog, select "Save as PDF" as the destination</li>
+          <li>Set scale to 100%</li>
+          <li>Disable headers and footers</li>
+          <li>Ensure margins are set to "Default" or "None"</li>
+        </ol>
       </div>
-    </Card>
+      
+      <Card className={previewClasses} ref={pageRef}>
+        <div className="resume-content">
+          {renderContent()}
+        </div>
+      </Card>
+    </div>
   );
 }

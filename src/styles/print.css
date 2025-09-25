@@ -1,0 +1,78 @@
+/* Global print reset */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* Hide everything except the resume */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Only show the resume container */
+  .print-resume,
+  .print-resume * {
+    visibility: visible;
+  }
+  
+  /* Position the resume at the top-left */
+  .print-resume {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+  
+  /* Ensure content fills the page */
+  .resume-content {
+    width: 100%;
+    margin: 0;
+    padding: 15mm; /* Inner padding for content */
+    box-sizing: border-box;
+  }
+  
+  /* Prevent breaking inside sections */
+  .section-container {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Allow natural breaks between sections */
+  .resume-content > div:not(:first-child) {
+    page-break-before: auto;
+    break-before: auto;
+  }
+  
+  /* Ensure the first page break happens after the first page */
+  .resume-content::after {
+    content: '';
+    display: block;
+    page-break-after: always;
+    break-after: page;
+    height: 0;
+  }
+  
+  /* Hide print button in print view */
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Print-specific overrides */
+@media print {
+  /* Ensure links are visible */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  
+  /* Ensure proper text color */
+  * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+}
