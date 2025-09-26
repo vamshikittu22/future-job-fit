@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, ExternalLink, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { printResume } from "@/lib/printUtils";
 
 interface CustomSectionData {
   id: string;
@@ -87,25 +86,18 @@ export default function ResumePreview({
 }: ResumePreviewProps) {
   const pageRef = useRef<HTMLDivElement>(null);
 
-  // Print function
-  const handlePrint = () => {
-    const resumeElement = pageRef.current?.querySelector('.resume-content') as HTMLElement;
-    if (!resumeElement) return;
-    
-    printResume(resumeElement, resumeData.personal?.name || 'My Resume');
-  };
-
+  
   // Force static styling for resume preview - not affected by theme
   const previewClasses = cn(
     'bg-white text-gray-900',
-    'p-8 max-w-4xl mx-auto',
+    'w-full p-0 m-0', // Remove centering and padding for print
     'shadow-lg my-8',
-    'print:shadow-none print:my-0 print:p-0',
     'transition-none',
     'h-[calc(100vh-200px)] overflow-y-auto',
     'resume-container',
-    'relative' // For positioning the print button
+    'relative'
   );
+  
   const getTemplateStyles = (name: string) => {
     switch ((name || 'minimal').toLowerCase()) {
       case 'colorful':
@@ -528,25 +520,7 @@ export default function ResumePreview({
     <div className="relative">
       <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
       
-      <Button 
-        onClick={handlePrint}
-        className="fixed bottom-8 right-8 print:hidden z-50 shadow-lg"
-        size="lg"
-      >
-        <Printer className="mr-2 h-4 w-4" />
-        Print / Save as PDF
-      </Button>
-      
-      <div className="text-xs text-gray-500 mb-2 print:hidden">
-        <p>Tip: For best results when printing/saving as PDF:</p>
-        <ol className="list-decimal pl-5 mt-1">
-          <li>Click the "Print / Save as PDF" button above</li>
-          <li>In the print dialog, select "Save as PDF" as the destination</li>
-          <li>Set scale to 100%</li>
-          <li>Disable headers and footers</li>
-          <li>Ensure margins are set to "Default" or "None"</li>
-        </ol>
-      </div>
+     
       
       <Card className={previewClasses} ref={pageRef}>
         <div className="resume-content">

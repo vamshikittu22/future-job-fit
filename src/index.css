@@ -81,31 +81,6 @@
     /* Navigation Shadow for Dark Mode */
     --shadow-nav: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3), 0 0 0 1px rgb(255 255 255 / 0.1);
   }
-  
-  /* Print styles for resume preview */
-  @media print {
-    .resume-preview {
-      --background: 0 0% 100% !important;
-      --foreground: 0 0% 0% !important;
-      --card: 0 0% 100% !important;
-      --card-foreground: 0 0% 0% !important;
-      --popover: 0 0% 100% !important;
-      --popover-foreground: 0 0% 0% !important;
-      --primary: 0 0% 0% !important;
-      --primary-foreground: 0 0% 100% !important;
-      --secondary: 0 0% 96% !important;
-      --secondary-foreground: 0 0% 20% !important;
-      --muted: 0 0% 96% !important;
-      --muted-foreground: 0 0% 45% !important;
-      --accent: 0 0% 96% !important;
-      --accent-foreground: 0 0% 20% !important;
-      --destructive: 0 0% 0% !important;
-      --destructive-foreground: 0 0% 100% !important;
-      --border: 0 0% 90% !important;
-      --input: 0 0% 90% !important;
-      --ring: 0 0% 0% !important;
-    }
-  }
 }
 
 @layer base {
@@ -125,11 +100,11 @@
   .swiss-grid {
     @apply grid gap-8 lg:gap-12;
   }
-  
+
   .swiss-section {
     @apply py-16 lg:py-24;
   }
-  
+
   .swiss-container {
     @apply mx-auto max-w-7xl px-6 lg:px-8;
   }
@@ -182,3 +157,4 @@
     }
   }
 }
+
