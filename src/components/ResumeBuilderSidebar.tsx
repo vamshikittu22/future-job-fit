@@ -216,6 +216,21 @@ export default function ResumeBuilderSidebar({
         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
+      {/* Sidebar Header - Resume Builder Title */}
+      <div className="p-4 border-b bg-primary/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <FileText className="w-4 h-4 text-primary" />
+          </div>
+          {!isCollapsed && (
+            <div>
+              <h2 className="text-sm font-semibold">Resume Builder</h2>
+              <p className="text-xs text-muted-foreground">Create your perfect resume</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Main scrollable area */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* --- Resume Sections --- */}

@@ -192,120 +192,8 @@ export default function CreateResumeBuilder() {
       {/* Top Navigation - Clean, minimal */}
       <AppNavigation />
 
-      {/* Resume Builder Taskbar - Right below main navigation */}
-      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border shadow-sm">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left Section - Title and Page Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">Resume Builder</h1>
-                <div className="text-xs text-muted-foreground">
-                  Create your perfect resume
-                </div>
-              </div>
-            </div>
 
-            {/* Center Section - Quick Actions */}
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={handleSave}>
-                <Save className="w-3 h-3 mr-1" /> Save
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className={showPreview ? "bg-primary/10" : ""}
-              >
-                <Eye className="w-3 h-3 mr-1" />
-                <span className="hidden sm:inline">{showPreview ? "Hide" : "Show"} Preview</span>
-              </Button>
-
-              <Button variant="secondary" size="sm" onClick={() => setIsExportOpen(true)}>
-                <Download className="w-3 h-3 mr-1" /> Export
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)}>
-                <Upload className="w-3 h-3 mr-1" /> Import
-              </Button>
-
-              {/* AI Enhancement Button */}
-              <Button variant="outline" size="sm" onClick={() => setShowAIModal(true)}>
-                <Sparkles className="w-3 h-3 mr-1" /> AI Enhance
-              </Button>
-
-              {/* Clear Form Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearForm}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="w-3 h-3 mr-1" /> Clear
-              </Button>
-            </div>
-
-            {/* Right Section - Undo/Redo and Versions */}
-            <div className="flex items-center gap-1">
-              {/* Undo/Redo */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  undo();
-                  toast({
-                    title: "Undo",
-                    description: canUndo ? "Action undone!" : "No actions to undo",
-                  });
-                }}
-                disabled={!canUndo}
-                className="h-8 w-8 p-0"
-              >
-                <RotateCcw className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  redo();
-                  toast({
-                    title: "Redo",
-                    description: canRedo ? "Action redone!" : "No actions to redo",
-                  });
-                }}
-                disabled={!canRedo}
-                className="h-8 w-8 p-0"
-              >
-                <RotateCw className="w-3 h-3" />
-              </Button>
-
-              {/* Versions Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 px-2">
-                    <History className="w-3 h-3 mr-1" /> Versions
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                    Saved Versions
-                  </div>
-                  <DropdownMenuSeparator />
-                  <div className="py-2 text-sm text-muted-foreground text-center">
-                    No saved versions yet
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-16"> {/* Offset for sticky Navigation + Taskbar height */}
+      <div> {/* Clean layout without extra padding */}
         <ResumeBuilderSidebar
           activeSection={activeSection}
           onSectionChange={setActiveSection}
@@ -327,6 +215,97 @@ export default function CreateResumeBuilder() {
 
         {/* Main Content */}
         <main className={`${isSidebarCollapsed ? 'ml-20' : 'ml-80'} transition-all duration-300`}>
+          {/* Resume Builder Taskbar - Compact action buttons */}
+          <div className="bg-background/95 backdrop-blur border-b border-border shadow-sm mb-2 h-10 flex items-center justify-center w-full sticky top-16 z-30">
+            <div className="flex items-center gap-0.5 max-w-full overflow-x-auto px-2">
+              {/* All Action Buttons in Single Row */}
+              <Button variant="outline" size="sm" onClick={handleSave} className="flex-shrink-0">
+                <Save className="w-3 h-3 mr-1" /> Save
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className={`flex-shrink-0 ${showPreview ? "bg-primary/10" : ""}`}
+              >
+                <Eye className="w-3 h-3 mr-1" />
+                <span className="hidden md:inline">{showPreview ? "Hide" : "Show"} Preview</span>
+                <span className="md:hidden">Preview</span>
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} className="flex-shrink-0">
+                <Download className="w-3 h-3 mr-1" /> Export
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)} className="flex-shrink-0">
+                <Upload className="w-3 h-3 mr-1" /> Import
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={() => setShowAIModal(true)} className="flex-shrink-0">
+                <Sparkles className="w-3 h-3 mr-1" /> AI Enhance
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearForm}
+                className="flex-shrink-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-3 h-3 mr-1" /> Clear
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  undo();
+                  toast({
+                    title: "Undo",
+                    description: canUndo ? "Action undone!" : "No actions to undo",
+                  });
+                }}
+                disabled={!canUndo}
+                className="h-7 px-1.5 flex-shrink-0"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  redo();
+                  toast({
+                    title: "Redo",
+                    description: canRedo ? "Action redone!" : "No actions to redo",
+                  });
+                }}
+                disabled={!canRedo}
+                className="h-7 px-1.5 flex-shrink-0"
+              >
+                <RotateCw className="w-3 h-3" />
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 px-1.5 flex-shrink-0">
+                    <History className="w-3 h-3 mr-1" /> Versions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                    Saved Versions
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="py-2 text-sm text-muted-foreground text-center">
+                    No saved versions yet
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
           <div className={`${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="sections" direction="vertical">
@@ -366,9 +345,9 @@ export default function CreateResumeBuilder() {
             {/* Preview Pane */}
             {showPreview && (
               <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-hidden">
-                <ResumePreview 
-                  resumeData={resumeData} 
-                  template={selectedTemplate} 
+                <ResumePreview
+                  resumeData={resumeData}
+                  template={selectedTemplate}
                   currentPage={currentPage}
                   sectionOrder={sectionOrder}
                 />
@@ -376,7 +355,7 @@ export default function CreateResumeBuilder() {
             )}
           </div>
         </main>
-      </div> {/* Close pt-16 div */}
+      </div> {/* Close main container div */}
 
       {/* Template Carousel */}
       {showTemplateCarousel && (
@@ -427,39 +406,41 @@ export default function CreateResumeBuilder() {
       )}
 
       {/* Modals, Toaster, Footer */}
-      <ImportResumeModal
-        open={showImportModal}
-        onOpenChange={setShowImportModal}
-        onImport={(data) => {
-          // Handle import logic here
-          console.log('Import data:', data);
-        }}
-      />
-      <ExportResumeModal
-        open={isExportOpen}
-        onOpenChange={setIsExportOpen}
-        resumeData={resumeData}
-        template={selectedTemplate}
-      />
-      <AIEnhanceModal
-        open={showAIModal}
-        onOpenChange={setShowAIModal}
-        resumeData={resumeData}
-        onEnhance={(enhancedData) => {
-          // Handle enhanced data
-          console.log('Enhanced data:', enhancedData);
-        }}
-      />
-      <Toaster />
-      <Footer />
+      <>
+        <ImportResumeModal
+          open={showImportModal}
+          onOpenChange={setShowImportModal}
+          onImport={(data) => {
+            // Handle import logic here
+            console.log('Import data:', data);
+          }}
+        />
+        <ExportResumeModal
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          resumeData={resumeData}
+          template={selectedTemplate}
+        />
+        <AIEnhanceModal
+          open={showAIModal}
+          onOpenChange={setShowAIModal}
+          resumeData={resumeData}
+          onEnhance={(enhancedData) => {
+            // Handle enhanced data
+            console.log('Enhanced data:', enhancedData);
+          }}
+        />
+        <Toaster />
+        <Footer />
 
-      {/* Clear Form Dialog */}
-      <ClearFormDialog
-        open={showClearFormDialog}
-        onOpenChange={setShowClearFormDialog}
-        onSaveAndClear={handleSaveAndClear}
-        onClearWithoutSaving={handleClearWithoutSaving}
-      />
+        {/* Clear Form Dialog */}
+        <ClearFormDialog
+          open={showClearFormDialog}
+          onOpenChange={setShowClearFormDialog}
+          onSaveAndClear={handleSaveAndClear}
+          onClearWithoutSaving={handleClearWithoutSaving}
+        />
+      </>
     </div>
   );
 }
