@@ -216,8 +216,8 @@ export default function ResumeBuilderSidebar({
         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
-      {/* Main scrollable area, activates on hover */}
-      <div className="flex-1 overflow-hidden group-hover/sidebar:overflow-y-auto scrollbar-hide">
+      {/* Main scrollable area */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* --- Resume Sections --- */}
         <div className="border-b">
           <div 

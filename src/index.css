@@ -93,6 +93,35 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+    /* Add vertical scrollbar if needed */
+    overflow-y: auto;
+  }
+
+  /* Responsive breakpoints */
+  @media (max-width: 1920px) {
+    body {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 1366px) {
+    body {
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    body {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body {
+      font-size: 0.8rem;
+    }
   }
 }
 
@@ -158,3 +187,29 @@
   }
 }
 
+/* Global responsive utilities */
+@layer utilities {
+  .overflow-sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100vh;
+  }
+
+  .overflow-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100vh;
+  }
+
+  .header-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    gap: 1rem;
+    justify-content: space-between;
+  }
+
+  .header-responsive > * {
+    flex-shrink: 1;
+  }
+}

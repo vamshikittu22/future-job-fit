@@ -20,8 +20,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from 'file-saver';
-import { exportResume } from '@/templates/exportUtils';
-import { formatResumeData } from '@/templates/resumeDataUtils';
 
 interface ExportResumeModalProps {
   open: boolean;
@@ -496,24 +494,20 @@ export default function ExportResumeModal({
       console.log('2. Data being passed to export function:', JSON.stringify(exportData, null, 2));
 
       switch (format) {
-        case 'pdf': {
-          console.log('3. Exporting as PDF with template:', template);
-          await exportResume(exportData, 'pdf', baseName, { template });
+        case 'pdf':
+        case 'docx':
+        case 'txt':
+          // Export functionality removed
+          toast({
+            title: "Export Disabled",
+            description: "Export functionality has been removed. Please use the on-screen preview.",
+            variant: "destructive",
+          });
           break;
-        }
-        case 'docx': {
-          console.log('3. Exporting as Word');
-          await exportResume(exportData, 'word', baseName, { template });
-          break;
-        }
         case 'json': {
           const jsonContent = JSON.stringify(exportData, null, 2);
           const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
           saveAs(jsonBlob, `${baseName}.json`);
-          break;
-        }
-        case 'txt': {
-          await exportResume(formatResumeData(exportData), 'text', baseName);
           break;
         }
         default:
@@ -545,45 +539,12 @@ export default function ExportResumeModal({
       setExportProgress(0);
       setExportComplete(false);
       setIsExporting(false);
-      
-      // Ensure the preview is visible before exporting
-      if (resumePreviewRef.current) {
-        resumePreviewRef.current.style.display = 'block';
-      }
     }
     
     return () => {
       // Cleanup if needed
     };
   }, [open]);
-  
-  // Add a style tag for print-specific styles
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @media print {
-        body * {
-          visibility: hidden;
-        }
-        .resume-preview, .resume-preview * {
-          visibility: visible;
-        }
-        .resume-preview {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          padding: 0;
-          margin: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -682,15 +643,6 @@ export default function ExportResumeModal({
           </TabsContent>
         </Tabs>
         
-        {/* Hidden preview for PDF generation */}
-        <div 
-          ref={resumePreviewRef}
-          className="fixed left-[-9999px] top-0 w-[210mm] bg-white"
-          style={{ display: 'none' }}
-        >
-          {renderResumePreview()}
-        </div>
-        
         <div className="flex justify-between items-center pt-4 border-t mt-6">
           <div className="text-sm text-muted-foreground">
             {format && (
@@ -703,6 +655,7 @@ export default function ExportResumeModal({
               variant="outline" 
               onClick={() => onOpenChange(false)}
               disabled={isExporting}
+              className="disabled:opacity-50"
             >
               Cancel
             </Button>

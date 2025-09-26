@@ -1,9 +1,28 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { FileText, Download, Upload, Save, Eye, Plus, RotateCcw, RotateCw, Sparkles } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Save,
+  Eye,
+  Download,
+  Upload,
+  Sparkles,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+  History,
+  MoreHorizontal,
+  FileText
+} from "lucide-react";
 import AppNavigation from "@/components/AppNavigation";
 import Footer from "@/components/Footer";
 import ResumeBuilderSidebar from "@/components/ResumeBuilderSidebar";
@@ -131,61 +150,156 @@ export default function ResumeBuilder() {
     <div className="min-h-screen bg-background">
       <AppNavigation />
       <main className="container mx-auto px-4 py-8">
-        {/* Header with Actions */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
-          <div className="container mx-auto px-6 py-4">
+        {/* Resume Builder Taskbar - Right below main navigation */}
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border shadow-sm">
+          <div className="container mx-auto px-6 py-3">
             <div className="flex items-center justify-between">
+              {/* Left Section - Title and Page Info */}
               <div className="flex items-center gap-4">
-                <FileText className="w-6 h-6 text-primary" />
-                <h1 className="text-2xl font-bold">Resume Builder</h1>
-                <div className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold">Resume Builder</h1>
+                  <div className="text-xs text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </div>
                 </div>
               </div>
-              
-              
+
+              {/* Center Section - Quick Actions */}
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={handleSave}>
+                  <Save className="w-3 h-3 mr-1" /> Save
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className={showPreview ? "bg-primary/10" : ""}
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">{showPreview ? "Hide" : "Show"} Preview</span>
+                </Button>
+
+                <Button variant="secondary" size="sm" onClick={() => setShowExportModal(true)}>
+                  <Download className="w-3 h-3 mr-1" /> Export
+                </Button>
+
+                <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)}>
+                  <Upload className="w-3 h-3 mr-1" /> Import
+                </Button>
+              </div>
+
+              {/* Right Section - Secondary Actions Dropdown */}
+              <div className="flex items-center gap-1">
+                {/* Undo/Redo */}
+                {undo && redo && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={undo}
+                      disabled={!canUndo}
+                      className="h-8 w-8 p-0"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={redo}
+                      disabled={!canRedo}
+                      className="h-8 w-8 p-0"
+                    >
+                      <RotateCw className="w-3 h-3" />
+                    </Button>
+                  </>
+                )}
+
+                {/* More Actions Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => {}}>
+                      <Sparkles className="w-4 h-4 mr-2" /> Enhance with AI
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => {}}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Clear Form
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Versions Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                      <History className="w-3 h-3 mr-1" /> Versions
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                      Saved Versions
+                    </div>
+                    <DropdownMenuSeparator />
+                    <div className="py-2 text-sm text-muted-foreground text-center">
+                      No saved versions yet
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex mt-6">
+        <div className="flex mt-6 min-h-[calc(100vh-12rem)]">
           {/* Sidebar Navigation */}
-          <ResumeBuilderSidebar
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-            sectionOrder={sectionOrder}
-            resumeData={resumeData}
-            isCollapsed={false}
-            onToggleCollapse={() => {}}
-            onToggleTemplateCarousel={() => {}}
-            onSelectTemplate={setSelectedTemplate}
-            selectedTemplate={selectedTemplate}
-            expandedSection={null}
-            onExpandedChange={() => {}}
-            customSections={resumeData.customSections || []}
-            onAddCustomSection={(section) => updateSection('customSections', [...(resumeData.customSections || []), section])}
-            onEditCustomSection={(section) => {
-              const updated = (resumeData.customSections || []).map(s => s.id === section.id ? section : s);
-              updateSection('customSections', updated);
-            }}
-            onRemoveCustomSection={(id) => {
-              const updated = (resumeData.customSections || []).filter(s => s.id !== id);
-              updateSection('customSections', updated);
-            }}
-            updateResumeData={updateResumeData}
-          />
+          <div className="w-80 flex-shrink-0">
+            <ResumeBuilderSidebar
+              activeSection={activeSection}
+              onSectionChange={setActiveSection}
+              sectionOrder={sectionOrder}
+              resumeData={resumeData}
+              isCollapsed={false}
+              onToggleCollapse={() => {}}
+              onToggleTemplateCarousel={() => {}}
+              onSelectTemplate={setSelectedTemplate}
+              selectedTemplate={selectedTemplate}
+              expandedSection={null}
+              onExpandedChange={() => {}}
+              customSections={resumeData.customSections || []}
+              onAddCustomSection={(section) => updateSection('customSections', [...(resumeData.customSections || []), section])}
+              onEditCustomSection={(section) => {
+                const updated = (resumeData.customSections || []).map(s => s.id === section.id ? section : s);
+                updateSection('customSections', updated);
+              }}
+              onRemoveCustomSection={(id) => {
+                const updated = (resumeData.customSections || []).filter(s => s.id !== id);
+                updateSection('customSections', updated);
+              }}
+              updateResumeData={updateResumeData}
+            />
+          </div>
 
           {/* Main Content */}
-          <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-6' : ''}`}>
+          <div className={`flex-1 ${showPreview ? 'grid grid-cols-2 gap-4' : ''}`}>
             {/* Builder Content */}
-            <div className="p-6">
+            <div className="p-6 min-h-full">
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="sections">
                   {(provided) => (
-                    <div 
-                      {...provided.droppableProps} 
-                      ref={provided.innerRef} 
-                      className="space-y-6"
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-6 min-h-[calc(100vh-16rem)]"
                     >
                       {sectionOrder.map((sectionId, index) => (
                         <ResumeSection
@@ -230,8 +344,8 @@ export default function ResumeBuilder() {
 
             {/* Live Preview */}
             {showPreview && (
-              <div className="border-l bg-muted/30">
-                <div className="sticky top-24 p-6">
+              <div className="border-l bg-muted/30 min-h-full">
+                <div className="sticky top-24 p-6 h-full">
                   <ResumePreview
                     resumeData={resumeData}
                     template={selectedTemplate}

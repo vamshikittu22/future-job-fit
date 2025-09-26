@@ -3,9 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, ExternalLink, Printer } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface CustomSectionData {
   id: string;
@@ -93,9 +92,11 @@ export default function ResumePreview({
     'w-full p-0 m-0', // Remove centering and padding for print
     'shadow-lg my-8',
     'transition-none',
-    'h-[calc(100vh-200px)] overflow-y-auto',
+    'h-[calc(100vh-200px)] overflow-main', // Use responsive overflow class
     'resume-container',
-    'relative'
+    'relative',
+    'mx-[14.17px] my-[14.17px] p-8', // Add 5mm margins and padding for better visibility
+    'aspect-[210/297]' // A4 aspect ratio (210mm x 297mm)
   );
   
   const getTemplateStyles = (name: string) => {
@@ -514,19 +515,50 @@ export default function ResumePreview({
       background-color: #9ca3af;
       border-radius: 3px;
     }
+    .a4-container {
+      aspect-ratio: 210 / 297;
+      max-width: min(90vw, 1200px);
+      max-height: calc(100vh - 200px);
+      margin: 0 auto;
+      position: relative;
+      width: 100%;
+    }
+    .a4-container .resume-card {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    /* Ensure A4 ratio is maintained on all screen sizes */
+    @media (max-width: 768px) {
+      .a4-container {
+        max-width: 95vw;
+        max-height: calc(100vh - 150px);
+      }
+    }
+    @media (max-width: 480px) {
+      .a4-container {
+        max-width: 98vw;
+        max-height: calc(100vh - 120px);
+      }
+    }
   `;
-
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
-      
-     
-      
-      <Card className={previewClasses} ref={pageRef}>
-        <div className="resume-content">
-          {renderContent()}
-        </div>
-      </Card>
+
+      {/* A4 aspect ratio container - Fixed proportions */}
+      <div className="a4-container">
+        <Card className={cn(
+          'resume-card bg-white text-gray-900 shadow-lg transition-none',
+          'overflow-hidden resize-none'
+        )} ref={pageRef}>
+          <div className="resume-content h-full overflow-y-auto p-8">
+            {renderContent()}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
