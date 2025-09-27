@@ -175,6 +175,76 @@ const CreateResumeBuilder: React.FC = () => {
           
           {/* Main Content */}
           <div className={`${showPreview ? 'lg:w-1/2' : 'lg:w-2/3'}`}>
+            {/* Taskbar */}
+            <div className="mb-6 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex flex-wrap gap-2 items-center">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowImportModal(true)}
+                className="text-xs"
+              >
+                Import
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowExportModal(true)}
+                className="text-xs"
+              >
+                Export
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAIEnhanceModal(true)}
+                className="text-xs"
+              >
+                AI Enhance
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowClearFormDialog(true)}
+                className="text-xs"
+              >
+                Clear Form
+              </Button>
+              <div className="flex-1 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={undo} 
+                  disabled={!canUndo}
+                  className="h-8 w-8"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 14 4 9l5-5"/>
+                    <path d="M4.5 9h11a4 4 0 0 1 0 8h-1"/>
+                  </svg>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={redo} 
+                  disabled={!canRedo}
+                  className="h-8 w-8"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m15 14 5-5-5-5"/>
+                    <path d="M19.5 9.5h-11a4 4 0 0 0 0 8h1"/>
+                  </svg>
+                </Button>
+                <Button 
+                  variant={showPreview ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="text-xs"
+                >
+                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                </Button>
+              </div>
+            </div>
+            
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="resume-sections">
                 {(provided) => (
