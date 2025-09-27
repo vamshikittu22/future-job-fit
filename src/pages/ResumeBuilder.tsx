@@ -30,7 +30,7 @@ import ResumeSection from "@/components/ResumeSection";
 import TemplateCarousel from "@/components/TemplateCarousel";
 import ResumePreview from "@/components/ResumePreview";
 import ImportResumeModal from "@/components/ImportResumeModal";
-import ExportResumeModal from "@/components/ExportResumeModal";
+import ExportResumeModal from "../components/ExportResumeModal";
 import { useResume } from "@/contexts/ResumeContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -386,7 +386,17 @@ export default function ResumeBuilder() {
           onOpenChange={setShowExportModal}
           resumeData={resumeData}
           template={selectedTemplate}
-        />
+        >
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={() => setShowExportModal(true)}
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+        </ExportResumeModal>
 
         <Footer />
       </main>

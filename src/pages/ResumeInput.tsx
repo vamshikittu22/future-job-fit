@@ -16,7 +16,7 @@ import CustomizeAIButton from "@/components/CustomizeAIButton";
 import CustomizeAIModal from "@/components/CustomizeAIModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import PreviewPanel from "@/components/PreviewPanel";
-import ImportExportPanel from "@/components/ImportExportPanel";
+import ImportExportPanel from "../components/ImportExportPanel";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");

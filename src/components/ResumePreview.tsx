@@ -108,11 +108,13 @@ export default function ResumePreview({
   // Calculate pages based on content height
   useEffect(() => {
     if (contentRef.current) {
+      // Calculate the actual height of the content
       const height = contentRef.current.scrollHeight;
       setContentHeight(height);
       
-      // Calculate number of pages needed
-      const calculatedPages = Math.ceil(height / CONTENT_HEIGHT_PX) || 1;
+      // Calculate number of pages needed based on content height
+      // We'll use a simpler approach and let the browser handle pagination
+      const calculatedPages = Math.max(1, Math.ceil(height / CONTENT_HEIGHT_PX));
       setPages(calculatedPages);
       
       // Reset to first page when content changes
@@ -546,51 +548,37 @@ export default function ResumePreview({
     return [...regularSections, ...customSections];
   };
 
-  // Split content into pages
+  // Render content with proper page breaks
   const renderContent = () => {
     if (!contentRef.current) return null;
     
-    const content = (
-      <div className="space-y-8 print:space-y-6">
-        {renderSections()}
-      </div>
-    );
-
-    if (pages === 1) {
-      return (
-        <div className="page">
-          {content}
-          <div className="page-number">Page 1</div>
-        </div>
-      );
-    }
-
-    // For multiple pages, we'll simulate page breaks in the UI
+    // Get all sections to be rendered
+    const sections = renderSections();
+    
+    // Always render all sections in a single container
+    // Let the browser handle page breaks naturally based on content
     return (
-      <div className="relative">
-        {Array.from({ length: pages }).map((_, index) => (
-          <div 
-            key={index} 
-            className={cn("page", { 'mt-4': index > 0 })}
-            style={{
-              paddingBottom: index < pages - 1 ? '2rem' : '0',
-              minHeight: `${CONTENT_HEIGHT_PX}px`,
-              position: 'relative'
-            }}
-          >
-            {content}
-            <div className="page-number">Page {index + 1} of {pages}</div>
-            {index < pages - 1 && (
-              <div className="absolute bottom-0 left-0 right-0 border-t border-dashed border-gray-300"></div>
-            )}
+      <div className="relative print:block">
+        <div className="page">
+          <div className="space-y-8 print:space-y-6">
+            {sections}
           </div>
-        ))}
+          {pages > 1 && (
+            <div className="page-number print:hidden">Page 1 of {pages}</div>
+          )}
+        </div>
       </div>
     );
   };
 
-  // Screen styles for the resume container
+  // Screen and print styles for the resume container
   const screenStyles = `
+    /* Base styles for both screen and print */
+    @page {
+      size: A4;
+      margin: 15mm 15mm 15mm 15mm;
+    }
+
     .a4-container {
       aspect-ratio: 210 / 297;
       max-width: min(90vw, 1200px);
@@ -601,6 +589,8 @@ export default function ResumePreview({
       transform-origin: top center;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       background: white;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     
     .a4-container .resume-card {
@@ -666,48 +656,85 @@ export default function ResumePreview({
     }
     
     /* Print styles */
-    @page {
-      size: A4;
-      margin: 0;
-    }
-    
     @media print {
+      @page {
+        size: A4;
+        margin: 15mm 15mm 15mm 15mm;
+      }
+      
       body, html {
-        margin: 0;
-        padding: 0;
-        background: white;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        width: 210mm;
+        height: 297mm;
+      }
+
+      body * {
+        visibility: hidden; /* Hide everything by default */
+      }
+
+      .a4-container, .a4-container * {
+        visibility: visible; /* Only show the resume content */
       }
 
       .a4-container {
+        position: relative !important;
         width: 210mm !important;
-        height: 297mm !important;
-        max-width: 100% !important;
-        max-height: none !important;
-        margin: 0 !important;
+        min-height: 297mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
         box-shadow: none !important;
         transform: none !important;
-        position: relative;
-        overflow: visible;
+        overflow: visible !important;
+        background: white !important;
+      }
+      
+      .resume-card {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 100% !important;
       }
       
       .resume-content {
+        padding: 0 !important;
+        margin: 0 !important;
         overflow: visible !important;
         height: auto !important;
-        padding: 15mm !important;
+        min-height: 100% !important;
       }
 
       .page {
-        min-height: 0;
-        margin-bottom: 0;
-        padding-bottom: 15mm;
-      }
-
-      .page:last-child {
-        padding-bottom: 0;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto !important;
+        padding: 15mm !important;
+        box-sizing: border-box;
+        position: relative;
+        background: white;
       }
 
       .page-number {
-        display: block;
+        position: absolute;
+        bottom: 10mm;
+        right: 15mm;
+        font-size: 10pt;
+        color: #666;
+      }
+      
+      /* Let the browser handle page breaks naturally */
+      .page {
+        page-break-after: always;
+      }
+      
+      .page:last-child {
+        page-break-after: auto;
       }
     }
     
@@ -726,21 +753,37 @@ export default function ResumePreview({
       }
     }
   `;
+  // Add a print button handler
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <div className="relative w-full h-full">
       <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
+      
+      {/* Print button */}
+      <div className="fixed top-4 right-4 z-50 print:hidden">
+        <Button 
+          onClick={handlePrint}
+          variant="outline"
+          className="bg-white hover:bg-gray-50 shadow-md"
+        >
+          Print / Save as PDF
+        </Button>
+      </div>
       
       {/* A4 aspect ratio container - Fixed proportions */}
       <div className="a4-container">
         <Card 
           className={cn(
             'resume-card bg-white text-gray-900 transition-none relative',
-            'print:shadow-none print:border-0'
+            'print:shadow-none print:border-0 print:bg-transparent'
           )} 
           ref={pageRef}
         >
           <div 
-            className="resume-content" 
+            className="resume-content print:bg-white" 
             ref={contentRef}
             onScroll={handleScroll}
           >

@@ -49,17 +49,17 @@ interface ResumeBuilderSidebarProps {
   resumeData: any; 
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  onToggleTemplateCarousel: () => void;
-  onSelectTemplate: (templateId: string) => void;
-  selectedTemplate: string;
+  onToggleTemplateCarousel?: () => void;
+  onSelectTemplate?: (templateId: string) => void;
+  selectedTemplate?: string;
   // Controlled accordion support
   expandedSection?: string | null;
   onExpandedChange?: (key: string | null) => void;
   customSections: CustomSectionData[];
-  onAddCustomSection: (section: CustomSectionData) => void;
-  onEditCustomSection: (section: CustomSectionData) => void;
-  onRemoveCustomSection: (id: string) => void;
-  updateResumeData: (key: string, value: any) => void;
+  onAddCustomSection?: (section: CustomSectionData) => void;
+  onEditCustomSection?: (section: CustomSectionData) => void;
+  onRemoveCustomSection?: (sectionId: string) => void;
+  updateResumeData: (section: string, data: any) => void;
 }
 
 // Icon mappings for resume sections
@@ -153,10 +153,14 @@ export default function ResumeBuilderSidebar({
     return 'text-red-500';
   };
 
-  const addCustomSection = () => {
-    const newSection = {
+  // Handle adding a new custom section from the button click
+  const handleAddCustomSection = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const newSection: CustomSectionData = {
       id: `custom-${Date.now()}`,
-      title: 'New Custom Section',
+      title: 'Custom Section',
       description: '',
       items: [
         {
@@ -169,26 +173,30 @@ export default function ResumeBuilderSidebar({
       ]
     };
     
-    const updatedSections = [...(resumeData.customSections || []), newSection];
-    updateResumeData('customSections', updatedSections);
+    // Call the parent's onAddCustomSection with the new section
+    onAddCustomSection(newSection);
+    
+    // Set the new section as active
     onSectionChange(newSection.id);
     
-    // Auto-scroll to the new section
-    setTimeout(() => {
-      const element = document.getElementById(newSection.id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    // Ensure the resume section is expanded when adding a new section
+    if (onExpandedChange) {
+      onExpandedChange('resume');
+    } else {
+      setExpanded('resume');
+    }
   };
 
   const removeCustomSection = (id: string) => {
-    const updatedSections = (resumeData.customSections || []).filter((section: any) => section.id !== id);
-    updateResumeData('customSections', updatedSections);
-    
-    // If the removed section was active, switch to the first available section
-    if (activeSection === id) {
-      onSectionChange(sectionOrder[0]);
+    const section = customSections.find(s => s.id === id);
+    if (section && window.confirm(`Are you sure you want to delete the "${section.title}" section?`)) {
+      // Use the provided callback to remove the section
+      onRemoveCustomSection(id);
+      
+      // If the removed section was active, switch to the first available section
+      if (activeSection === id) {
+        onSectionChange(sectionOrder[0]);
+      }
     }
   };
 
@@ -274,55 +282,63 @@ export default function ResumeBuilderSidebar({
                 })}
               
               {/* Custom sections */}
-              {resumeData?.customSections?.map((section: any) => {
-                const status = section.items?.length > 0 ? 'complete' : 'empty';
-                return (
-                  <div
-                    key={section.id}
-                    className={`group flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${
-                      activeSection === section.id ? 'bg-primary/10' : ''
-                    }`}
-                    onClick={() => onSectionChange(section.id)}
-                  >
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Plus className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className={`flex-1 text-sm ${
-                      activeSection === section.id ? 'text-primary font-medium' : ''
-                    }`}>
-                      {section.title || 'Custom Section'}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Are you sure you want to delete "${section.title || 'this section'}"?`)) {
-                            removeCustomSection(section.id);
-                          }
-                        }}
-                      >
-                        <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                        <span className="sr-only">Delete section</span>
-                      </Button>
+              <div className="space-y-1">
+                {Array.isArray(customSections) && customSections.length > 0 && (
+                  <div className="mt-2">
+                    <h4 className="text-xs font-medium text-muted-foreground px-3 mb-1">Custom Sections</h4>
+                    <div className="space-y-1">
+                      {customSections.map((section) => {
+                        if (!section?.id) return null;
+                        const status = section.items?.length > 0 ? 'complete' : 'empty';
+                        return (
+                          <div
+                            key={section.id}
+                            className={`group flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${
+                              activeSection === section.id ? 'bg-primary/10' : ''
+                            }`}
+                            onClick={() => onSectionChange(section.id)}
+                          >
+                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Plus className="w-3 h-3 text-primary" />
+                            </div>
+                            <span className={`flex-1 text-sm truncate ${
+                              activeSection === section.id ? 'text-primary font-medium' : ''
+                            }`}>
+                              {section.title || 'Custom Section'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeCustomSection(section.id);
+                                }}
+                              >
+                                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                                <span className="sr-only">Delete section</span>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
+                )}
 
-              <Button
-                variant="outline"
-                className="w-full justify-start mt-4"
-                onClick={addCustomSection}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Custom Section
-              </Button>
-              <Separator className="my-2" />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start mt-4"
+                  onClick={handleAddCustomSection}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Custom Section
+                </Button>
+                <Separator className="my-2" />
+              </div>
             </div>
           )}
         </div>
