@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode, useRef } from 'react';
 import { debounce } from 'lodash';
 import { ResumeData, initialResumeData } from '../lib/initialData';
+
+const STORAGE_KEY = 'resumeBuilderDraft';
+const SNAPSHOTS_STORAGE_KEY = 'resumeBuilderSnapshots';
+const HISTORY_LIMIT = 100;
+
+const cloneResumeData = (data: ResumeData): ResumeData => JSON.parse(JSON.stringify(data));
 
 export interface SavedVersion {
   id: string;
@@ -39,44 +45,52 @@ type ResumeAction =
   | { type: 'LOAD_FROM_STORAGE' }
   | { type: 'UNDO' }
   | { type: 'REDO' }
-  | { type: 'CLEAR_HISTORY' };
+  | { type: 'CLEAR_HISTORY' }
+  | { type: 'UPDATE_RESUME'; payload: ResumeData };
 
 interface ResumeContextType {
   resumeData: ResumeData;
-  canUndo: boolean;
-  canRedo: boolean;
-  dispatch: React.Dispatch<ResumeAction>;
-  updateSection: (section: keyof ResumeData, data: any) => void;
+  updateResumeData: (section: keyof ResumeData, data: any) => void;
   addSkill: (category: 'languages' | 'frameworks' | 'tools', skill: string) => void;
   removeSkill: (category: 'languages' | 'frameworks' | 'tools', index: number) => void;
-  saveDraft: () => void;
-  loadDraft: () => void;
+  addExperience: (experience: ResumeData['experience'][0]) => void;
+  updateExperience: (index: number, data: ResumeData['experience'][0]) => void;
+  removeExperience: (index: number) => void;
+  addEducation: (education: ResumeData['education'][0]) => void;
+  updateEducation: (index: number, data: ResumeData['education'][0]) => void;
+  removeEducation: (index: number) => void;
+  addProject: (project: ResumeData['projects'][0]) => void;
+  updateProject: (index: number, data: ResumeData['projects'][0]) => void;
+  removeProject: (index: number) => void;
+  saveResume: () => Promise<void>;
+  loadResume: (id: string) => Promise<void>;
+  savedVersions: SavedVersion[];
   undo: () => void;
   redo: () => void;
-  clearHistory: () => void;
-  saveSnapshot: (name?: string) => string;
-  restoreSnapshot: (versionId: string) => boolean;
-  getSavedVersions: () => SavedVersion[];
+  canUndo: boolean;
+  canRedo: boolean;
   clearForm: () => void;
+  sections?: any[];
 }
 
-const resumeReducer = (state: ResumeData, action: ResumeAction): ResumeData => {
+export const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
+
+// Reducer function for resume data
+function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
   switch (action.type) {
     case 'SET_RESUME_DATA':
-      return action.payload;
-    
+        return action.payload;
     case 'UPDATE_SECTION':
-      return {
-        ...state,
-        [action.payload.section]: action.payload.data,
-      };
-    
+        return { ...state, [action.payload.section]: action.payload.data };
     case 'ADD_SKILL':
       return {
         ...state,
         skills: {
           ...state.skills,
-          [action.payload.category]: [...state.skills[action.payload.category], action.payload.skill]
+          [action.payload.category]: [
+            ...(state.skills?.[action.payload.category] || []),
+            action.payload.skill
+          ]
         }
       };
     
@@ -194,17 +208,6 @@ const resumeReducer = (state: ResumeData, action: ResumeAction): ResumeData => {
   }
 };
 
-const STORAGE_KEY = 'resume_builder_draft';
-const SNAPSHOTS_STORAGE_KEY = 'resume_builder_snapshots';
-const HISTORY_LIMIT = 50;
-
-const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
-
-// Helper function to create a deep copy of resume data
-const cloneResumeData = (data: ResumeData): ResumeData => {
-  return JSON.parse(JSON.stringify(data));
-};
-
 // History reducer for undo/redo
 const historyReducer = (
   state: HistoryState,
@@ -280,12 +283,17 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     present: initialResumeData,
     future: []
   });
-  
+
   const { present: resumeData, past, future } = history;
   const canUndo = past.length > 0;
   const canRedo = future.length > 0;
-  
-  // Debounced save to localStorage - only save when user stops typing
+  const [savedVersions, setSavedVersions] = useState<SavedVersion[]>([]);
+
+  const dispatch = useCallback((action: ResumeAction) => {
+    const pastLimit = past.length >= HISTORY_LIMIT;
+    historyDispatch({ ...action, pastLimit });
+  }, [past.length]);
+
   const debouncedSave = useRef(
     debounce((data: ResumeData) => {
       try {
@@ -293,148 +301,114 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Failed to save draft:', error);
       }
-    }, 2000) // Increased delay to 2 seconds
+    }, 2000)
   ).current;
-  
-  // Save to localStorage whenever resumeData changes
+
   useEffect(() => {
     debouncedSave(resumeData);
     return () => debouncedSave.cancel();
   }, [resumeData, debouncedSave]);
-  
-  const dispatch = useCallback((action: ResumeAction) => {
-    const pastLimit = past.length >= HISTORY_LIMIT;
-    historyDispatch({ ...action, pastLimit });
-  }, [past.length]);
-  
-  const updateSection = useCallback((section: keyof ResumeData, data: any) => {
+
+  const updateResumeData = useCallback((section: keyof ResumeData, data: any) => {
     dispatch({ type: 'UPDATE_SECTION', payload: { section, data } });
   }, [dispatch]);
-  
+
   const addSkill = useCallback((category: 'languages' | 'frameworks' | 'tools', skill: string) => {
     dispatch({ type: 'ADD_SKILL', payload: { category, skill } });
   }, [dispatch]);
-  
+
   const removeSkill = useCallback((category: 'languages' | 'frameworks' | 'tools', index: number) => {
     dispatch({ type: 'REMOVE_SKILL', payload: { category, index } });
   }, [dispatch]);
-  
-  const saveDraft = useCallback(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
-    } catch (error) {
-      console.error('Failed to save draft:', error);
-    }
-  }, [resumeData]);
-  
-  const loadDraft = useCallback(() => {
-    try {
-      const savedData = localStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        dispatch({ type: 'SET_RESUME_DATA', payload: parsedData });
-      }
-    } catch (error) {
-      console.error('Failed to load draft:', error);
-    }
+
+  const addExperience = useCallback((experience: ResumeData['experience'][0]) => {
+    dispatch({ type: 'ADD_EXPERIENCE', payload: experience });
   }, [dispatch]);
-  
+
+  const updateExperience = useCallback((index: number, data: ResumeData['experience'][0]) => {
+    dispatch({ type: 'UPDATE_EXPERIENCE', payload: { index, data } });
+  }, [dispatch]);
+
+  const removeExperience = useCallback((index: number) => {
+    dispatch({ type: 'REMOVE_EXPERIENCE', payload: index });
+  }, [dispatch]);
+
+  const addEducation = useCallback((education: ResumeData['education'][0]) => {
+    dispatch({ type: 'ADD_EDUCATION', payload: education });
+  }, [dispatch]);
+
+  const updateEducation = useCallback((index: number, data: ResumeData['education'][0]) => {
+    dispatch({ type: 'UPDATE_EDUCATION', payload: { index, data } });
+  }, [dispatch]);
+
+  const removeEducation = useCallback((index: number) => {
+    dispatch({ type: 'REMOVE_EDUCATION', payload: index });
+  }, [dispatch]);
+
+  const addProject = useCallback((project: ResumeData['projects'][0]) => {
+    dispatch({ type: 'ADD_PROJECT', payload: project });
+  }, [dispatch]);
+
+  const updateProject = useCallback((index: number, data: ResumeData['projects'][0]) => {
+    dispatch({ type: 'UPDATE_PROJECT', payload: { index, data } });
+  }, [dispatch]);
+
+  const removeProject = useCallback((index: number) => {
+    dispatch({ type: 'REMOVE_PROJECT', payload: index });
+  }, [dispatch]);
+
+  const saveResume = useCallback(async (): Promise<void> => {
+    // This is a placeholder. In a real app, you'd save to a server.
+  }, []);
+
+  const loadResume = useCallback(async (id: string): Promise<void> => {
+    // This is a placeholder. In a real app, you'd load from a server.
+  }, []);
+
   const undo = useCallback(() => {
     if (canUndo) {
       historyDispatch({ type: 'UNDO' });
     }
   }, [canUndo]);
-  
+
   const redo = useCallback(() => {
     if (canRedo) {
       historyDispatch({ type: 'REDO' });
     }
   }, [canRedo]);
-  
-  const clearHistory = useCallback(() => {
-    historyDispatch({ type: 'CLEAR_HISTORY' });
-  }, []);
 
-  const saveSnapshot = useCallback((name?: string): string => {
-    try {
-      const existingSnapshots = getSavedVersions();
-      const timestamp = new Date().toISOString();
-      const snapshotName = name || `Resume Snapshot - ${new Date().toLocaleString()}`;
-
-      const newSnapshot: SavedVersion = {
-        id: `snapshot-${Date.now()}`,
-        name: snapshotName,
-        timestamp,
-        data: cloneResumeData(resumeData)
-      };
-
-      const updatedSnapshots = [...existingSnapshots, newSnapshot];
-      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedSnapshots));
-
-      return newSnapshot.id;
-    } catch (error) {
-      console.error('Failed to save snapshot:', error);
-      return '';
-    }
-  }, [resumeData]);
-
-  const restoreSnapshot = useCallback((versionId: string): boolean => {
-    try {
-      const snapshots = getSavedVersions();
-      const snapshot = snapshots.find(s => s.id === versionId);
-
-      if (snapshot) {
-        dispatch({ type: 'SET_RESUME_DATA', payload: snapshot.data });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Failed to restore snapshot:', error);
-      return false;
+  const clearForm = useCallback(() => {
+    if (window.confirm('Are you sure you want to clear all data?')) {
+      dispatch({ type: 'SET_RESUME_DATA', payload: initialResumeData });
     }
   }, [dispatch]);
 
-  const getSavedVersions = useCallback((): SavedVersion[] => {
-    try {
-      const stored = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Failed to get saved versions:', error);
-      return [];
-    }
-  }, []);
-
-  const clearForm = useCallback(() => {
-    dispatch({ type: 'SET_RESUME_DATA', payload: initialResumeData });
-    clearHistory();
-  }, [dispatch, clearHistory]);
-  
-  // Load saved data on initial render - ONLY ONCE
-  useEffect(() => {
-    loadDraft();
-  }, []); // Empty dependency array to run only once on mount
-  
-  const value = {
+  const contextValue: ResumeContextType = {
     resumeData,
-    canUndo,
-    canRedo,
-    dispatch,
-    updateSection,
+    updateResumeData,
     addSkill,
     removeSkill,
-    saveDraft,
-    loadDraft,
+    addExperience,
+    updateExperience,
+    removeExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
+    addProject,
+    updateProject,
+    removeProject,
+    saveResume,
+    loadResume,
+    savedVersions,
     undo,
     redo,
-    clearHistory,
-    saveSnapshot,
-    restoreSnapshot,
-    getSavedVersions,
-    clearForm
+    canUndo,
+    canRedo,
+    clearForm,
   };
-  
+
   return (
-    <ResumeContext.Provider value={value}>
+    <ResumeContext.Provider value={contextValue}>
       {children}
     </ResumeContext.Provider>
   );
