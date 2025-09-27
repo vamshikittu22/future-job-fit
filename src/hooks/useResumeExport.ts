@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { FormattedResumeData } from '@/templates/resumeDataUtils';
-import { exportToPDF, exportToWord, exportToText } from '@/templates/exportUtils';
 
 export type ExportFormat = 'pdf' | 'word' | 'text';
 

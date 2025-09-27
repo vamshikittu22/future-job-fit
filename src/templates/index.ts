@@ -2,7 +2,6 @@
 export * from './BaseResumeTemplate';
 
 // Export utility functions
-export * from './exportUtils';
 export * from './resumeDataUtils';
 
 // Export types
@@ -10,7 +9,6 @@ export type { FormattedResumeData } from './resumeDataUtils';
 
 export default {
   // Default export with all exports for easier importing
-  ...require('./exportUtils'),
   ...require('./resumeDataUtils'),
   BaseResumeTemplate: require('./BaseResumeTemplate').default,
 };

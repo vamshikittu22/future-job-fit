@@ -357,50 +357,21 @@ export default function CreateResumeBuilder() {
         </main>
       </div> {/* Close main container div */}
 
-      {/* Template Carousel */}
+      {/* Template Carousel - Placeholder for future use */}
       {showTemplateCarousel && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t shadow-lg">
-          <div className="h-32 p-4 flex items-center justify-between relative">
-            <div className="flex items-center gap-3">
-              {['modern', 'classic', 'creative', 'minimal'].map((template) => (
-                <Button
-                  key={template}
-                  variant={selectedTemplate === template ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-16 w-28 flex flex-col gap-1 capitalize"
-                  onClick={() => setSelectedTemplate(template)}
-                >
-                  <div className="w-full h-8 rounded bg-gray-200" />
-                  {template}
-                </Button>
-              ))}
+          <div className="h-16 p-4 flex items-center justify-between relative">
+            <div className="flex-1 text-center text-muted-foreground text-sm">
+              Template customization panel (coming soon)
             </div>
-            <div className="flex items-center gap-2">
-              {/* Test Button to populate history */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Add a test action to populate history
-                  updateSection('summary', (resumeData.summary || '') + ' Test action for undo/redo.');
-                  toast({
-                    title: "Test Action Added",
-                    description: "Try clicking Undo to reverse this action!",
-                  });
-                }}
-                className="flex items-center gap-2"
-              >
-                <span className="font-mono text-xs">🧪 Test Undo/Redo</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setShowTemplateCarousel(false)}
-              >
-                <Minimize2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setShowTemplateCarousel(false)}
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       )}

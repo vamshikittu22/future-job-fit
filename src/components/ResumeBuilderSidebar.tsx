@@ -24,8 +24,9 @@ import {
   Trash2,
   X
 } from 'lucide-react';
-import { useATS } from '@/hooks/use-ats'; 
+import { useATS } from '@/hooks/use-ats';
 import { ResumeData } from '@/lib/initialData';
+import { SECTION_NAMES, SECTION_ORDER, type SectionKey } from '@/constants/sectionNames';
 
 interface CustomSectionData {
   id: string;
@@ -61,7 +62,7 @@ interface ResumeBuilderSidebarProps {
   updateResumeData: (key: string, value: any) => void;
 }
 
-// Icon and name mappings for resume sections
+// Icon mappings for resume sections
 const sectionIcons = {
   personal: User,
   summary: FileText,
@@ -73,22 +74,11 @@ const sectionIcons = {
   certifications: Award, 
 };
 
-const sectionNames = {
-  personal: 'Personal Info',
-  summary: 'Summary',
-  skills: 'Skills',
-  experience: 'Experience',
-  education: 'Education',
-  projects: 'Projects',
-  achievements: 'Achievements',
-  certifications: 'Certifications',
-};
-
 // The main sidebar component
 export default function ResumeBuilderSidebar({
   activeSection,
   onSectionChange,
-  sectionOrder,
+  sectionOrder = SECTION_ORDER,
   resumeData,
   isCollapsed,
   onToggleCollapse,
@@ -276,7 +266,7 @@ export default function ResumeBuilderSidebar({
                       <span className={`flex-1 text-sm ${
                         activeSection === sectionId ? 'text-primary font-medium' : ''
                       }`}>
-                        {sectionNames[sectionId as keyof typeof sectionNames]}
+                        {SECTION_NAMES[sectionId as SectionKey] || sectionId}
                       </span>
                       <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
                     </div>
@@ -452,20 +442,6 @@ export default function ResumeBuilderSidebar({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Add Custom Section Button */}
-      <div className="p-4 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full flex items-center gap-2"
-          onClick={addCustomSection}
-        >
-          <Plus className="w-4 h-4" />
-          Add Custom Section
-        </Button>
       </div>
 
       {/* CSS for hiding the scrollbar */}

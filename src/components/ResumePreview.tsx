@@ -1,10 +1,12 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
+import { Button } from "@/components/ui/button";
 
 interface CustomSectionData {
   id: string;
@@ -77,6 +79,20 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
   );
 };
 
+// Page break configuration
+const A4_HEIGHT_MM = 297;
+const A4_WIDTH_MM = 210;
+const MM_TO_PX = 3.78; // Approximate conversion
+const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - 30; // 15mm margin top and bottom
+const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
+
+// Component to handle page breaks
+const PageBreak = ({ isLast = false }: { isLast?: boolean }) => (
+  <div className={cn("page-break", !isLast ? "page" : "")}>
+    {!isLast && <div className="page-number">Page {isLast ? '' : ''}</div>}
+  </div>
+);
+
 export default function ResumePreview({ 
   resumeData, 
   template, 
@@ -84,6 +100,45 @@ export default function ResumePreview({
   sectionOrder 
 }: ResumePreviewProps) {
   const pageRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [pages, setPages] = useState<number>(1);
+  const [currentViewPage, setCurrentViewPage] = useState<number>(1);
+  const [contentHeight, setContentHeight] = useState<number>(0);
+
+  // Calculate pages based on content height
+  useEffect(() => {
+    if (contentRef.current) {
+      const height = contentRef.current.scrollHeight;
+      setContentHeight(height);
+      
+      // Calculate number of pages needed
+      const calculatedPages = Math.ceil(height / CONTENT_HEIGHT_PX) || 1;
+      setPages(calculatedPages);
+      
+      // Reset to first page when content changes
+      setCurrentViewPage(1);
+    }
+  }, [resumeData, template, sectionOrder]);
+
+  const scrollToPage = useCallback((pageNumber: number) => {
+    if (contentRef.current) {
+      const scrollPosition = (pageNumber - 1) * CONTENT_HEIGHT_PX;
+      contentRef.current.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
+      setCurrentViewPage(pageNumber);
+    }
+  }, []);
+
+  // Handle scroll events to update current page
+  const handleScroll = useCallback(() => {
+    if (contentRef.current) {
+      const scrollPosition = contentRef.current.scrollTop;
+      const currentPage = Math.floor(scrollPosition / CONTENT_HEIGHT_PX) + 1;
+      setCurrentViewPage(Math.min(Math.max(1, currentPage), pages));
+    }
+  }, [pages]);
 
   
   // Force static styling for resume preview - not affected by theme
@@ -192,7 +247,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          SUMMARY
+          {SECTION_NAMES.summary.toUpperCase()}
         </h3>
         <p className="whitespace-pre-line text-gray-800">
           {summaryText}
@@ -228,7 +283,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          TECHNICAL SKILLS
+          {SECTION_NAMES.skills.toUpperCase()}
         </h3>
         <div className="space-y-2">
           {skillsWithItems.map((category: any) => (
@@ -251,7 +306,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          PROFESSIONAL EXPERIENCE
+          {SECTION_NAMES.experience.toUpperCase()}
         </h3>
         <div className="space-y-6">
           {experiences.map((exp: any, index: number) => {
@@ -301,7 +356,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          EDUCATION
+          {SECTION_NAMES.education.toUpperCase()}
         </h3>
         <div className="space-y-4">
           {education.map((edu: any, index: number) => (
@@ -342,12 +397,13 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          PROJECTS
+          {SECTION_NAMES.projects.toUpperCase()}
         </h3>
         <div className="space-y-6">
           {projects.map((project: any, index: number) => {
             const when = project.duration || ((project.startDate || project.endDate) ? `${project.startDate || ''}${project.startDate || project.endDate ? ' - ' : ''}${project.endDate || 'Present'}` : '');
             const bullets = Array.isArray(project.bullets) ? project.bullets.filter((b: string) => b && b.trim().length > 0) : [];
+            
             return (
               <div key={project.id || index}>
                 <div className="flex justify-between items-start">
@@ -399,7 +455,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          ACHIEVEMENTS
+          {SECTION_NAMES.achievements.toUpperCase()}
         </h3>
         <ul className="space-y-2 list-disc pl-5">
           {achievements.map((ach: any, idx: number) => {
@@ -427,7 +483,7 @@ export default function ResumePreview({
     return (
       <div className="mb-6">
         <h3 className={styles.sectionTitle}>
-          CERTIFICATIONS
+          {SECTION_NAMES.certifications.toUpperCase()}
         </h3>
         <div className="space-y-3">
           {certifications.map((cert: any, index: number) => (
@@ -490,53 +546,179 @@ export default function ResumePreview({
     return [...regularSections, ...customSections];
   };
 
-  // Calculate content for page break detection
-  const renderContent = () => (
-    <div className="space-y-8 print:space-y-6">
-      {renderSections()}
-    </div>
-  );
+  // Split content into pages
+  const renderContent = () => {
+    if (!contentRef.current) return null;
+    
+    const content = (
+      <div className="space-y-8 print:space-y-6">
+        {renderSections()}
+      </div>
+    );
+
+    if (pages === 1) {
+      return (
+        <div className="page">
+          {content}
+          <div className="page-number">Page 1</div>
+        </div>
+      );
+    }
+
+    // For multiple pages, we'll simulate page breaks in the UI
+    return (
+      <div className="relative">
+        {Array.from({ length: pages }).map((_, index) => (
+          <div 
+            key={index} 
+            className={cn("page", { 'mt-4': index > 0 })}
+            style={{
+              paddingBottom: index < pages - 1 ? '2rem' : '0',
+              minHeight: `${CONTENT_HEIGHT_PX}px`,
+              position: 'relative'
+            }}
+          >
+            {content}
+            <div className="page-number">Page {index + 1} of {pages}</div>
+            {index < pages - 1 && (
+              <div className="absolute bottom-0 left-0 right-0 border-t border-dashed border-gray-300"></div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   // Screen styles for the resume container
   const screenStyles = `
-    .resume-container {
-      scrollbar-width: thin;
-      scrollbar-color: #9ca3af #e5e7eb;
-    }
-    .resume-container::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .resume-container::-webkit-scrollbar-track {
-      background: #e5e7eb;
-      border-radius: 3px;
-    }
-    .resume-container::-webkit-scrollbar-thumb {
-      background-color: #9ca3af;
-      border-radius: 3px;
-    }
     .a4-container {
       aspect-ratio: 210 / 297;
       max-width: min(90vw, 1200px);
       max-height: calc(100vh - 200px);
-      margin: 0 auto;
+      margin: 2rem auto;
       position: relative;
       width: 100%;
+      transform-origin: top center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      background: white;
     }
+    
     .a4-container .resume-card {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       box-sizing: border-box;
+      overflow: hidden;
+      background: white;
+      display: flex;
+      flex-direction: column;
     }
-    /* Ensure A4 ratio is maintained on all screen sizes */
+    
+    .resume-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+
+    .page {
+      page-break-after: always;
+      break-after: page;
+      min-height: calc(100% - 3rem);
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+      margin-bottom: 0;
+    }
+
+    .page-number {
+      position: absolute;
+      bottom: 0;
+      right: 2rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    /* Scrollbar styles */
+    .resume-content::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    .resume-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .resume-content::-webkit-scrollbar-thumb {
+      background-color: #9ca3af;
+      border-radius: 4px;
+    }
+    
+    .resume-content::-webkit-scrollbar-thumb:hover {
+      background-color: #6b7280;
+    }
+    
+    /* Print styles */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    @media print {
+      body, html {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      .a4-container {
+        width: 210mm !important;
+        height: 297mm !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+        position: relative;
+        overflow: visible;
+      }
+      
+      .resume-content {
+        overflow: visible !important;
+        height: auto !important;
+        padding: 15mm !important;
+      }
+
+      .page {
+        min-height: 0;
+        margin-bottom: 0;
+        padding-bottom: 15mm;
+      }
+
+      .page:last-child {
+        padding-bottom: 0;
+      }
+
+      .page-number {
+        display: block;
+      }
+    }
+    
+    /* Responsive adjustments */
     @media (max-width: 768px) {
       .a4-container {
         max-width: 95vw;
         max-height: calc(100vh - 150px);
       }
     }
+    
     @media (max-width: 480px) {
       .a4-container {
         max-width: 98vw;
@@ -545,18 +727,52 @@ export default function ResumePreview({
     }
   `;
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full">
       <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
-
+      
       {/* A4 aspect ratio container - Fixed proportions */}
       <div className="a4-container">
-        <Card className={cn(
-          'resume-card bg-white text-gray-900 shadow-lg transition-none',
-          'overflow-hidden resize-none'
-        )} ref={pageRef}>
-          <div className="resume-content h-full overflow-y-auto p-8">
+        <Card 
+          className={cn(
+            'resume-card bg-white text-gray-900 transition-none relative',
+            'print:shadow-none print:border-0'
+          )} 
+          ref={pageRef}
+        >
+          <div 
+            className="resume-content" 
+            ref={contentRef}
+            onScroll={handleScroll}
+          >
             {renderContent()}
           </div>
+          
+          {/* Page navigation (only show if multiple pages) */}
+          {pages > 1 && (
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 print:hidden">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => scrollToPage(currentViewPage - 1)}
+                disabled={currentViewPage <= 1}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center px-4 text-sm text-gray-600">
+                Page {currentViewPage} of {pages}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => scrollToPage(currentViewPage + 1)}
+                disabled={currentViewPage >= pages}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     </div>
