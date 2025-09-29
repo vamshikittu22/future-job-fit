@@ -156,25 +156,46 @@ const CreateResumeBuilder: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <AppNavigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className={`container mx-auto px-2 sm:px-4 py-8 ${!isSidebarCollapsed ? 'max-w-7xl' : 'max-w-full px-4'}`}>
+        {/* Floating Toggle Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className={`fixed left-2 top-1/2 z-50 p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 transform -translate-y-1/2 transition-all duration-200 hover:scale-105 ${isSidebarCollapsed ? '' : 'lg:left-[calc(25%-0.5rem)]'}`}
+          aria-label={isSidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
+        >
+          {isSidebarCollapsed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5"/>
+              <path d="m12 19-7-7 7-7"/>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
+          )}
+        </button>
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
-          <div className="lg:w-1/3">
-            <ResumeBuilderSidebar
-              activeSection={activeSection}
-              onSectionChange={setActiveSection}
-              sectionOrder={sectionOrder}
-              resumeData={resumeData}
-              isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              customSections={customSections}
-              onAddCustomSection={handleAddCustomSection}
-              updateResumeData={updateResumeData}
-            />
+          <div className={`${isSidebarCollapsed ? 'lg:w-0' : 'lg:w-1/3'} transition-all duration-300`}>
+            <div className={isSidebarCollapsed ? 'hidden' : 'block'}>
+              <ResumeBuilderSidebar
+                activeSection={activeSection}
+                onSectionChange={setActiveSection}
+                sectionOrder={sectionOrder}
+                resumeData={resumeData}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                customSections={customSections}
+                onAddCustomSection={handleAddCustomSection}
+                updateResumeData={updateResumeData}
+              />
+            </div>
           </div>
           
           {/* Main Content */}
-          <div className={`${showPreview ? 'lg:w-1/2' : 'lg:w-2/3'}`}>
+          <div className={`${isSidebarCollapsed ? 'lg:w-full' : showPreview ? 'lg:w-1/2' : 'lg:w-2/3'} transition-all duration-300`}>
             {/* Taskbar */}
             <div className="mb-6 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex flex-wrap gap-2 items-center">
               <Button 

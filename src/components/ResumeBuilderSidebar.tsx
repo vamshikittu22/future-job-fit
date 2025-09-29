@@ -204,28 +204,16 @@ export default function ResumeBuilderSidebar({
     <aside className={`fixed top-16 left-0 bottom-0 w-80 bg-background border-r flex flex-col transition-all duration-300 ${
       isCollapsed ? '-translate-x-full' : 'translate-x-0'
     }`}>
-      {/* Collapse/Expand Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onToggleCollapse}
-        className="absolute -right-4 top-4 z-40 h-8 w-8 rounded-full border bg-background shadow-md"
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </Button>
-
       {/* Sidebar Header - Resume Builder Title */}
       <div className="p-4 border-b bg-primary/5">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
             <FileText className="w-4 h-4 text-primary" />
           </div>
-          {!isCollapsed && (
-            <div>
-              <h2 className="text-sm font-semibold">Resume Builder</h2>
-              <p className="text-xs text-muted-foreground">Create your perfect resume</p>
-            </div>
-          )}
+          <div>
+            <h2 className="text-sm font-semibold">Resume Builder</h2>
+            <p className="text-xs text-muted-foreground">Create your perfect resume</p>
+          </div>
         </div>
       </div>
 
