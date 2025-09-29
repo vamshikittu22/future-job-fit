@@ -231,6 +231,9 @@ interface ResumeSectionProps {
   updateResumeData: (section: string, data: any) => void;
   isActive?: boolean;
   onActivate?: () => void;
+  addCustomSection?: (section: any) => void;
+  updateCustomSection?: (index: number, data: any) => void;
+  removeCustomSection?: (id: string) => void;
 }
 
 const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (section: any) => void }) => {
@@ -330,13 +333,37 @@ const ResumeSection = ({
   updateResumeData,
   isActive = false,
   onActivate,
+  addCustomSection,
+  updateCustomSection,
+  removeCustomSection,
 }: ResumeSectionProps) => {
+  // Find the custom section if this is a custom section
+  const customSection = resumeData?.customSections?.find((s: any) => s.id === sectionId);
   const [isExpanded, setIsExpanded] = useState(false);
   const [skillsData, setSkillsData] = useState<SkillCategoryType[]>([]);
-  const [customSections, setCustomSections] = useState<any[]>([]);
+  const [localCustomSections, setLocalCustomSections] = useState<any[]>(resumeData?.customSections || []);
+  
+  // Update local state when resumeData changes
+  useEffect(() => {
+    setLocalCustomSections(resumeData?.customSections || []);
+  }, [resumeData?.customSections]);
   
   // Get the appropriate icon for the section
   const Icon = sectionIcons[sectionId as keyof typeof sectionIcons] || FileText;
+  
+  // If this is a custom section, ensure we have the section data
+  if (sectionId.startsWith('custom-') && !customSection) {
+    return (
+      <div className="p-4 border rounded-lg bg-card">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Section Not Found</h3>
+        </div>
+        <p className="text-muted-foreground">
+          This section could not be loaded. It may have been removed.
+        </p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Convert new skills object structure to old array structure for compatibility
@@ -1156,10 +1183,14 @@ const ResumeSection = ({
   };
 
   const renderCustomSectionContent = () => {
-    if (!resumeData?.customSections) return null;
+    if (!customSection) return (
+      <div className="p-4 text-center text-muted-foreground">
+        Custom section not found. Please refresh the page or try again.
+      </div>
+    );
     
-    const customSection = resumeData.customSections.find((s: any) => s.id === sectionId);
-    if (!customSection) return null;
+    // Ensure items array exists
+    const sectionItems = customSection.items || [];
 
     return (
       <div className="space-y-4">
@@ -1169,14 +1200,24 @@ const ResumeSection = ({
             <Input
               value={customSection.title || ''}
               onChange={(e) => {
-                const updatedSections = [...resumeData.customSections];
-                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
-                if (sectionIndex !== -1) {
-                  updatedSections[sectionIndex] = {
-                    ...updatedSections[sectionIndex],
-                    title: e.target.value
-                  };
-                  updateResumeData('customSections', updatedSections);
+                if (updateCustomSection) {
+                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  if (sectionIndex !== -1) {
+                    updateCustomSection(sectionIndex, {
+                      ...customSection,
+                      title: e.target.value
+                    });
+                  }
+                } else {
+                  const updatedSections = [...(resumeData.customSections || [])];
+                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  if (sectionIndex !== -1) {
+                    updatedSections[sectionIndex] = {
+                      ...updatedSections[sectionIndex],
+                      title: e.target.value
+                    };
+                    updateResumeData('customSections', updatedSections);
+                  }
                 }
               }}
               placeholder="Section Title"
@@ -1187,14 +1228,24 @@ const ResumeSection = ({
             <Textarea
               value={customSection.description || ''}
               onChange={(e) => {
-                const updatedSections = [...resumeData.customSections];
-                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
-                if (sectionIndex !== -1) {
-                  updatedSections[sectionIndex] = {
-                    ...updatedSections[sectionIndex],
-                    description: e.target.value
-                  };
-                  updateResumeData('customSections', updatedSections);
+                if (updateCustomSection) {
+                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  if (sectionIndex !== -1) {
+                    updateCustomSection(sectionIndex, {
+                      ...customSection,
+                      description: e.target.value
+                    });
+                  }
+                } else {
+                  const updatedSections = [...(resumeData.customSections || [])];
+                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  if (sectionIndex !== -1) {
+                    updatedSections[sectionIndex] = {
+                      ...updatedSections[sectionIndex],
+                      description: e.target.value
+                    };
+                    updateResumeData('customSections', updatedSections);
+                  }
                 }
               }}
               placeholder="Section description"
@@ -1211,30 +1262,65 @@ const ResumeSection = ({
               variant="outline"
               size="sm"
               onClick={() => {
-                const updatedSections = [...resumeData.customSections];
-                const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
-                if (sectionIndex !== -1) {
-                  const newItem = {
-                    id: `item-${Date.now()}`,
-                    title: '',
-                    subtitle: '',
-                    date: '',
-                    description: ''
-                  };
-                  updatedSections[sectionIndex] = {
-                    ...updatedSections[sectionIndex],
-                    items: [...(updatedSections[sectionIndex].items || []), newItem]
-                  };
-                  updateResumeData('customSections', updatedSections);
+                if (updateCustomSection) {
+                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  if (sectionIndex !== -1) {
+                    const newItem = {
+                      id: `item-${Date.now()}`,
+                      title: '',
+                      subtitle: '',
+                      date: '',
+                      description: ''
+                    };
+                    updateCustomSection(sectionIndex, {
+                      ...customSection,
+                      items: [...(customSection.items || []), newItem]
+                    });
+                  }
+                } else {
+                  const updatedSections = [...(resumeData.customSections || [])];
+                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  if (sectionIndex !== -1) {
+                    const newItem = {
+                      id: `item-${Date.now()}`,
+                      title: '',
+                      subtitle: '',
+                      date: '',
+                      description: ''
+                    };
+                    updatedSections[sectionIndex] = {
+                      ...updatedSections[sectionIndex],
+                      items: [...(updatedSections[sectionIndex].items || []), newItem]
+                    };
+                    updateResumeData('customSections', updatedSections);
+                  }
                 }
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
-          </div>
-
-          {(customSection.items || []).map((item: any, itemIndex: number) => (
+                    }
+                  } else {
+                    const updatedSections = [...(resumeData.customSections || [])];
+                    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                    if (sectionIndex !== -1) {
+                      const newItem = {
+                        id: `item-${Date.now()}`,
+                        title: '',
+                        subtitle: '',
+                        date: '',
+                        link: '',
+                        description: ''
+                      };
+                      updatedSections[sectionIndex] = {
+                        ...updatedSections[sectionIndex],
+                        items: [...(updatedSections[sectionIndex].items || []), newItem]
+                      };
+                      updateResumeData('customSections', updatedSections);
+                    }
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+                      {sectionItems.map((item: any, itemIndex: number) => (
             <div key={item.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Item {itemIndex + 1}</h4>
@@ -1243,14 +1329,24 @@ const ResumeSection = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    const updatedSections = [...resumeData.customSections];
-                    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
-                    if (sectionIndex !== -1) {
-                      updatedSections[sectionIndex] = {
-                        ...updatedSections[sectionIndex],
-                        items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
-                      };
-                      updateResumeData('customSections', updatedSections);
+                    if (updateCustomSection) {
+                      const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                      if (sectionIndex !== -1) {
+                        updateCustomSection(sectionIndex, {
+                          ...customSection,
+                          items: customSection.items.filter((_: any, i: number) => i !== itemIndex)
+                        });
+                      }
+                    } else {
+                      const updatedSections = [...(resumeData.customSections || [])];
+                      const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                      if (sectionIndex !== -1) {
+                        updatedSections[sectionIndex] = {
+                          ...updatedSections[sectionIndex],
+                          items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
+                        };
+                        updateResumeData('customSections', updatedSections);
+                      }
                     }
                   }}
                 >
@@ -1265,6 +1361,7 @@ const ResumeSection = ({
                     value={item.title || ''}
                     onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'title', e.target.value)}
                     placeholder="Item title"
+                    className="w-full"
                   />
                 </div>
                 <div>
@@ -1273,6 +1370,7 @@ const ResumeSection = ({
                     value={item.subtitle || ''}
                     onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'subtitle', e.target.value)}
                     placeholder="Item subtitle"
+                    className="w-full"
                   />
                 </div>
                 <div>
@@ -1281,6 +1379,7 @@ const ResumeSection = ({
                     value={item.date || ''}
                     onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'date', e.target.value)}
                     placeholder="e.g., Jan 2023 - Present"
+                    className="w-full"
                   />
                 </div>
                 <div>
@@ -1289,6 +1388,7 @@ const ResumeSection = ({
                     value={item.link || ''}
                     onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'link', e.target.value)}
                     placeholder="https://example.com"
+                    className="w-full"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -1298,6 +1398,7 @@ const ResumeSection = ({
                     onChange={(e) => updateCustomSectionItem(sectionId, itemIndex, 'description', e.target.value)}
                     placeholder="Detailed description"
                     rows={3}
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -1305,27 +1406,38 @@ const ResumeSection = ({
           ))}
         </div>
       </div>
-    );
   };
 
   const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
     if (!resumeData?.customSections) return;
     
-    const updatedSections = [...resumeData.customSections];
-    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+    const sectionIndex = resumeData.customSections.findIndex((s: any) => s.id === sectionId);
+    if (sectionIndex === -1) return;
     
-    if (sectionIndex !== -1) {
-      const updatedItems = [...(updatedSections[sectionIndex].items || [])];
-      updatedItems[itemIndex] = {
-        ...updatedItems[itemIndex],
-        [field]: value
-      };
-      
-      updatedSections[sectionIndex] = {
-        ...updatedSections[sectionIndex],
-        items: updatedItems
-      };
-      
+    const section = resumeData.customSections[sectionIndex];
+    const updatedItems = [...(section.items || [])];
+    
+    // Ensure the item exists
+    if (!updatedItems[itemIndex]) {
+      updatedItems[itemIndex] = { id: `item-${Date.now()}` };
+    }
+    
+    updatedItems[itemIndex] = {
+      ...updatedItems[itemIndex],
+      [field]: value
+    };
+    
+    const updatedSection = {
+      ...section,
+      items: updatedItems
+    };
+    
+    // Use the context method if available, otherwise fall back to updateResumeData
+    if (updateCustomSection) {
+      updateCustomSection(sectionIndex, updatedSection);
+    } else {
+      const updatedSections = [...resumeData.customSections];
+      updatedSections[sectionIndex] = updatedSection;
       updateResumeData('customSections', updatedSections);
     }
   };

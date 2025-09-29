@@ -42,7 +42,9 @@ type ResumeAction =
   | { type: 'ADD_CERTIFICATION'; payload: ResumeData['certifications'][0] }
   | { type: 'UPDATE_CERTIFICATION'; payload: { index: number; data: ResumeData['certifications'][0] } }
   | { type: 'REMOVE_CERTIFICATION'; payload: number }
-  | { type: 'LOAD_FROM_STORAGE' }
+  | { type: 'ADD_CUSTOM_SECTION'; payload: ResumeData['customSections'][0] }
+  | { type: 'UPDATE_CUSTOM_SECTION'; payload: { index: number; data: ResumeData['customSections'][0] } }
+  | { type: 'REMOVE_CUSTOM_SECTION'; payload: string }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'CLEAR_HISTORY' }
@@ -62,6 +64,9 @@ interface ResumeContextType {
   addProject: (project: ResumeData['projects'][0]) => void;
   updateProject: (index: number, data: ResumeData['projects'][0]) => void;
   removeProject: (index: number) => void;
+  addCustomSection: (section: ResumeData['customSections'][0]) => void;
+  updateCustomSection: (index: number, data: ResumeData['customSections'][0]) => void;
+  removeCustomSection: (id: string) => void;
   saveResume: () => Promise<void>;
   loadResume: (id: string) => Promise<void>;
   savedVersions: SavedVersion[];
@@ -203,8 +208,25 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
         certifications: state.certifications.filter((_, index) => index !== action.payload),
       };
     
-    default:
-      return state;
+    case 'ADD_CUSTOM_SECTION':
+      return {
+        ...state,
+        customSections: [...state.customSections, action.payload],
+      };
+    
+    case 'UPDATE_CUSTOM_SECTION':
+      return {
+        ...state,
+        customSections: state.customSections.map((item, index) =>
+          index === action.payload.index ? action.payload.data : item
+        ),
+      };
+    
+    case 'REMOVE_CUSTOM_SECTION':
+      return {
+        ...state,
+        customSections: state.customSections.filter((section) => section.id !== action.payload),
+      };
   }
 };
 
@@ -357,6 +379,18 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     dispatch({ type: 'REMOVE_PROJECT', payload: index });
   }, [dispatch]);
 
+  const addCustomSection = useCallback((section: ResumeData['customSections'][0]) => {
+    dispatch({ type: 'ADD_CUSTOM_SECTION', payload: section });
+  }, [dispatch]);
+
+  const updateCustomSection = useCallback((index: number, data: ResumeData['customSections'][0]) => {
+    dispatch({ type: 'UPDATE_CUSTOM_SECTION', payload: { index, data } });
+  }, [dispatch]);
+
+  const removeCustomSection = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_CUSTOM_SECTION', payload: id });
+  }, [dispatch]);
+
   const saveResume = useCallback(async (): Promise<void> => {
     // This is a placeholder. In a real app, you'd save to a server.
   }, []);
@@ -397,6 +431,9 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     addProject,
     updateProject,
     removeProject,
+    addCustomSection,
+    updateCustomSection,
+    removeCustomSection,
     saveResume,
     loadResume,
     savedVersions,

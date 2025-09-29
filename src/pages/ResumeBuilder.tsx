@@ -37,27 +37,8 @@ import { useToast } from "@/hooks/use-toast";
 // Import ResumeData type from ResumeContext
 import { ResumeData } from '@/contexts/ResumeContext';
 
-const initialResumeData: ResumeData = {
-  personal: {
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    linkedin: "",
-    website: ""
-  },
-  summary: "",
-  skills: [],
-  experience: [],
-  education: [],
-  projects: [],
-  achievements: [],
-  certifications: [],
-  languages: []
-};
-
 export default function ResumeBuilder() {
-  const { resumeData, updateSection, undo, redo, canUndo, canRedo } = useResume();
+  const { resumeData, updateSection, undo, redo, canUndo, canRedo, addCustomSection, updateCustomSection, removeCustomSection } = useResume();
   const [activeSection, setActiveSection] = useState("personal");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -79,11 +60,27 @@ export default function ResumeBuilder() {
 
   // Auto-save functionality
   useEffect(() => {
-    const interval = setInterval(() => {
-      localStorage.setItem('resume_builder_draft', JSON.stringify(resumeData));
-      localStorage.setItem('resumeBuilder_template', selectedTemplate);
-      localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
-    }, 30000); // Auto-save every 30 seconds
+    const saveData = () => {
+      try {
+        // Ensure customSections is always an array
+        const dataToSave = {
+          ...resumeData,
+          customSections: resumeData.customSections || []
+        };
+        
+        localStorage.setItem('resume_builder_draft', JSON.stringify(dataToSave));
+        localStorage.setItem('resumeBuilder_template', selectedTemplate);
+        localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(sectionOrder));
+      } catch (error) {
+        console.error('Failed to save resume data:', error);
+      }
+    };
+    
+    // Save immediately on mount
+    saveData();
+    
+    // Then set up the interval for auto-saving
+    const interval = setInterval(saveData, 30000); // Auto-save every 30 seconds
 
     return () => clearInterval(interval);
   }, [resumeData, selectedTemplate, sectionOrder]);
@@ -99,17 +96,43 @@ export default function ResumeBuilder() {
         const parsedData = JSON.parse(savedData);
         // Update each section individually
         Object.entries(parsedData).forEach(([key, value]) => {
+          // Skip custom sections here, they'll be handled by the sectionOrder
+          if (key === 'customSections') return;
           updateSection(key as keyof ResumeData, value);
         });
+        
+        // Handle custom sections separately to ensure they're in sync with sectionOrder
+        if (parsedData.customSections) {
+          updateSection('customSections', parsedData.customSections);
+        }
       } catch (error) {
         console.error('Failed to parse saved resume data:', error);
       }
     }
+    
     if (savedTemplate) {
       setSelectedTemplate(savedTemplate);
     }
+    
     if (savedOrder) {
-      setSectionOrder(JSON.parse(savedOrder));
+      try {
+        const order = JSON.parse(savedOrder);
+        setSectionOrder(order);
+        
+        // If we have custom sections in the order but not in the data, add them
+        const customSectionIds = order.filter((id: string) => id.startsWith('custom-'));
+        if (customSectionIds.length > 0 && (!resumeData.customSections || resumeData.customSections.length === 0)) {
+          const newCustomSections = customSectionIds.map((id: string) => ({
+            id,
+            title: 'New Section',
+            description: '',
+            items: []
+          }));
+          updateSection('customSections', newCustomSections);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved section order:', error);
+      }
     }
   }, [updateSection]);
 
@@ -276,14 +299,41 @@ export default function ResumeBuilder() {
               expandedSection={null}
               onExpandedChange={() => {}}
               customSections={resumeData.customSections || []}
-              onAddCustomSection={(section) => updateSection('customSections', [...(resumeData.customSections || []), section])}
+              onAddCustomSection={(section) => {
+                // Add to custom sections
+                const newSections = [...(resumeData.customSections || []), section];
+                updateSection('customSections', newSections);
+                
+                // Add to section order if not already present
+                if (!sectionOrder.includes(section.id)) {
+                  const newOrder = [...sectionOrder, section.id];
+                  setSectionOrder(newOrder);
+                  localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(newOrder));
+                }
+                
+                // Set the new section as active
+                setActiveSection(section.id);
+              }}
               onEditCustomSection={(section) => {
-                const updated = (resumeData.customSections || []).map(s => s.id === section.id ? section : s);
+                const updated = (resumeData.customSections || []).map(s => 
+                  s.id === section.id ? section : s
+                );
                 updateSection('customSections', updated);
               }}
               onRemoveCustomSection={(id) => {
-                const updated = (resumeData.customSections || []).filter(s => s.id !== id);
-                updateSection('customSections', updated);
+                // Remove from custom sections
+                const updatedSections = (resumeData.customSections || []).filter(s => s.id !== id);
+                updateSection('customSections', updatedSections);
+                
+                // Remove from section order
+                const updatedOrder = sectionOrder.filter(sectionId => sectionId !== id);
+                setSectionOrder(updatedOrder);
+                localStorage.setItem('resumeBuilder_sectionOrder', JSON.stringify(updatedOrder));
+                
+                // If the active section was the one being removed, switch to the first section
+                if (activeSection === id) {
+                  setActiveSection(updatedOrder[0] || 'personal');
+                }
               }}
               updateResumeData={updateResumeData}
             />
@@ -310,6 +360,9 @@ export default function ResumeBuilder() {
                           updateResumeData={updateResumeData}
                           isActive={activeSection === sectionId}
                           onActivate={() => setActiveSection(sectionId)}
+                          addCustomSection={addCustomSection}
+                          updateCustomSection={updateCustomSection}
+                          removeCustomSection={removeCustomSection}
                         />
                       ))}
                       {provided.placeholder}
