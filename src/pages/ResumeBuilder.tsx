@@ -357,7 +357,7 @@ export default function ResumeBuilder() {
                           sectionId={sectionId}
                           index={index}
                           resumeData={resumeData}
-                          updateResumeData={updateResumeData}
+                          updateResumeData={updateSection}
                           isActive={activeSection === sectionId}
                           onActivate={() => setActiveSection(sectionId)}
                           addCustomSection={addCustomSection}

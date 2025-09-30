@@ -1221,6 +1221,7 @@ const ResumeSection = ({
                 }
               }}
               placeholder="Section Title"
+              className="w-full"
             />
           </div>
           <div>
@@ -1250,6 +1251,7 @@ const ResumeSection = ({
               }}
               placeholder="Section description"
               rows={2}
+              className="w-full"
             />
           </div>
         </div>
@@ -1262,16 +1264,18 @@ const ResumeSection = ({
               variant="outline"
               size="sm"
               onClick={() => {
+                const newItem = {
+                  id: `item-${Date.now()}`,
+                  title: '',
+                  subtitle: '',
+                  date: '',
+                  link: '',
+                  description: ''
+                };
+                
                 if (updateCustomSection) {
                   const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
                   if (sectionIndex !== -1) {
-                    const newItem = {
-                      id: `item-${Date.now()}`,
-                      title: '',
-                      subtitle: '',
-                      date: '',
-                      description: ''
-                    };
                     updateCustomSection(sectionIndex, {
                       ...customSection,
                       items: [...(customSection.items || []), newItem]
@@ -1281,13 +1285,6 @@ const ResumeSection = ({
                   const updatedSections = [...(resumeData.customSections || [])];
                   const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
                   if (sectionIndex !== -1) {
-                    const newItem = {
-                      id: `item-${Date.now()}`,
-                      title: '',
-                      subtitle: '',
-                      date: '',
-                      description: ''
-                    };
                     updatedSections[sectionIndex] = {
                       ...updatedSections[sectionIndex],
                       items: [...(updatedSections[sectionIndex].items || []), newItem]
@@ -1295,32 +1292,14 @@ const ResumeSection = ({
                     updateResumeData('customSections', updatedSections);
                   }
                 }
-                    }
-                  } else {
-                    const updatedSections = [...(resumeData.customSections || [])];
-                    const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
-                    if (sectionIndex !== -1) {
-                      const newItem = {
-                        id: `item-${Date.now()}`,
-                        title: '',
-                        subtitle: '',
-                        date: '',
-                        link: '',
-                        description: ''
-                      };
-                      updatedSections[sectionIndex] = {
-                        ...updatedSections[sectionIndex],
-                        items: [...(updatedSections[sectionIndex].items || []), newItem]
-                      };
-                      updateResumeData('customSections', updatedSections);
-                    }
-                  }
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-                      {sectionItems.map((item: any, itemIndex: number) => (
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
+
+          {sectionItems.map((item: any, itemIndex: number) => (
             <div key={item.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Item {itemIndex + 1}</h4>
@@ -1406,6 +1385,7 @@ const ResumeSection = ({
           ))}
         </div>
       </div>
+    );
   };
 
   const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
@@ -1435,7 +1415,7 @@ const ResumeSection = ({
     // Use the context method if available, otherwise fall back to updateResumeData
     if (updateCustomSection) {
       updateCustomSection(sectionIndex, updatedSection);
-    } else {
+    } else if (updateResumeData) {
       const updatedSections = [...resumeData.customSections];
       updatedSections[sectionIndex] = updatedSection;
       updateResumeData('customSections', updatedSections);
@@ -1443,6 +1423,14 @@ const ResumeSection = ({
   };
 
   const renderSectionContent = () => {
+    if (!sectionId) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Select a section to edit</p>
+        </div>
+      );
+    }
+
     switch (sectionId) {
       case "personal":
         return renderPersonalInfo();
@@ -1466,7 +1454,7 @@ const ResumeSection = ({
         }
         return (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">Select a section to edit</p>
+            <p className="text-muted-foreground">Section not found</p>
           </div>
         );
     }
