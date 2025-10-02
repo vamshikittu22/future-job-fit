@@ -19,21 +19,6 @@ interface CreateResumeModalProps {
 
 type TabValue = 'blank' | 'sample' | 'import';
 
-type FormData = {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  skills: string[];
-  education: string;
-  certifications: string;
-  projects: string;
-  achievements: string;
-  experience: string;
-  jobDescription: string;
-};
-
 export default function CreateResumeModal({ open, onOpenChange }: CreateResumeModalProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,25 +26,24 @@ export default function CreateResumeModal({ open, onOpenChange }: CreateResumeMo
   const [importData, setImportData] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   
-  const defaultFormData: FormData = {
+  const defaultFormData = {
     name: "",
     email: "",
     phone: "",
     location: "",
     summary: "",
-    skills: [],
+    skills: [] as string[],
     education: "",
     certifications: "",
     projects: "",
     achievements: "",
     experience: "",
     jobDescription: ""
-  };
+  });
 
-  const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [newSkill, setNewSkill] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState("swiss");
+  const [selectedTemplate, setSelectedTemplate] = useState("swiss"); // Default to Swiss theme
 
   const skillCategories = {
     languages: ["JavaScript", "TypeScript", "Python", "Java", "C#", "Go", "Rust"],
@@ -92,6 +76,7 @@ export default function CreateResumeModal({ open, onOpenChange }: CreateResumeMo
 
   const handleTemplateSelect = (template: string) => {
     setSelectedTemplate(template);
+    // Apply template-specific modifications
     if (template === "Optimize for ATS") {
       setFormData(prev => ({
         ...prev,
@@ -221,220 +206,6 @@ ${formData.skills.length > 0 ? `TECHNICAL SKILLS\n${formData.skills.join(', ')}\
     onOpenChange(isOpen);
   };
 
-  const renderForm = () => (
-    <div className="grid lg:grid-cols-2 gap-6">
-      {/* Left Column - Personal Info & Content */}
-      <div className="space-y-6">
-        {/* Personal Information */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold">Personal Information</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="John Smith"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="john@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="(555) 123-4567"
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                placeholder="San Francisco, CA"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Professional Summary */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold">Professional Summary</h3>
-          </div>
-          <Textarea
-            value={formData.summary}
-            onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
-            placeholder="Experienced software engineer with 5+ years..."
-            className="min-h-[100px]"
-          />
-        </Card>
-
-        {/* Technical Skills */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Code className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold">Technical Skills</h3>
-          </div>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                placeholder="Add a skill"
-                onKeyPress={(e) => e.key === 'Enter' && addSkill(newSkill)}
-              />
-              <Button onClick={() => addSkill(newSkill)} size="sm">Add</Button>
-            </div>
-            
-            {/* Quick Add Skills */}
-            <div className="space-y-2">
-              {Object.entries(skillCategories).map(([category, skills]) => (
-                <div key={category}>
-                  <Label className="text-xs text-muted-foreground capitalize">{category}</Label>
-                  <div className="flex flex-wrap gap-1">
-                    {skills.map(skill => (
-                      <Badge
-                        key={skill}
-                        variant={formData.skills.includes(skill) ? "default" : "outline"}
-                        className="cursor-pointer text-xs"
-                        onClick={() => formData.skills.includes(skill) ? removeSkill(skill) : addSkill(skill)}
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Selected Skills */}
-            {formData.skills.length > 0 && (
-              <div>
-                <Label className="text-sm">Selected Skills</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.skills.map(skill => (
-                    <Badge key={skill} variant="default" className="cursor-pointer" onClick={() => removeSkill(skill)}>
-                      {skill} ×
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Right Column - Experience & Settings */}
-      <div className="space-y-6">
-        {/* AI Options */}
-        <Card className="p-4">
-          <h3 className="font-semibold mb-4">AI Options</h3>
-          
-          {/* Quick Templates */}
-          <div className="space-y-2 mb-4">
-            <Label className="text-sm">Quick Templates</Label>
-            <div className="flex flex-wrap gap-2">
-              {templates.map(template => (
-                <Badge
-                  key={template}
-                  variant={selectedTemplate === template ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleTemplateSelect(template)}
-                >
-                  {template}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-2">
-            <Label className="text-sm">Focus Tags</Label>
-            <div className="flex flex-wrap gap-2">
-              {tags.map(tag => (
-                <Badge
-                  key={tag}
-                  variant={selectedTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleTag(tag)}
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* Experience */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Briefcase className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold">Experience</h3>
-          </div>
-          <Textarea
-            value={formData.experience}
-            onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
-            placeholder="Senior Software Engineer - Company (2020-Present)&#10;• Achievement 1&#10;• Achievement 2"
-            className="min-h-[120px]"
-          />
-        </Card>
-
-        {/* Projects */}
-        <Card className="p-4">
-          <h4 className="font-semibold mb-2">Projects</h4>
-          <Textarea
-            value={formData.projects}
-            onChange={(e) => setFormData(prev => ({ ...prev, projects: e.target.value }))}
-            placeholder="Project Name - Description and technologies used..."
-            className="min-h-[80px]"
-          />
-        </Card>
-
-        {/* Education */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <GraduationCap className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold">Education</h3>
-          </div>
-          <Textarea
-            value={formData.education}
-            onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value }))}
-            placeholder="Bachelor of Science in Computer Science&#10;University Name (2018-2022)"
-            className="min-h-[60px]"
-          />
-        </Card>
-
-        {/* Optional Job Description */}
-        <Card className="p-4">
-          <h4 className="font-semibold mb-2">Target Job Description (Optional)</h4>
-          <Textarea
-            value={formData.jobDescription}
-            onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
-            placeholder="Paste the job description you're targeting..."
-            className="min-h-[100px]"
-          />
-        </Card>
-      </div>
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={handleModalOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -442,22 +213,13 @@ ${formData.skills.length > 0 ? `TECHNICAL SKILLS\n${formData.skills.join(', ')}\
           <DialogTitle className="text-2xl">Create New Resume</DialogTitle>
         </DialogHeader>
 
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(value) => {
-            setActiveTab(value as TabValue);
-            if (value === 'sample') {
-              loadSampleData();
-            }
-          }} 
-          className="w-full"
-        >
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="blank">
               <FileText className="w-4 h-4 mr-2" />
               Blank
             </TabsTrigger>
-            <TabsTrigger value="sample">
+            <TabsTrigger value="sample" onClick={loadSampleData}>
               <FileText className="w-4 h-4 mr-2" />
               Sample
             </TabsTrigger>
@@ -516,51 +278,228 @@ ${formData.skills.length > 0 ? `TECHNICAL SKILLS\n${formData.skills.join(', ')}\
           </TabsContent>
 
           <TabsContent value="blank" className="mt-0">
-            {renderForm()}
-          </TabsContent>
+            <div className="grid lg:grid-cols-2 gap-6">
+          {/* Left Column - Personal Info & Content */}
+          <div className="space-y-6">
+            {/* Personal Information */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">Personal Information</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="John Smith"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="San Francisco, CA"
+                  />
+                </div>
+              </div>
+            </Card>
 
-          <TabsContent value="sample" className="mt-0">
-            <div className="space-y-4">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-medium mb-2">Sample Resume Loaded</h3>
-                <p className="text-sm text-muted-foreground">
-                  Review and edit the sample resume data below. You can switch to the "Blank" tab to start from scratch.
-                </p>
+            {/* Professional Summary */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">Professional Summary</h3>
               </div>
-              {renderForm()}
-            </div>
-          </TabsContent>
+              <Textarea
+                value={formData.summary}
+                onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
+                placeholder="Experienced software engineer with 5+ years..."
+                className="min-h-[100px]"
+              />
+            </Card>
 
-          <div className="mt-6 pt-4 border-t">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                {activeTab === 'blank' && 'Fill in your details to create a new resume'}
-                {activeTab === 'sample' && 'Review and customize the sample resume'}
-                {activeTab === 'import' && 'Import your existing resume data'}
+            {/* Technical Skills */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Code className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">Technical Skills</h3>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    resetForm();
-                    setActiveTab('blank');
-                  }}
-                  disabled={activeTab === 'import'}
-                >
-                  Reset
-                </Button>
-                <Button 
-                  onClick={activeTab === 'import' ? handleImport : handleCreate} 
-                  disabled={activeTab === 'import' ? !importData.trim() || isImporting : !formData.name || !formData.email}
-                >
-                  {activeTab === 'import' ? 
-                    (isImporting ? 'Importing...' : 'Import & Continue') : 
-                    'Create Resume'}
-                </Button>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a skill"
+                    onKeyPress={(e) => e.key === 'Enter' && addSkill(newSkill)}
+                  />
+                  <Button onClick={() => addSkill(newSkill)} size="sm">Add</Button>
+                </div>
+                
+                {/* Quick Add Skills */}
+                <div className="space-y-2">
+                  {Object.entries(skillCategories).map(([category, skills]) => (
+                    <div key={category}>
+                      <Label className="text-xs text-muted-foreground capitalize">{category}</Label>
+                      <div className="flex flex-wrap gap-1">
+                        {skills.map(skill => (
+                          <Badge
+                            key={skill}
+                            variant={formData.skills.includes(skill) ? "default" : "outline"}
+                            className="cursor-pointer text-xs"
+                            onClick={() => formData.skills.includes(skill) ? removeSkill(skill) : addSkill(skill)}
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Skills */}
+                {formData.skills.length > 0 && (
+                  <div>
+                    <Label className="text-sm">Selected Skills</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.skills.map(skill => (
+                        <Badge key={skill} variant="default" className="cursor-pointer" onClick={() => removeSkill(skill)}>
+                          {skill} ×
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            </Card>
           </div>
-        </Tabs>
+
+          {/* Right Column - Experience & Settings */}
+          <div className="space-y-6">
+            {/* AI Options */}
+            <Card className="p-4">
+              <h3 className="font-semibold mb-4">AI Options</h3>
+              
+              {/* Quick Templates */}
+              <div className="space-y-2 mb-4">
+                <Label className="text-sm">Quick Templates</Label>
+                <div className="flex flex-wrap gap-2">
+                  {templates.map(template => (
+                    <Badge
+                      key={template}
+                      variant={selectedTemplate === template ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      {template}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label className="text-sm">Focus Tags</Label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
+            {/* Experience */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">Experience</h3>
+              </div>
+              <Textarea
+                value={formData.experience}
+                onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                placeholder="Senior Software Engineer - Company (2020-Present)&#10;• Achievement 1&#10;• Achievement 2"
+                className="min-h-[120px]"
+              />
+            </Card>
+
+            {/* Projects */}
+            <Card className="p-4">
+              <h4 className="font-semibold mb-2">Projects</h4>
+              <Textarea
+                value={formData.projects}
+                onChange={(e) => setFormData(prev => ({ ...prev, projects: e.target.value }))}
+                placeholder="Project Name - Description and technologies used..."
+                className="min-h-[80px]"
+              />
+            </Card>
+
+            {/* Education */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">Education</h3>
+              </div>
+              <Textarea
+                value={formData.education}
+                onChange={(e) => setFormData(prev => ({ ...prev, education: e.target.value }))}
+                placeholder="Bachelor of Science in Computer Science&#10;University Name (2018-2022)"
+                className="min-h-[60px]"
+              />
+            </Card>
+
+            {/* Optional Job Description */}
+            <Card className="p-4">
+              <h4 className="font-semibold mb-2">Target Job Description (Optional)</h4>
+              <Textarea
+                value={formData.jobDescription}
+                onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                placeholder="Paste the job description you're targeting..."
+                className="min-h-[100px]"
+              />
+            </Card>
+          </div>
+        </div>
+
+        <Separator />
+        
+        <div className="flex justify-end gap-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} disabled={!formData.name || !formData.email}>
+            Create Resume
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
