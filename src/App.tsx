@@ -2,8 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/hooks/useTheme";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ResumeProvider } from "@/contexts/ResumeContext";
 import Home from "./pages/Home";
 import ResumeInput from "./pages/ResumeInput";
@@ -12,32 +12,55 @@ import ResumeBuilder from "./pages/ResumeBuilder";
 import CreateResumeBuilder from "./pages/CreateResumeBuilder";
 import NewResumePage from "./pages/NewResumePage";
 import EnhancedResumeBuilder from "./pages/EnhancedResumeBuilder";
-import ResumeWizard from "./pages/ResumeWizard";
 import NotFound from "./pages/NotFound";
 
+// New Wizard Routes
+import { WizardLayout } from "./pages/wizard/WizardLayout";
+import { TemplateStep } from "./pages/wizard/steps/TemplateStep";
+import { PersonalInfoStep } from "./pages/wizard/steps/PersonalInfoStep";
+import { SummaryStep } from "./pages/wizard/steps/SummaryStep";
+import { ExperienceStep } from "./pages/wizard/steps/ExperienceStep";
+import { EducationStep } from "./pages/wizard/steps/EducationStep";
+import { SkillsStep } from "./pages/wizard/steps/SkillsStep";
+import { ProjectsStep } from "./pages/wizard/steps/ProjectsStep";
+import { ReviewStep } from "./pages/wizard/steps/ReviewStep";
+
 const queryClient = new QueryClient();
+
+const router = createBrowserRouter([
+  { path: "/", element: <Home /> },
+  { path: "/input", element: <ResumeInput /> },
+  { path: "/results", element: <Results /> },
+  { path: "/builder", element: <ResumeBuilder /> },
+  { path: "/create-resume", element: <CreateResumeBuilder /> },
+  { path: "/new-resume", element: <NewResumePage /> },
+  { path: "/enhanced-resume", element: <EnhancedResumeBuilder /> },
+  {
+    path: "/resume-wizard",
+    element: <WizardLayout />,
+    children: [
+      { index: true, element: <TemplateStep /> },
+      { path: "template", element: <TemplateStep /> },
+      { path: "personal", element: <PersonalInfoStep /> },
+      { path: "summary", element: <SummaryStep /> },
+      { path: "experience", element: <ExperienceStep /> },
+      { path: "education", element: <EducationStep /> },
+      { path: "skills", element: <SkillsStep /> },
+      { path: "projects", element: <ProjectsStep /> },
+      { path: "review", element: <ReviewStep /> },
+    ],
+  },
+  { path: "*", element: <NotFound /> },
+]);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ThemeProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <ResumeProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/input" element={<ResumeInput />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/builder" element={<ResumeBuilder />} />
-              <Route path="/create-resume" element={<CreateResumeBuilder />} />
-              <Route path="/new-resume" element={<NewResumePage />} />
-              <Route path="/enhanced-resume" element={<EnhancedResumeBuilder />} />
-              <Route path="/resume-wizard" element={<ResumeWizard />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <RouterProvider router={router} />
         </ResumeProvider>
       </ThemeProvider>
     </TooltipProvider>

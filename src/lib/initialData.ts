@@ -1,11 +1,7 @@
-import { CustomSectionItem } from "@/components/CustomSectionModal";
-
 // Types
 export interface CustomSectionItem {
   id: string;
   title: string;
-  subtitle?: string;
-  date?: string;
   subtitle?: string;
   date?: string;
   description?: string;
@@ -28,6 +24,7 @@ export interface ResumeData {
     website?: string;
     linkedin?: string;
     github?: string;
+    title?: string;
   };
   summary: string;
   experience: Array<{
@@ -57,13 +54,17 @@ export interface ResumeData {
   projects: Array<{
     id: string;
     name: string;
+    role?: string;
     description: string;
     technologies: string[];
     url?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
   achievements: Array<{
     id: string;
     title: string;
+    issuer?: string;
     date?: string;
     description: string;
   }>;
@@ -72,6 +73,9 @@ export interface ResumeData {
     name: string;
     issuer: string;
     date: string;
+    expiryDate?: string;
+    credentialId?: string;
+    credentialUrl?: string;
     url?: string;
   }>;
   customSections: CustomSection[];
