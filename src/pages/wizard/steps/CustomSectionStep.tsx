@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
+import { WizardStepContainer } from '@/components/wizard/WizardStepContainer';
+import { Plus } from 'lucide-react';
 import type { CustomField, CustomFieldType, CustomSectionEntry } from '@/lib/initialData';
 
 const fieldTypes: { label: string; value: CustomFieldType }[] = [
@@ -38,10 +40,14 @@ export const CustomSectionStep: React.FC = () => {
 
   if (!section) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Section not found</h2>
-        <p className="text-muted-foreground">The requested custom section does not exist.</p>
-      </div>
+      <WizardStepContainer 
+        title="Section Not Found"
+        description="The requested custom section does not exist."
+      >
+        <div className="py-4">
+          <p className="text-muted-foreground">Please go back and select a valid section.</p>
+        </div>
+      </WizardStepContainer>
     );
   }
 
@@ -129,31 +135,55 @@ export const CustomSectionStep: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{section.title || 'Custom Section'}</h2>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="New field name"
-            value={newFieldName}
-            onChange={(e) => setNewFieldName(e.target.value)}
-            className="w-44"
-          />
-          <select
-            className="border bg-transparent rounded-md px-2 py-2 text-sm"
-            value={newFieldType}
-            onChange={(e) => setNewFieldType(e.target.value as CustomFieldType)}
-          >
-            {fieldTypes.map((ft) => (
-              <option key={ft.value} value={ft.value}>
-                {ft.label}
-              </option>
-            ))}
-          </select>
-          <Button variant="outline" onClick={handleAddField}>Add Field</Button>
-          <Button onClick={handleAddEntry}>Add Entry</Button>
+    <WizardStepContainer 
+      title={section.title || 'Custom Section'}
+      description="Add and manage custom fields for this section"
+    >
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+          <div className="flex-1 space-y-1">
+            <h3 className="text-sm font-medium">Section Fields</h3>
+            <p className="text-xs text-muted-foreground">
+              Add custom fields to collect specific information
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Field name"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+                className="w-36"
+              />
+              <select
+                className="border bg-transparent rounded-md px-2 py-2 text-sm text-sm w-28"
+                value={newFieldType}
+                onChange={(e) => setNewFieldType(e.target.value as CustomFieldType)}
+              >
+                {fieldTypes.map((ft) => (
+                  <option key={ft.value} value={ft.value}>
+                    {ft.label}
+                  </option>
+                ))}
+              </select>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddField}
+                disabled={!newFieldName.trim()}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Field
+              </Button>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={handleAddEntry}
+              disabled={(section.fields || []).length === 0}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Entry
+            </Button>
+          </div>
         </div>
-      </div>
 
       {/* Fields Editor */}
       {(section.fields || []).length === 0 ? (
@@ -193,21 +223,48 @@ export const CustomSectionStep: React.FC = () => {
 
       {/* Entries */}
       <div className="space-y-4">
-        {(section.entries || []).map((entry) => (
-          <Card key={entry.id} className="p-4 space-y-4">
-            {(section.fields || []).map((f) => (
-              <div key={f.id} className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{f.name}</Label>
-                {renderInput(f, entry)}
-              </div>
+        <h3 className="text-sm font-medium">Section Entries</h3>
+        {(section.entries || []).length === 0 ? (
+          <div className="border-2 border-dashed rounded-lg p-8 text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              No entries added yet. Click 'Add Entry' to get started.
+            </p>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleAddEntry}
+              disabled={(section.fields || []).length === 0}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Entry
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {(section.entries || []).map((entry) => (
+              <Card key={entry.id} className="p-4 space-y-4">
+                {(section.fields || []).map((f) => (
+                  <div key={f.id} className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{f.name}</Label>
+                    {renderInput(f, entry)}
+                  </div>
+                ))}
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => removeCustomEntry(section.id, entry.id)}
+                  >
+                    Delete Entry
+                  </Button>
+                </div>
+              </Card>
             ))}
-            <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => removeCustomEntry(section.id, entry.id)}>Delete Entry</Button>
-            </div>
-          </Card>
-        ))}
+          </div>
+        )}
       </div>
     </div>
+  </WizardStepContainer>
   );
 };
 

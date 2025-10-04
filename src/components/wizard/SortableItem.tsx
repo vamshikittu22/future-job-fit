@@ -3,7 +3,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 
-export const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+interface SortableItemProps {
+  id: string;
+  children: React.ReactNode;
+}
+
+export const SortableItem: React.FC<SortableItemProps> = ({ id, children }) => {
   const {
     attributes,
     listeners,
@@ -13,13 +18,13 @@ export const SortableItem = ({ id, children }: { id: string; children: React.Rea
     isDragging,
   } = useSortable({ id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || undefined,
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 1 : 'auto',
     position: 'relative',
-  } as React.CSSProperties;
+  };
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
@@ -28,6 +33,7 @@ export const SortableItem = ({ id, children }: { id: string; children: React.Rea
           {...attributes}
           {...listeners}
           className="p-1 text-muted-foreground hover:text-foreground focus:outline-none"
+          aria-label="Drag to reorder"
         >
           <GripVertical className="h-4 w-4" />
         </button>
@@ -38,3 +44,5 @@ export const SortableItem = ({ id, children }: { id: string; children: React.Rea
     </div>
   );
 };
+
+export default SortableItem;

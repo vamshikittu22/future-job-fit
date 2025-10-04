@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { SortableItem } from './SortableItem';
+// Simple sortable item component
+const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  return <div data-id={id} className="w-full">{children}</div>;
+};
 import { useWizard } from '@/contexts/WizardContext';
 import { useResume } from '@/contexts/ResumeContext';
 import { useATS } from '@/hooks/use-ats';
@@ -25,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Loader2 } from 'lucide-react';
 
 interface WizardSidebarProps {
   isCollapsed: boolean;
@@ -42,16 +45,17 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const getStatusColor = (stepId: string) => {
     const completion = getStepCompletion(stepId);
-    if (completion === 100) return 'text-green-500';
-    if (completion > 0) return 'text-yellow-500';
-    return 'text-muted-foreground';
+    if (completion === 100) return 'bg-green-500';
+    if (completion > 50) return 'bg-blue-500';
+    if (completion > 0) return 'bg-yellow-500';
+    return 'bg-muted';
   };
 
   const getStatusIcon = (stepId: string) => {
     const completion = getStepCompletion(stepId);
-    if (completion === 100) return <CheckCircle2 className="h-3 w-3" />;
-    if (completion > 0) return <Circle className="h-3 w-3 fill-current" />;
-    return <Circle className="h-3 w-3" />;
+    if (completion === 100) return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+    if (completion > 0) return <Circle className="h-3 w-3 fill-current text-yellow-500" />;
+    return <Circle className="h-3 w-3 text-muted-foreground" />;
   };
 
   const getATSScoreColor = (score: number) => {
@@ -103,8 +107,17 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const handleKeyDown = (e: React.KeyboardEvent, sectionId: string, index: number) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleSaveSectionTitle(sectionId, index);
     } else if (e.key === 'Escape') {
+      setEditingSectionId(null);
+    }
+  };
+
+  const handleBlur = (sectionId: string, index: number) => {
+    if (sectionTitle.trim()) {
+      handleSaveSectionTitle(sectionId, index);
+    } else {
       setEditingSectionId(null);
     }
   };
@@ -128,11 +141,11 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      const oldIndex = resumeData.customSections.findIndex(section => `custom:${section.id}` === active.id);
-      const newIndex = resumeData.customSections.findIndex(section => `custom:${section.id}` === over.id);
+      const oldIndex = resumeData.customSections?.findIndex(section => `custom:${section.id}` === active.id) ?? -1;
+      const newIndex = resumeData.customSections?.findIndex(section => `custom:${section.id}` === over.id) ?? -1;
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove(resumeData.customSections, oldIndex, newIndex);
+        const newOrder = arrayMove([...resumeData.customSections], oldIndex, newIndex);
         reorderCustomSections(newOrder.map(section => section.id));
       }
     }
@@ -192,49 +205,65 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">Resume Wizard</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={onToggle}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 text-xs"
+            onClick={() => {}}
+          >
+            <Save className="h-3.5 w-3.5 mr-1.5" />
+            Save Draft
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onToggle}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="space-y-6 p-4 pb-6">
           {/* Step Navigation */}
           <div className="space-y-1">
-            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Steps</h3>
-            {steps.map((step, index) => {
+            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Sections</h3>
+            {steps.map((step) => {
               const Icon = step.icon;
               const isActive = currentStep.id === step.id;
               const canNavigate = canNavigateToStep(step.id);
               const completion = getStepCompletion(step.id);
+              const isCustomStep = step.id.startsWith('custom:');
+              const sectionId = isCustomStep ? step.id.replace('custom:', '') : '';
+              const section = isCustomStep ? 
+                (resumeData.customSections || []).find((s: any) => s.id === sectionId) : null;
 
               return (
-                <Button
+                <div 
                   key={step.id}
-                  variant="ghost"
                   className={cn(
-                    'w-full justify-start gap-3 px-3 py-2 h-auto',
-                    isActive && 'bg-accent border-l-4 border-accent-foreground'
+                    'flex items-center gap-2 p-2 rounded-md',
+                    isActive ? 'bg-accent' : 'hover:bg-accent/50',
+                    'cursor-pointer',
+                    !canNavigate && 'opacity-50 cursor-not-allowed'
                   )}
                   onClick={() => canNavigate && goToStep(step.id)}
-                  disabled={!canNavigate}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{index + 1}</span>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{step.title}</div>
-                      {completion > 0 && completion < 100 && (
-                        <Progress value={completion} className="h-1 mt-1 w-full" />
-                      )}
-                    </div>
-                    <div className={getStatusColor(step.id)}>
-                      {getStatusIcon(step.id)}
-                    </div>
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                    {getStatusIcon(step.id)}
+                    <span className="truncate">
+                      {isCustomStep ? (section?.title || 'Untitled Section') : step.title}
+                    </span>
                   </div>
-                </Button>
+                  {!isCollapsed && (
+                    <div className="w-16">
+                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={cn('h-full', getStatusColor(step.id))}
+                          style={{ width: `${completion}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -255,8 +284,8 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
               </Button>
             </div>
             
-            {resumeData.customSections.length > 0 && (
-              <div className="space-y-1">
+            <div className="space-y-2">
+              {resumeData.customSections.length > 0 ? (
                 <DndContext 
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -275,56 +304,97 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                         <SortableItem key={stepId} id={stepId}>
                           <div 
                             className={cn(
-                              'flex items-center gap-2 p-2 rounded-md hover:bg-accent/50',
-                              isActive && 'bg-accent'
+                              'flex items-center gap-2 p-2 rounded-md hover:bg-accent/50 group',
+                              isActive && 'bg-accent',
+                              'w-full'
                             )}
+                            onClick={() => goToStep(stepId)}
                           >
                             <div className="flex-1 min-w-0">
-                              {editingSectionId === section.id ? (
-                                <input
-                                  ref={inputRef}
-                                  type="text"
-                                  value={sectionTitle}
-                                  onChange={(e) => setSectionTitle(e.target.value)}
-                                  onBlur={() => handleSaveSectionTitle(section.id, index)}
-                                  onKeyDown={(e) => handleKeyDown(e, section.id, index)}
-                                  className="w-full bg-transparent border-b focus:outline-none focus:border-primary"
-                                />
-                              ) : (
-                                <div 
-                                  className="truncate cursor-pointer"
-                                  onClick={() => goToStep(stepId)}
-                                  onDoubleClick={() => handleEditSection(section.id, section.title)}
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(stepId)}
+                                {editingSectionId === section.id ? (
+                                  <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={sectionTitle}
+                                    onChange={(e) => setSectionTitle(e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, section.id, index)}
+                                    onBlur={() => handleBlur(section.id, index)}
+                                    className="w-full bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="truncate font-medium">
+                                    {section.title || 'Untitled Section'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditSection(section.id, section.title);
+                                  }}
                                 >
-                                  {section.title}
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <div className="h-4 w-px bg-border mx-1"></div>
+                                <div className="h-4 w-4 flex items-center justify-center text-muted-foreground">
+                                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></div>
                                 </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditSection(section.id, section.title);
-                                }}
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </Button>
-                              <div className="h-4 w-px bg-border mx-1"></div>
-                              <div className="h-4 w-4 flex items-center justify-center text-muted-foreground">
-                                <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></div>
                               </div>
                             </div>
                           </div>
                         </SortableItem>
                       );
                     })}
+                  
                   </SortableContext>
                 </DndContext>
+              ) : (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  No custom sections added yet
+                </div>
+              )}
+              
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8 px-3"
+                  onClick={() => {
+                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                    if (currentIndex > 0) {
+                      goToStep(steps[currentIndex - 1].id);
+                    }
+                  }}
+                  disabled={steps.findIndex(step => step.id === currentStep.id) === 0}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8 px-3"
+                  onClick={() => {
+                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                    if (currentIndex < steps.length - 1) {
+                      goToStep(steps[currentIndex + 1].id);
+                    }
+                  }}
+                  disabled={steps.findIndex(step => step.id === currentStep.id) === steps.length - 1}
+                >
+                  Next
+                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* ATS Score */}

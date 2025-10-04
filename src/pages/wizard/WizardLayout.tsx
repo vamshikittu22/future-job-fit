@@ -4,7 +4,9 @@ import { WizardProvider } from '@/contexts/WizardContext';
 import { WizardSidebar } from '@/components/wizard/WizardSidebar';
 import WizardPreview from '@/components/wizard/WizardPreview';
 import { Button } from '@/components/ui/button';
-import { Menu, Eye, Sun, Moon, Undo2, Redo2, Save, MoonIcon, SunIcon } from 'lucide-react';
+import { Menu, Eye, Sun, Moon, Undo2, Redo2, Save, MoonIcon, SunIcon, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useResume } from '@/contexts/ResumeContext';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -18,10 +20,44 @@ export const WizardLayout: React.FC = () => {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const { theme, setTheme } = useTheme();
   
-  // Mock functions for undo/redo/save - replace with actual implementations
-  const handleUndo = () => console.log('Undo');
-  const handleRedo = () => console.log('Redo');
-  const handleSaveDraft = () => console.log('Save Draft');
+  // Get resume context for saving/loading drafts
+  const { undo, redo, canUndo, canRedo, saveResume } = useResume();
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const { toast } = useToast();
+
+  const handleUndo = () => {
+    if (canUndo) {
+      undo();
+    }
+  };
+
+  const handleRedo = () => {
+    if (canRedo) {
+      redo();
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      setIsSaving(true);
+      await saveResume();
+      setLastSaved(new Date());
+      toast({
+        title: 'Draft saved',
+        description: 'Your progress has been saved successfully.',
+      });
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save draft. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <WizardProvider>
@@ -81,8 +117,9 @@ export const WizardLayout: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={handleUndo}
+                    disabled={!canUndo}
                     title="Undo (Ctrl+Z)"
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
                     <Undo2 className="h-4 w-4" />
                   </Button>
@@ -90,8 +127,9 @@ export const WizardLayout: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={handleRedo}
+                    disabled={!canRedo}
                     title="Redo (Ctrl+Shift+Z)"
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
                     <Redo2 className="h-4 w-4" />
                   </Button>
@@ -99,11 +137,16 @@ export const WizardLayout: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={handleSaveDraft}
+                    disabled={isSaving}
                     title="Save Draft (Ctrl+S)"
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    <Save className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Save Draft</span>
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    <span>Save Draft</span>
                   </Button>
                 </div>
                 

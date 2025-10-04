@@ -8,6 +8,7 @@ import {
 export interface WizardStep {
   id: string;
   title: string;
+  label: string;  // Shorter label for sidebar
   path: string;
   icon: any;
   isRequired: boolean;
@@ -107,14 +108,24 @@ export const getWizardSteps = (customSections: any[] = []): WizardStep[] => {
   const customSteps = customSections.map((sec) => ({
     id: `custom:${sec.id}`,
     title: sec.title || 'Custom Section',
+    label: sec.title || 'Custom',
     path: `/resume-wizard/custom/${sec.id}`,
     icon: Folder,
     isRequired: false,
     fields: [],
     atsWeight: 0,
   }));
+
+  // Add label to base steps
+  const baseStepsWithLabels = BASE_WIZARD_STEPS.map(step => ({
+    ...step,
+    label: step.title.split(' ')[0] // Use first word as label
+  }));
   
-  return [...BASE_WIZARD_STEPS, ...customSteps, REVIEW_STEP];
+  return [...baseStepsWithLabels, ...customSteps, {
+    ...REVIEW_STEP,
+    label: 'Review'
+  }];
 };
 
 // Template Configuration
@@ -337,6 +348,48 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
       return 100;
       
     default:
+      // Handle custom sections
+      if (stepId.startsWith('custom:')) {
+        const sectionId = stepId.replace('custom:', '');
+        const section = data.customSections?.find((s: any) => s.id === sectionId);
+        
+        if (!section) return 0;
+        
+        // A custom section is considered complete if it has:
+        // 1. A title (20%)
+        // 2. At least one field (30%)
+        // 3. All fields have names (20%)
+        // 4. At least one entry with all required fields filled (30%)
+        let completion = 0;
+        
+        // Check for title (20%)
+        if (section.title?.trim()) completion += 20;
+        
+        // Check for at least one field (30%)
+        if (section.fields?.length > 0) {
+          completion += 30;
+          
+          // Check if all fields have names (20%)
+          const allFieldsHaveNames = section.fields.every((field: any) => field.name?.trim());
+          if (allFieldsHaveNames) completion += 20;
+          
+          // Check for at least one complete entry (30%)
+          if (section.entries?.length > 0) {
+            const hasCompleteEntry = section.entries.some((entry: any) => {
+              return section.fields.every((field: any) => {
+                const value = entry.values?.[field.id];
+                return value !== undefined && 
+                       value !== null && 
+                       value !== '' && 
+                       (!Array.isArray(value) || value.length > 0);
+              });
+            });
+            if (hasCompleteEntry) completion += 30;
+          }
+        }
+        
+        return Math.min(completion, 100);
+      }
       return 0;
   }
 };
