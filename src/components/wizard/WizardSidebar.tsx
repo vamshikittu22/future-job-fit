@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableItem } from './SortableItem';
 import { useWizard } from '@/contexts/WizardContext';
 import { useResume } from '@/contexts/ResumeContext';
 import { useATS } from '@/hooks/use-ats';
-import { WIZARD_STEPS, TEMPLATE_OPTIONS } from '@/config/wizardSteps';
+import { TEMPLATE_OPTIONS } from '@/config/wizardSteps';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -22,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus } from 'lucide-react';
 
 interface WizardSidebarProps {
   isCollapsed: boolean;
@@ -30,8 +33,11 @@ interface WizardSidebarProps {
 }
 
 export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onToggle }) => {
-  const { wizardState, currentStep, goToStep, canNavigateToStep, getStepCompletion } = useWizard();
-  const { resumeData } = useResume();
+  const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion } = useWizard();
+  const { resumeData, addCustomSection, updateCustomSection, reorderCustomSections } = useResume();
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [sectionTitle, setSectionTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const { atsScore, analysis } = useATS(resumeData);
 
   const getStatusColor = (stepId: string) => {
@@ -64,6 +70,74 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
     return 'Critical';
   };
 
+  const handleAddSection = () => {
+    const id = Date.now().toString();
+    const newSection = { 
+      id, 
+      title: `Custom ${resumeData.customSections.length + 1}`, 
+      description: '', 
+      fields: [], 
+      entries: [] 
+    };
+    addCustomSection(newSection);
+    // Give WizardContext a tick to recompute steps, then navigate
+    setTimeout(() => {
+      goToStep(`custom:${id}`);
+    }, 0);
+  };
+
+  const handleEditSection = (sectionId: string, title: string) => {
+    setEditingSectionId(sectionId);
+    setSectionTitle(title);
+  };
+
+  const handleSaveSectionTitle = (sectionId: string, index: number) => {
+    if (sectionTitle.trim()) {
+      updateCustomSection(index, { 
+        ...resumeData.customSections[index], 
+        title: sectionTitle.trim() 
+      });
+    }
+    setEditingSectionId(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, sectionId: string, index: number) => {
+    if (e.key === 'Enter') {
+      handleSaveSectionTitle(sectionId, index);
+    } else if (e.key === 'Escape') {
+      setEditingSectionId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (editingSectionId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingSectionId]);
+
+  // Set up drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = resumeData.customSections.findIndex(section => `custom:${section.id}` === active.id);
+      const newIndex = resumeData.customSections.findIndex(section => `custom:${section.id}` === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(resumeData.customSections, oldIndex, newIndex);
+        reorderCustomSections(newOrder.map(section => section.id));
+      }
+    }
+  };
+
   if (isCollapsed) {
     return (
       <div className="flex h-full flex-col items-center py-4 border-r">
@@ -77,7 +151,17 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        {WIZARD_STEPS.map((step) => {
+        {/* Quick add button in collapsed view */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="mb-3"
+          title="Add custom section"
+          onClick={handleAddSection}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        {steps.map((step) => {
           const Icon = step.icon;
           const isActive = currentStep.id === step.id;
           return (
@@ -118,7 +202,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           {/* Step Navigation */}
           <div className="space-y-1">
             <h3 className="mb-3 text-sm font-medium text-muted-foreground">Steps</h3>
-            {WIZARD_STEPS.map((step, index) => {
+            {steps.map((step, index) => {
               const Icon = step.icon;
               const isActive = currentStep.id === step.id;
               const canNavigate = canNavigateToStep(step.id);
@@ -156,6 +240,92 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           </div>
 
           <Separator />
+
+          {/* Custom Sections */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium text-muted-foreground">Custom Sections</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={handleAddSection}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            </div>
+            
+            {resumeData.customSections.length > 0 && (
+              <div className="space-y-1">
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={resumeData.customSections.map(section => `custom:${section.id}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {resumeData.customSections.map((section, index) => {
+                      const stepId = `custom:${section.id}`;
+                      const step = steps.find(s => s.id === stepId);
+                      const isActive = currentStep.id === stepId;
+                      
+                      return (
+                        <SortableItem key={stepId} id={stepId}>
+                          <div 
+                            className={cn(
+                              'flex items-center gap-2 p-2 rounded-md hover:bg-accent/50',
+                              isActive && 'bg-accent'
+                            )}
+                          >
+                            <div className="flex-1 min-w-0">
+                              {editingSectionId === section.id ? (
+                                <input
+                                  ref={inputRef}
+                                  type="text"
+                                  value={sectionTitle}
+                                  onChange={(e) => setSectionTitle(e.target.value)}
+                                  onBlur={() => handleSaveSectionTitle(section.id, index)}
+                                  onKeyDown={(e) => handleKeyDown(e, section.id, index)}
+                                  className="w-full bg-transparent border-b focus:outline-none focus:border-primary"
+                                />
+                              ) : (
+                                <div 
+                                  className="truncate cursor-pointer"
+                                  onClick={() => goToStep(stepId)}
+                                  onDoubleClick={() => handleEditSection(section.id, section.title)}
+                                >
+                                  {section.title}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSection(section.id, section.title);
+                                }}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </Button>
+                              <div className="h-4 w-px bg-border mx-1"></div>
+                              <div className="h-4 w-4 flex items-center justify-center text-muted-foreground">
+                                <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </SortableItem>
+                      );
+                    })}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
+          </div>
 
           {/* ATS Score */}
           <div className="space-y-3">

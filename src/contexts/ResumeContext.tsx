@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode, useRef } from 'react';
 import { debounce } from 'lodash';
-import { ResumeData, initialResumeData } from '../lib/initialData';
+import { ResumeData, initialResumeData, CustomSection, CustomField, CustomSectionEntry } from '../lib/initialData';
 
 const STORAGE_KEY = 'resumeBuilderDraft';
 const SNAPSHOTS_STORAGE_KEY = 'resumeBuilderSnapshots';
@@ -45,6 +45,14 @@ type ResumeAction =
   | { type: 'ADD_CUSTOM_SECTION'; payload: ResumeData['customSections'][0] }
   | { type: 'UPDATE_CUSTOM_SECTION'; payload: { index: number; data: ResumeData['customSections'][0] } }
   | { type: 'REMOVE_CUSTOM_SECTION'; payload: string }
+  | { type: 'REORDER_CUSTOM_SECTIONS'; payload: string[] }
+  | { type: 'ADD_CUSTOM_FIELD'; payload: { sectionId: string; field: CustomField } }
+  | { type: 'UPDATE_CUSTOM_FIELD'; payload: { sectionId: string; fieldId: string; updates: Partial<CustomField> } }
+  | { type: 'REMOVE_CUSTOM_FIELD'; payload: { sectionId: string; fieldId: string } }
+  | { type: 'REORDER_CUSTOM_FIELDS'; payload: { sectionId: string; fieldIds: string[] } }
+  | { type: 'ADD_CUSTOM_ENTRY'; payload: { sectionId: string; entry: CustomSectionEntry } }
+  | { type: 'UPDATE_CUSTOM_ENTRY'; payload: { sectionId: string; entryId: string; updates: Partial<CustomSectionEntry> } }
+  | { type: 'REMOVE_CUSTOM_ENTRY'; payload: { sectionId: string; entryId: string } }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'CLEAR_HISTORY' }
@@ -67,6 +75,14 @@ interface ResumeContextType {
   addCustomSection: (section: ResumeData['customSections'][0]) => void;
   updateCustomSection: (index: number, data: ResumeData['customSections'][0]) => void;
   removeCustomSection: (id: string) => void;
+  reorderCustomSections: (ids: string[]) => void;
+  addCustomField: (sectionId: string, field: CustomField) => void;
+  updateCustomField: (sectionId: string, fieldId: string, updates: Partial<CustomField>) => void;
+  removeCustomField: (sectionId: string, fieldId: string) => void;
+  reorderCustomFields: (sectionId: string, fieldIds: string[]) => void;
+  addCustomEntry: (sectionId: string, entry: CustomSectionEntry) => void;
+  updateCustomEntry: (sectionId: string, entryId: string, updates: Partial<CustomSectionEntry>) => void;
+  removeCustomEntry: (sectionId: string, entryId: string) => void;
   saveResume: () => Promise<void>;
   loadResume: (id: string) => Promise<void>;
   savedVersions: SavedVersion[];
@@ -227,6 +243,87 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
         ...state,
         customSections: state.customSections.filter((section) => section.id !== action.payload),
       };
+    case 'REORDER_CUSTOM_SECTIONS':
+      return {
+        ...state,
+        customSections: action.payload
+          .map(id => state.customSections.find(s => s.id === id))
+          .filter((s): s is CustomSection => Boolean(s))
+      };
+    case 'ADD_CUSTOM_FIELD': {
+      const { sectionId, field } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId ? { ...sec, fields: [...(sec.fields || []), field] } : sec
+        )
+      };
+    }
+    case 'UPDATE_CUSTOM_FIELD': {
+      const { sectionId, fieldId, updates } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId
+            ? { ...sec, fields: (sec.fields || []).map(f => f.id === fieldId ? { ...f, ...updates } : f) }
+            : sec
+        )
+      };
+    }
+    case 'REMOVE_CUSTOM_FIELD': {
+      const { sectionId, fieldId } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId ? { ...sec, fields: (sec.fields || []).filter(f => f.id !== fieldId) } : sec
+        )
+      };
+    }
+    case 'REORDER_CUSTOM_FIELDS': {
+      const { sectionId, fieldIds } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId
+            ? {
+                ...sec,
+                fields: fieldIds
+                  .map(id => (sec.fields || []).find(f => f.id === id))
+                  .filter((f): f is CustomField => Boolean(f))
+              }
+            : sec
+        )
+      };
+    }
+    case 'ADD_CUSTOM_ENTRY': {
+      const { sectionId, entry } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId ? { ...sec, entries: [...(sec.entries || []), entry] } : sec
+        )
+      };
+    }
+    case 'UPDATE_CUSTOM_ENTRY': {
+      const { sectionId, entryId, updates } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId
+            ? { ...sec, entries: (sec.entries || []).map(e => e.id === entryId ? { ...e, ...updates } : e) }
+            : sec
+        )
+      };
+    }
+    case 'REMOVE_CUSTOM_ENTRY': {
+      const { sectionId, entryId } = action.payload;
+      return {
+        ...state,
+        customSections: state.customSections.map(sec =>
+          sec.id === sectionId ? { ...sec, entries: (sec.entries || []).filter(e => e.id !== entryId) } : sec
+        )
+      };
+    }
   }
 };
 
@@ -391,6 +488,38 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     dispatch({ type: 'REMOVE_CUSTOM_SECTION', payload: id });
   }, [dispatch]);
 
+  const reorderCustomSections = useCallback((ids: string[]) => {
+    dispatch({ type: 'REORDER_CUSTOM_SECTIONS', payload: ids });
+  }, [dispatch]);
+
+  const addCustomField = useCallback((sectionId: string, field: CustomField) => {
+    dispatch({ type: 'ADD_CUSTOM_FIELD', payload: { sectionId, field } });
+  }, [dispatch]);
+
+  const updateCustomField = useCallback((sectionId: string, fieldId: string, updates: Partial<CustomField>) => {
+    dispatch({ type: 'UPDATE_CUSTOM_FIELD', payload: { sectionId, fieldId, updates } });
+  }, [dispatch]);
+
+  const removeCustomField = useCallback((sectionId: string, fieldId: string) => {
+    dispatch({ type: 'REMOVE_CUSTOM_FIELD', payload: { sectionId, fieldId } });
+  }, [dispatch]);
+
+  const reorderCustomFields = useCallback((sectionId: string, fieldIds: string[]) => {
+    dispatch({ type: 'REORDER_CUSTOM_FIELDS', payload: { sectionId, fieldIds } });
+  }, [dispatch]);
+
+  const addCustomEntry = useCallback((sectionId: string, entry: CustomSectionEntry) => {
+    dispatch({ type: 'ADD_CUSTOM_ENTRY', payload: { sectionId, entry } });
+  }, [dispatch]);
+
+  const updateCustomEntry = useCallback((sectionId: string, entryId: string, updates: Partial<CustomSectionEntry>) => {
+    dispatch({ type: 'UPDATE_CUSTOM_ENTRY', payload: { sectionId, entryId, updates } });
+  }, [dispatch]);
+
+  const removeCustomEntry = useCallback((sectionId: string, entryId: string) => {
+    dispatch({ type: 'REMOVE_CUSTOM_ENTRY', payload: { sectionId, entryId } });
+  }, [dispatch]);
+
   const saveResume = useCallback(async (): Promise<void> => {
     // This is a placeholder. In a real app, you'd save to a server.
   }, []);
@@ -434,6 +563,14 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     addCustomSection,
     updateCustomSection,
     removeCustomSection,
+    reorderCustomSections,
+    addCustomField,
+    updateCustomField,
+    removeCustomField,
+    reorderCustomFields,
+    addCustomEntry,
+    updateCustomEntry,
+    removeCustomEntry,
     saveResume,
     loadResume,
     savedVersions,

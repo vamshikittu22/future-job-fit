@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ResumeData } from '@/lib/initialData';
 import { useResume } from './ResumeContext';
-import { WIZARD_STEPS, validateStep, calculateStepCompletion, getStepStatus } from '@/config/wizardSteps';
+import { BASE_WIZARD_STEPS, getWizardSteps, validateStep, calculateStepCompletion, getStepStatus, type WizardStep } from '@/config/wizardSteps';
+import { Folder } from 'lucide-react';
 import { debounce } from 'lodash';
 
 // Wizard-specific state
@@ -20,7 +21,8 @@ export interface WizardState {
 interface WizardContextType {
   // State
   wizardState: WizardState;
-  currentStep: typeof WIZARD_STEPS[0];
+  steps: WizardStep[];
+  currentStep: WizardStep;
   canNavigateToStep: (stepId: string) => boolean;
   
   // Navigation
@@ -78,7 +80,12 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   });
   
-  const currentStep = WIZARD_STEPS[wizardState.currentStepIndex];
+  // Get steps with custom sections, ensuring review is always last
+  const steps: WizardStep[] = useMemo(() => {
+    return getWizardSteps(resumeData.customSections);
+  }, [resumeData.customSections]);
+
+  const currentStep = steps[wizardState.currentStepIndex] || steps[0];
   
   // Save wizard state to localStorage whenever it changes
   useEffect(() => {
@@ -132,7 +139,7 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const completed: string[] = [];
     const partial: string[] = [];
     
-    WIZARD_STEPS.forEach(step => {
+    steps.forEach(step => {
       const completion = calculateStepCompletion(step.id, { 
         ...resumeData, 
         selectedTemplate: wizardState.selectedTemplate 
@@ -151,34 +158,17 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       completedSteps: completed,
       partialSteps: partial,
     }));
-  }, [resumeData, wizardState.selectedTemplate]);
+  }, [resumeData, wizardState.selectedTemplate, steps]);
   
   // Update step status when data changes
   useEffect(() => {
     updateStepStatus();
   }, [updateStepStatus]);
   
-  // Check if user can navigate to a specific step
+  // Allow navigation to any step
   const canNavigateToStep = useCallback((stepId: string): boolean => {
-    const targetIndex = WIZARD_STEPS.findIndex(s => s.id === stepId);
-    if (targetIndex === -1) return false;
-    
-    // Can always go back to completed steps
-    if (wizardState.completedSteps.includes(stepId)) return true;
-    
-    // Can go to current step
-    if (targetIndex === wizardState.currentStepIndex) return true;
-    
-    // Can go to next step if current is complete or optional
-    if (targetIndex === wizardState.currentStepIndex + 1) {
-      const currentStepComplete = wizardState.completedSteps.includes(currentStep.id);
-      const currentStepOptional = !currentStep.isRequired;
-      return currentStepComplete || currentStepOptional;
-    }
-    
-    // Can't skip ahead
-    return false;
-  }, [wizardState.completedSteps, wizardState.currentStepIndex, currentStep]);
+    return steps.some(step => step.id === stepId);
+  }, [steps]);
   
   // Navigate to a specific step
   const goToStep = useCallback((stepId: string) => {
@@ -187,12 +177,12 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
     
-    const stepIndex = WIZARD_STEPS.findIndex(s => s.id === stepId);
+    const stepIndex = steps.findIndex(s => s.id === stepId);
     if (stepIndex !== -1) {
       setWizardState(prev => ({ ...prev, currentStepIndex: stepIndex }));
-      navigate(WIZARD_STEPS[stepIndex].path);
+      navigate(steps[stepIndex].path);
     }
-  }, [canNavigateToStep, navigate]);
+  }, [canNavigateToStep, navigate, steps]);
   
   // Validate current step
   const validateCurrentStep = useCallback((): { isValid: boolean; errors: string[] } => {
@@ -232,21 +222,21 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
     
     // Navigate to next step
-    if (wizardState.currentStepIndex < WIZARD_STEPS.length - 1) {
+    if (wizardState.currentStepIndex < steps.length - 1) {
       const nextIndex = wizardState.currentStepIndex + 1;
       setWizardState(prev => ({ ...prev, currentStepIndex: nextIndex }));
-      navigate(WIZARD_STEPS[nextIndex].path);
+      navigate(steps[nextIndex].path);
     }
-  }, [currentStep, validateCurrentStep, wizardState, navigate]);
+  }, [currentStep, validateCurrentStep, wizardState, navigate, steps]);
   
   // Navigate to previous step
   const prevStep = useCallback(() => {
     if (wizardState.currentStepIndex > 0) {
       const prevIndex = wizardState.currentStepIndex - 1;
       setWizardState(prev => ({ ...prev, currentStepIndex: prevIndex }));
-      navigate(WIZARD_STEPS[prevIndex].path);
+      navigate(steps[prevIndex].path);
     }
-  }, [wizardState.currentStepIndex, navigate]);
+  }, [wizardState.currentStepIndex, navigate, steps]);
   
   // Skip current step (only for optional steps)
   const skipStep = useCallback(() => {
@@ -256,14 +246,14 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         skippedSteps: [...prev.skippedSteps, currentStep.id],
       }));
       
-      // Navigate to next step
-      if (wizardState.currentStepIndex < WIZARD_STEPS.length - 1) {
+      // Navigate to next step if not at the end
+      if (wizardState.currentStepIndex < steps.length - 1) {
         const nextIndex = wizardState.currentStepIndex + 1;
         setWizardState(prev => ({ ...prev, currentStepIndex: nextIndex }));
-        navigate(WIZARD_STEPS[nextIndex].path);
+        navigate(steps[nextIndex].path);
       }
     }
-  }, [currentStep, wizardState.currentStepIndex, navigate]);
+  }, [currentStep, wizardState.currentStepIndex, navigate, steps]);
   
   // Get step completion percentage
   const getStepCompletion = useCallback((stepId: string): number => {
@@ -316,11 +306,11 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Sync current step with URL
   useEffect(() => {
     const currentPath = location.pathname;
-    const stepIndex = WIZARD_STEPS.findIndex(s => s.path === currentPath);
+    const stepIndex = steps.findIndex(s => s.path === currentPath);
     
     if (stepIndex !== -1 && stepIndex !== wizardState.currentStepIndex) {
       // Check if navigation is allowed
-      const step = WIZARD_STEPS[stepIndex];
+      const step = steps[stepIndex];
       if (canNavigateToStep(step.id)) {
         setWizardState(prev => ({ ...prev, currentStepIndex: stepIndex }));
       } else {
@@ -328,10 +318,11 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         navigate(currentStep.path);
       }
     }
-  }, [location.pathname, wizardState.currentStepIndex, canNavigateToStep, currentStep, navigate]);
+  }, [location.pathname, wizardState.currentStepIndex, canNavigateToStep, currentStep, navigate, steps]);
   
   const contextValue: WizardContextType = {
     wizardState,
+    steps,
     currentStep,
     canNavigateToStep,
     goToStep,

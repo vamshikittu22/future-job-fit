@@ -16,7 +16,8 @@ export interface WizardStep {
   atsWeight: number;
 }
 
-export const WIZARD_STEPS: WizardStep[] = [
+// Base steps that should always be present (except review which is handled separately)
+export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'template',
     title: 'Template Selection',
@@ -87,17 +88,34 @@ export const WIZARD_STEPS: WizardStep[] = [
     helpText: 'Showcase your notable projects',
     atsWeight: 10,
   },
-  {
-    id: 'review',
-    title: 'Review & Export',
-    path: '/resume-wizard/review',
-    icon: CheckCircle,
-    isRequired: true,
-    fields: [],
-    helpText: 'Review your resume and export',
-    atsWeight: 5,
-  },
 ];
+
+// Review step that should always be last
+const REVIEW_STEP: WizardStep = {
+  id: 'review',
+  title: 'Review & Export',
+  path: '/resume-wizard/review',
+  icon: CheckCircle,
+  isRequired: true,
+  fields: [],
+  helpText: 'Review your resume and export',
+  atsWeight: 5,
+};
+
+// Helper function to get all steps with custom sections in the correct order
+export const getWizardSteps = (customSections: any[] = []): WizardStep[] => {
+  const customSteps = customSections.map((sec) => ({
+    id: `custom:${sec.id}`,
+    title: sec.title || 'Custom Section',
+    path: `/resume-wizard/custom/${sec.id}`,
+    icon: Folder,
+    isRequired: false,
+    fields: [],
+    atsWeight: 0,
+  }));
+  
+  return [...BASE_WIZARD_STEPS, ...customSteps, REVIEW_STEP];
+};
 
 // Template Configuration
 export interface TemplateOption {

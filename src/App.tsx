@@ -24,6 +24,7 @@ import { EducationStep } from "./pages/wizard/steps/EducationStep";
 import { SkillsStep } from "./pages/wizard/steps/SkillsStep";
 import { ProjectsStep } from "./pages/wizard/steps/ProjectsStep";
 import { ReviewStep } from "./pages/wizard/steps/ReviewStep";
+import CustomSectionStep from "./pages/wizard/steps/CustomSectionStep";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
       { path: "skills", element: <SkillsStep /> },
       { path: "projects", element: <ProjectsStep /> },
       { path: "review", element: <ReviewStep /> },
+      { path: "custom/:id", element: <CustomSectionStep /> },
     ],
   },
   { path: "*", element: <NotFound /> },

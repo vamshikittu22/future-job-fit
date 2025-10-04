@@ -1,18 +1,24 @@
 // Types
-export interface CustomSectionItem {
+export type CustomFieldType = 'text' | 'textarea' | 'date' | 'url' | 'tag';
+
+export interface CustomField {
   id: string;
-  title: string;
-  subtitle?: string;
-  date?: string;
-  description?: string;
-  link?: string;
+  name: string;
+  type: CustomFieldType;
+}
+
+export interface CustomSectionEntry {
+  id: string;
+  // key is field.id, value is string or string[] for 'tag'
+  values: Record<string, string | string[]>;
 }
 
 export interface CustomSection {
   id: string;
   title: string;
   description?: string;
-  items: CustomSectionItem[];
+  fields: CustomField[];
+  entries: CustomSectionEntry[];
 }
 
 export interface ResumeData {
@@ -36,17 +42,22 @@ export interface ResumeData {
     endDate: string;
     description: string;
     current: boolean;
+    bullets?: string[]; // Add bullets array for experience entries
   }>;
   education: Array<{
     id: string;
     degree: string;
     school: string;
     fieldOfStudy?: string;
+    field?: string; // Alias for fieldOfStudy
     startDate: string;
     endDate: string;
     description?: string;
   }>;
-  skills: {
+  skills: Array<{
+    category: string;
+    items: string[];
+  }> | {
     languages: string[];
     frameworks: string[];
     tools: string[];
@@ -57,6 +68,8 @@ export interface ResumeData {
     role?: string;
     description: string;
     technologies: string[];
+    tech?: string[]; // Alias for technologies
+    bullets?: string[]; // Add bullets array for project entries
     url?: string;
     startDate?: string;
     endDate?: string;

@@ -77,46 +77,64 @@ export const useATS = (resumeData: ResumeData) => {
       });
     }
 
-    // 3. Experience Analysis
     let experienceKeywordCount = 0;
     let quantifiableBullets = 0;
     let uniqueVerbs: string[] = [];
     (resumeData.experience || []).forEach(exp => {
-      const expText = [exp.title, exp.company, ...exp.bullets].join(' ');
+      // Handle both old and new experience formats
+      const bullets = 'bullets' in exp ? exp.bullets || [] : [exp.description];
+      const expTech = 'technologies' in exp ? exp.technologies : (exp as any).tech || [];
+      const expText = [exp.title, exp.company, ...expTech, ...bullets].join(' ');
       const expMatch = countKeywords(expText, [...KEYWORDS.technical, ...KEYWORDS.actionVerbs]);
       experienceKeywordCount += expMatch.count;
-      exp.bullets.forEach(b => { if (checkQuantifiable(b)) quantifiableBullets++; });
-      uniqueVerbs.push(...countKeywords(exp.bullets.join(' '), KEYWORDS.actionVerbs).matched);
+      bullets.forEach(b => { if (checkQuantifiable(b)) quantifiableBullets++; });
+      uniqueVerbs.push(...countKeywords(bullets.join(' '), KEYWORDS.actionVerbs).matched);
     });
     const experienceKeywordScore = Math.min((experienceKeywordCount / 10) * SCORING_WEIGHTS.experienceKeywords, SCORING_WEIGHTS.experienceKeywords);
     const experienceImpactScore = ((quantifiableBullets / (resumeData.experience?.length || 1)) / 2) * SCORING_WEIGHTS.experienceImpact;
     totalScore += experienceKeywordScore + experienceImpactScore;
     newAnalysis.sections.experience = ((experienceKeywordScore + experienceImpactScore) / (SCORING_WEIGHTS.experienceKeywords + SCORING_WEIGHTS.experienceImpact)) * 100;
-    if (quantifiableBullets < resumeData.experience?.length) newAnalysis.suggestions.push({ text: 'Include more measurable results in Experience bullets.', priority: 'high' });
-    if (Array.from(new Set(uniqueVerbs)).length < 5) newAnalysis.suggestions.push({ text: 'Use a variety of action verbs in Experience.', priority: 'medium' });
-
-    // 4. Projects
+    
+    // 4. Projects Analysis
     let projectKeywordCount = 0;
     (resumeData.projects || []).forEach(proj => {
-      const projText = [proj.name, proj.tech, ...proj.bullets].join(' ');
-      projectKeywordCount += countKeywords(projText, KEYWORDS.technical).count;
+      const projTech = 'technologies' in proj ? proj.technologies : (proj as any).tech || [];
+      const projText = [proj.name, proj.role || '', proj.description, ...projTech].join(' ');
+      const projMatch = countKeywords(projText, [...KEYWORDS.technical, ...KEYWORDS.actionVerbs]);
+      projectKeywordCount += projMatch.count;
+      
+      // Handle both bullets and description for quantifiable metrics
+      const bullets = 'bullets' in proj ? proj.bullets || [] : [proj.description];
+      bullets.forEach(b => { if (checkQuantifiable(b)) quantifiableBullets++; });
     });
+    
     const projectsScore = Math.min((projectKeywordCount / 5) * SCORING_WEIGHTS.projectsKeywords, SCORING_WEIGHTS.projectsKeywords);
     totalScore += projectsScore;
     newAnalysis.sections.projects = (projectsScore / SCORING_WEIGHTS.projectsKeywords) * 100;
 
     // 5. Education
-    let educationMatches = 0;
-    (resumeData.education || []).forEach(ed => {
-      educationMatches += countKeywords(ed.degree + ' ' + ed.field, KEYWORDS.degrees).count;
-    });
-    const educationScore = Math.min((educationMatches / 3) * SCORING_WEIGHTS.educationRelevance, SCORING_WEIGHTS.educationRelevance);
+    const educationText = (resumeData.education || [])
+      .map(edu => [
+        edu.degree, 
+        edu.school, 
+        edu.fieldOfStudy || (edu as any).field || '', 
+        edu.description || ''
+      ].join(' '))
+      .join(' ');
+    const educationMatch = countKeywords(educationText, KEYWORDS.degrees);
+    const educationScore = (educationMatch.count / 2) * SCORING_WEIGHTS.educationRelevance;
     totalScore += educationScore;
     newAnalysis.sections.education = (educationScore / SCORING_WEIGHTS.educationRelevance) * 100;
-    if (educationMatches === 0) newAnalysis.suggestions.push({ text: 'Add relevant degrees or certifications.', priority: 'medium' });
+    if (educationMatch.count === 0) newAnalysis.suggestions.push({ text: 'Add relevant degrees or certifications.', priority: 'medium' });
 
     // 6. Achievements / Certifications
-    let achievementCount = (resumeData.achievements || []).length;
+    let achievementCount = 0;
+    (resumeData.achievements || []).forEach(ach => {
+      const achText = [ach.title, ach.issuer || '', ach.description].join(' ');
+      const achMatch = countKeywords(achText, [...KEYWORDS.degrees, ...KEYWORDS.actionVerbs]);
+      achievementCount += achMatch.count;
+    });
+    
     const achievementsScore = Math.min((achievementCount / 5) * SCORING_WEIGHTS.achievements, SCORING_WEIGHTS.achievements);
     totalScore += achievementsScore;
     newAnalysis.sections.achievements = (achievementsScore / SCORING_WEIGHTS.achievements) * 100;
@@ -126,7 +144,16 @@ export const useATS = (resumeData: ResumeData) => {
     let formattingScore = SCORING_WEIGHTS.formatting;
     if (!resumeData.summary) formattingScore -= 3;
     if ((resumeData.experience || []).length === 0) formattingScore -= 4;
-    if ((resumeData.skills || []).length === 0) formattingScore -= 3;
+    
+    // Handle both array and object formats for skills
+    const hasSkills = Array.isArray(resumeData.skills) 
+      ? resumeData.skills.length > 0 
+      : resumeData.skills && (
+          (resumeData.skills.languages?.length || 0) > 0 ||
+          (resumeData.skills.frameworks?.length || 0) > 0 ||
+          (resumeData.skills.tools?.length || 0) > 0
+        );
+    if (!hasSkills) formattingScore -= 3;
     totalScore += Math.max(0, formattingScore);
 
     newAnalysis.keywords.matched = Array.from(new Set(newAnalysis.keywords.matched));
