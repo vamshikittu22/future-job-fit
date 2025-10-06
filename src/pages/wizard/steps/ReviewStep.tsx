@@ -10,6 +10,13 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Download, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface SectionData {
+  id: string;
+  name: string;
+  data: any;
+  isCustom?: boolean;
+}
+
 export const ReviewStep: React.FC = () => {
   const { resumeData } = useResume();
   const { atsScore, analysis } = useATS(resumeData);
@@ -28,7 +35,8 @@ export const ReviewStep: React.FC = () => {
     return 'Needs Improvement';
   };
 
-  const sections = [
+  // Base sections
+  const baseSections: SectionData[] = [
     { id: 'personal', name: 'Personal Info', data: resumeData.personal },
     { id: 'summary', name: 'Summary', data: resumeData.summary },
     { id: 'experience', name: 'Experience', data: resumeData.experience },
@@ -36,6 +44,17 @@ export const ReviewStep: React.FC = () => {
     { id: 'skills', name: 'Skills', data: resumeData.skills },
     { id: 'projects', name: 'Projects', data: resumeData.projects },
   ];
+
+  // Add custom sections
+  const customSections: SectionData[] = (resumeData.customSections || []).map(section => ({
+    id: `custom-${section.id}`,
+    name: section.title || 'Custom Section',
+    data: section,
+    isCustom: true
+  }));
+
+  // Combine all sections
+  const sections = [...baseSections, ...customSections];
 
   return (
     <WizardStepContainer
@@ -108,12 +127,19 @@ export const ReviewStep: React.FC = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-1">{section.name}</h3>
+                      <h3 className="font-semibold mb-1">
+                        {section.name}
+                        {section.isCustom && (
+                          <span className="ml-2 text-xs text-muted-foreground font-normal">
+                            (Custom)
+                          </span>
+                        )}
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         {hasData ? (
                           <span className="flex items-center gap-1 text-green-600">
                             <CheckCircle className="h-4 w-4" />
-                            Complete
+                            {section.isCustom ? 'Added' : 'Complete'}
                           </span>
                         ) : (
                           'Not added'
