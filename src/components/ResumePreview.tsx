@@ -79,26 +79,96 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
   );
 };
 
-// Page break configuration
-const A4_HEIGHT_MM = 297;
+// A4 dimensions in mm and pixels
 const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
 const MM_TO_PX = 3.78; // Approximate conversion
-const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - 30; // 15mm margin top and bottom
+const A4_WIDTH_PX = A4_WIDTH_MM * MM_TO_PX;
+const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX;
+const PAGE_MARGIN_MM = 15; // 15mm margins on all sides
+const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - (PAGE_MARGIN_MM * 2);
 const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
 
-// Component to handle page breaks
-const PageBreak = ({ isLast = false }: { isLast?: boolean }) => (
-  <div className={cn("page-break", !isLast ? "page" : "")}>
-    {!isLast && <div className="page-number">Page {isLast ? '' : ''}</div>}
-  </div>
+// Template styles with different color schemes
+const TEMPLATE_STYLES = {
+  modern: {
+    primary: '#3b82f6',   // blue-500
+    secondary: '#60a5fa', // blue-400
+    accent: '#1e40af',    // blue-700
+    text: '#1f2937',      // gray-800
+    background: '#ffffff',
+    sectionBg: '#f9fafb'  // gray-50
+  },
+  professional: {
+    primary: '#4f46e5',   // indigo-600
+    secondary: '#6366f1', // indigo-500
+    accent: '#3730a3',    // indigo-800
+    text: '#111827',      // gray-900
+    background: '#ffffff',
+    sectionBg: '#f8fafc'  // slate-50
+  },
+  creative: {
+    primary: '#8b5cf6',   // violet-500
+    secondary: '#a78bfa', // violet-400
+    accent: '#6d28d9',    // violet-700
+    text: '#1f2937',      // gray-800
+    background: '#ffffff',
+    sectionBg: '#f5f3ff'  // violet-50
+  },
+  minimal: {
+    primary: '#10b981',   // emerald-500
+    secondary: '#34d399', // emerald-400
+    accent: '#047857',    // emerald-700
+    text: '#1f2937',      // gray-800
+    background: '#ffffff',
+    sectionBg: '#ecfdf5'  // emerald-50
+  }
+} as const;
+
+type TemplateName = keyof typeof TEMPLATE_STYLES;
+
+// Simple page break component
+const PageBreak = () => (
+  <div style={{ pageBreakAfter: 'always' }}></div>
 );
 
-export default function ResumePreview({ 
-  resumeData, 
-  template, 
-  currentPage,
-  sectionOrder 
-}: ResumePreviewProps) {
+// Helper function to get contrast color
+const getContrastColor = (hexColor: string) => {
+  // Convert hex to RGB
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  
+  // Calculate luminance (perceived brightness)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return black for light colors, white for dark colors
+  return luminance > 0.5 ? '#000000' : '#ffffff';
+};
+
+export const ResumePreview: React.FC<ResumePreviewProps> = ({ 
+  resumeData = {}, 
+  template = 'modern', 
+  sectionOrder = [] 
+}) => {
+  // Get the selected template styles or default to modern
+  const currentTemplate = template as TemplateName;
+  const templateStyle = TEMPLATE_STYLES[currentTemplate] || TEMPLATE_STYLES.modern;
+  
+  // Generate CSS variables for the template
+  const templateVars = {
+    '--primary-color': templateStyle.primary,
+    '--secondary-color': templateStyle.secondary,
+    '--accent-color': templateStyle.accent,
+    '--text-color': templateStyle.text,
+    '--section-bg': templateStyle.sectionBg,
+    '--background-color': templateStyle.background,
+    '--border-color': 'rgba(0, 0, 0, 0.1)',
+    '--heading-color': templateStyle.primary,
+    '--subheading-color': templateStyle.secondary,
+    '--link-color': templateStyle.primary,
+    '--link-hover-color': templateStyle.accent
+  } as React.CSSProperties;
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState<number>(1);
@@ -107,20 +177,45 @@ export default function ResumePreview({
 
   // Calculate pages based on content height
   useEffect(() => {
-    if (contentRef.current) {
-      // Calculate the actual height of the content
-      const height = contentRef.current.scrollHeight;
-      setContentHeight(height);
-      
-      // Calculate number of pages needed based on content height
-      // We'll use a simpler approach and let the browser handle pagination
-      const calculatedPages = Math.max(1, Math.ceil(height / CONTENT_HEIGHT_PX));
-      setPages(calculatedPages);
-      
-      // Reset to first page when content changes
-      setCurrentViewPage(1);
-    }
-  }, [resumeData, template, sectionOrder]);
+    const calculatePages = () => {
+      if (contentRef.current) {
+        // Force reflow to ensure content is rendered
+        const height = contentRef.current.scrollHeight;
+        setContentHeight(height);
+        
+        // Calculate number of pages needed based on content height
+        const pageHeight = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
+        const calculatedPages = Math.max(1, Math.ceil(height / pageHeight));
+        setPages(calculatedPages);
+        
+        // Ensure current page is within bounds and reset to first page on content change
+        setCurrentViewPage(prev => {
+          const newPage = Math.min(prev, calculatedPages);
+          return newPage < 1 ? 1 : newPage;
+        });
+        
+        // Scroll to current page
+        if (contentRef.current) {
+          const scrollPosition = (currentViewPage - 1) * pageHeight;
+          contentRef.current.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth'
+          });
+        }
+      }
+    };
+
+    // Add a small delay to ensure all content is rendered
+    const timer = setTimeout(calculatePages, 100);
+    
+    // Also calculate on window resize
+    window.addEventListener('resize', calculatePages);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calculatePages);
+    };
+  }, [resumeData, template, sectionOrder, A4_HEIGHT_PX, PAGE_MARGIN_MM, MM_TO_PX]);
 
   const scrollToPage = useCallback((pageNumber: number) => {
     if (contentRef.current) {
@@ -194,9 +289,22 @@ export default function ResumePreview({
   const styles = getTemplateStyles(template);
 
   const renderPersonalInfo = () => {
-    const { personal } = resumeData;
-    if (!personal) return null;
-
+    // Use the component's templateStyle which is already defined
+    const personal = resumeData?.personal || {};
+    
+    if (!personal || Object.keys(personal).length === 0) {
+      return (
+        <div className="mb-6 p-4 border border-dashed border-red-300 bg-red-50 rounded">
+          <p className="text-red-700 text-center">No personal information available. Please check your resume data.</p>
+        </div>
+      );
+    }
+    
+    // Use the component's templateStyle which is already defined
+    const textColor = templateStyle.text || '#111827'; // Default to gray-900 if undefined
+    const primaryColor = templateStyle.primary || '#3b82f6'; // Default to blue-500 if undefined
+    const secondaryColor = templateStyle.secondary || '#60a5fa'; // Default to blue-400 if undefined
+    
     const contactItems = [
       { icon: '✉️', value: personal.email },
       { icon: '📱', value: personal.phone },
@@ -207,35 +315,48 @@ export default function ResumePreview({
     ].filter(item => item.value);
 
     return (
-      <div className="mb-6">
+      <div className="mb-8" style={{ color: textColor }}>
         <div className="text-center mb-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-1">
+          <h2 
+            className="text-3xl font-bold mb-1"
+            style={{ color: primaryColor }}
+          >
             {personal.name || 'Your Name'}
           </h2>
           {personal.title && (
-            <h3 className="text-lg text-gray-700">{personal.title}</h3>
+            <h3 
+              className="text-lg font-medium"
+              style={{ color: secondaryColor }}
+            >
+              {personal.title}
+            </h3>
           )}
         </div>
         
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-700 mb-4">
-          {contactItems.map((item, index) => (
-            <div key={index} className="flex items-center gap-1">
-              <span className="opacity-70">{item.icon}</span>
-              {item.isLink ? (
-                <a 
-                  href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
-                </a>
-              ) : (
-                <span>{item.value}</span>
-              )}
-            </div>
-          ))}
-        </div>
+        {contactItems.length > 0 ? (
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm mb-4">
+            {contactItems.map((item, index) => (
+              <div key={index} className="flex items-center gap-1">
+                <span style={{ color: primaryColor, opacity: 0.8 }}>{item.icon}</span>
+                {item.isLink ? (
+                  <a 
+                    href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                    style={{ color: primaryColor }}
+                  >
+                    {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
+                  </a>
+                ) : (
+                  <span style={{ color: textColor }}>{item.value}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">No contact information provided</p>
+        )}
         <Separator className="my-4" />
       </div>
     );
@@ -243,15 +364,17 @@ export default function ResumePreview({
 
   const renderSummary = () => {
     const summaryText = resumeData.summary || '';
-    
     if (!summaryText) return null;
     
     return (
       <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
+        <h3 
+          className="text-lg font-bold border-b-2 pb-1 mb-3"
+          style={{ borderColor: templateStyle.primary, color: templateStyle.primary }}
+        >
           {SECTION_NAMES.summary.toUpperCase()}
         </h3>
-        <p className="whitespace-pre-line text-gray-800">
+        <p className="whitespace-pre-line" style={{ color: templateStyle.text }}>
           {summaryText}
         </p>
       </div>
@@ -524,7 +647,7 @@ export default function ResumePreview({
     custom: () => null, // We'll handle custom sections separately
   };
 
-  const renderSections = () => {
+  const renderSections = useCallback(() => {
     // First render regular sections
     const regularSections = sectionOrder
       .filter(sectionId => sectionId !== 'custom' && !sectionId.startsWith('custom-'))
@@ -546,14 +669,108 @@ export default function ResumePreview({
     )) || [];
 
     return [...regularSections, ...customSections];
-  };
+  }, [sectionOrder, resumeData.customSections]);
 
   // Render content with proper page breaks
-  const renderContent = () => {
-    if (!contentRef.current) return null;
+  const renderContent = useCallback(() => {
+    if (!contentRef.current) {
+      return null;
+    }
     
     // Get all sections to be rendered
-    const sections = renderSections();
+    const { personal = {}, customSections = [] } = resumeData || {};
+    
+    // Ensure we have a valid section order
+    const validSectionOrder = Array.isArray(sectionOrder) && sectionOrder.length > 0 
+      ? sectionOrder 
+      : ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications', ...(customSections?.map((s: any) => s.id) || [])];
+    
+    // Render a custom section by ID
+    const renderCustomSection = (sectionId: string) => {
+      const section = customSections.find((s: any) => s.id === sectionId);
+      if (!section) return null;
+      
+      return (
+        <div key={section.id} className="mb-6">
+          <h3 className={styles.sectionTitle}>
+            {section.title?.toUpperCase() || 'CUSTOM SECTION'}
+          </h3>
+          {section.description && (
+            <p className="text-gray-700 mb-4">{section.description}</p>
+          )}
+          {section.items?.map((item: any, index: number) => (
+            <div key={item.id || index} className="mb-4">
+              <div className="flex justify-between items-start">
+                <h4 className="font-bold">{item.title}</h4>
+                {item.date && (
+                  <span className="text-sm text-gray-600">
+                    {item.date}
+                  </span>
+                )}
+              </div>
+              {item.subtitle && (
+                <div className="text-sm text-gray-700">{item.subtitle}</div>
+              )}
+              {item.description && (
+                <p className="text-sm text-gray-800 mt-1">{item.description}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    };
+    
+    // Get all section components in order
+    const renderContent = () => {
+    const customSections = resumeData.customSections || [];
+    const primaryColor = templateStyle.primary || '#3b82f6'; // Default to blue-500 if undefined
+    
+    const sections = {
+      personal: renderPersonalInfo(),
+      summary: renderSummary(),
+      experience: renderExperience(),
+      education: renderEducation(),
+      skills: renderSkills(),
+      projects: renderProjects(),
+      achievements: renderAchievements(),
+      certifications: renderCertifications(),
+      // Add custom sections with consistent styling
+      ...(customSections || []).reduce((acc: any, section: any) => {
+        if (section && section.id) {
+          acc[section.id] = (
+            <div key={section.id} className="mb-6">
+              <h3 
+                className="text-lg font-bold mb-3 pb-2 border-b-2"
+                style={{ borderColor: primaryColor, color: primaryColor }}
+              >
+                {section.title?.toUpperCase() || 'CUSTOM SECTION'}
+              </h3>
+              <CustomSectionPreview section={section} />
+            </div>
+          );
+        }
+        return acc;
+      }, {})
+    };
+    
+    // Get the ordered sections to render, filtering out any undefined sections
+    const sectionsToRender = (sectionOrder || [
+      'personal',
+      'summary',
+      'experience',
+      'education',
+      'skills',
+      'projects',
+      'achievements',
+      'certifications',
+      ...(customSections || []).map((s: any) => s.id)
+    ])
+    .filter((sectionId: string) => sectionComponents[sectionId])
+    .map((sectionId: string) => (
+      <div key={sectionId} className="mb-8">
+        {sectionComponents[sectionId]()}
+      </div>
+    ));
     
     // Always render all sections in a single container
     // Let the browser handle page breaks naturally based on content
@@ -561,7 +778,7 @@ export default function ResumePreview({
       <div className="relative print:block">
         <div className="page">
           <div className="space-y-8 print:space-y-6">
-            {sections}
+            {sectionsToRender}
           </div>
           {pages > 1 && (
             <div className="page-number print:hidden">Page 1 of {pages}</div>
@@ -758,66 +975,112 @@ export default function ResumePreview({
     window.print();
   }, []);
 
+  // Calculate content width with margins
+  const contentWidth = `calc(100% - ${PAGE_MARGIN_MM * 2}mm)`;
+  const contentPadding = `${PAGE_MARGIN_MM}mm`;
+
+  // Apply template styles to the main container
+  const containerStyle: React.CSSProperties = {
+    ...templateVars,
+    color: templateStyle.text,
+    backgroundColor: templateStyle.background,
+    '--primary': templateStyle.primary,
+    '--secondary': templateStyle.secondary,
+    '--text': templateStyle.text,
+    '--bg': templateStyle.background,
+    '--section-bg': templateStyle.sectionBg,
+    '--a4-width': `${A4_WIDTH_MM}mm`,
+    '--a4-height': `${A4_HEIGHT_MM}mm`,
+    '--page-margin': `${PAGE_MARGIN_MM}mm`
+  };
+
   return (
-    <div className="relative w-full h-full">
-      <style dangerouslySetInnerHTML={{ __html: screenStyles }} />
-      
+    <div 
+      className="w-full min-h-screen p-4 print:p-0"
+      style={containerStyle}
+    >
       {/* Print button */}
-      <div className="fixed top-4 right-4 z-50 print:hidden">
+      <div className="w-full max-w-[210mm] mx-auto mb-4 print:hidden">
         <Button 
-          onClick={handlePrint}
-          variant="outline"
-          className="bg-white hover:bg-gray-50 shadow-md"
+          style={{ borderColor: templateStyle.primary, color: templateStyle.primary }}
         >
           Print / Save as PDF
         </Button>
       </div>
-      
-      {/* A4 aspect ratio container - Fixed proportions */}
-      <div className="a4-container">
-        <Card 
-          className={cn(
-            'resume-card bg-white text-gray-900 transition-none relative',
-            'print:shadow-none print:border-0 print:bg-transparent'
-          )} 
-          ref={pageRef}
+
+      {/* A4 Container */}
+      <div 
+        className="mx-auto bg-white shadow-lg print:shadow-none"
+        style={{
+          width: '210mm',
+          minHeight: '297mm',
+          maxWidth: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          padding: contentPadding
+        }}
+      >
+        {/* Main content area */}
+        <div 
+          ref={contentRef}
+          style={{
+            width: '100%',
+            height: '100%',
+            overflow: 'visible',
+            position: 'relative'
+          }}
         >
-          <div 
-            className="resume-content print:bg-white" 
-            ref={contentRef}
-            onScroll={handleScroll}
-          >
-            {renderContent()}
-          </div>
-          
-          {/* Page navigation (only show if multiple pages) */}
-          {pages > 1 && (
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 print:hidden">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => scrollToPage(currentViewPage - 1)}
-                disabled={currentViewPage <= 1}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center px-4 text-sm text-gray-600">
-                Page {currentViewPage} of {pages}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => scrollToPage(currentViewPage + 1)}
-                disabled={currentViewPage >= pages}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+          {renderContent()}
+        </div>
+
+        {/* Page navigation */}
+        {pages > 1 && (
+          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 print:hidden">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => scrollToPage(currentViewPage - 1)}
+              disabled={currentViewPage <= 1}
+              className="bg-white/90 backdrop-blur-sm"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center px-4 text-sm text-gray-600 bg-white/90 backdrop-blur-sm rounded-md">
+              Page {currentViewPage} of {pages}
             </div>
-          )}
-        </Card>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => scrollToPage(currentViewPage + 1)}
+              disabled={currentViewPage >= pages}
+              className="bg-white/90 backdrop-blur-sm"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Print styles */}
+      <style jsx global>{`
+        @page {
+          size: A4;
+          margin: 0;
+        }
+        
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          
+          .print\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
-}
+};
