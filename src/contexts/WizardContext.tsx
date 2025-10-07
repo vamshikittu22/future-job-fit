@@ -151,14 +151,46 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       } else if (status === 'partial') {
         partial.push(step.id);
       }
+      
+      console.log(`Step ${step.id} completion:`, { completion, status });
     });
-    
-    setWizardState(prev => ({
-      ...prev,
-      completedSteps: completed,
-      partialSteps: partial,
-    }));
-  }, [resumeData, wizardState.selectedTemplate, steps]);
+
+    // Always update the state to ensure progress is reflected
+    setWizardState(prev => {
+      console.log('Updating step status:', { 
+        current: currentStep.id,
+        completed, 
+        previousCompleted: prev.completedSteps,
+        partial,
+        previousPartial: prev.partialSteps
+      });
+      
+      return {
+        ...prev,
+        completedSteps: [...new Set(completed)], // Ensure unique values
+        partialSteps: [...new Set(partial)],     // Ensure unique values
+      };
+    });
+  }, [resumeData, wizardState.selectedTemplate, steps, currentStep.id]);
+  
+  // Add a debug effect to log state changes
+  useEffect(() => {
+    console.log('Wizard state updated:', {
+      currentStep: currentStep.id,
+      completedSteps: wizardState.completedSteps,
+      partialSteps: wizardState.partialSteps,
+      resumeData: {
+        experience: resumeData.experience?.map(exp => ({
+          title: exp.title,
+          company: exp.company,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          current: exp.current,
+          description: exp.description ? `${exp.description.substring(0, 20)}...` : null
+        }))
+      }
+    });
+  }, [wizardState.completedSteps, wizardState.partialSteps, currentStep.id, resumeData.experience]);
   
   // Update step status when data changes
   useEffect(() => {

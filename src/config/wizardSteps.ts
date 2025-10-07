@@ -324,8 +324,35 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
       
     case 'experience':
       if (!data.experience || data.experience.length === 0) return 0;
-      const expWithDesc = data.experience.filter((e: any) => e.description && e.description.length > 20).length;
-      return Math.min(100, Math.round((expWithDesc / data.experience.length) * 100));
+      
+      // Check if all required fields are filled for at least one experience entry
+      const hasCompleteExperience = data.experience.some((exp: any) => {
+        return exp.title?.trim() && 
+               exp.company?.trim() && 
+               exp.startDate && 
+               (exp.endDate || exp.current) && 
+               exp.description?.trim()?.length > 20;
+      });
+      
+      // If at least one complete experience entry exists, return 100%
+      if (hasCompleteExperience) return 100;
+      
+      // Otherwise, calculate partial completion
+      const expCompletion = data.experience.map((exp: any) => {
+        let entryScore = 0;
+        
+        // Check for required fields
+        if (exp.title?.trim()) entryScore += 20;
+        if (exp.company?.trim()) entryScore += 20;
+        if (exp.startDate) entryScore += 20;
+        if (exp.endDate || exp.current) entryScore += 20;
+        if (exp.description?.trim()?.length > 20) entryScore += 20;
+        
+        return Math.min(entryScore, 100);
+      });
+      
+      // Return the highest completion percentage among all entries
+      return Math.max(...expCompletion);
       
     case 'education':
       if (!data.education || data.education.length === 0) return 0;
@@ -396,7 +423,8 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
 
 // Get step status based on completion
 export const getStepStatus = (completion: number): 'complete' | 'partial' | 'empty' => {
-  if (completion === 100) return 'complete';
+  // Consider anything above 95% as complete to handle floating point precision issues
+  if (completion >= 95) return 'complete';
   if (completion > 0) return 'partial';
   return 'empty';
 };

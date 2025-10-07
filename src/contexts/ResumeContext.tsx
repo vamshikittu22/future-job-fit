@@ -100,7 +100,25 @@ export const ResumeContext = createContext<ResumeContextType | undefined>(undefi
 function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
   switch (action.type) {
     case 'SET_RESUME_DATA':
-        return action.payload;
+        // Ensure customSections has proper structure with initialized fields and entries
+        const data = action.payload;
+        return {
+          ...data,
+          customSections: (data.customSections || []).map(section => ({
+            ...section,
+            fields: section.fields?.map(f => ({
+              id: f.id,
+              name: f.name || '',
+              type: f.type || 'text',
+              required: f.required || false,
+              options: f.options || []
+            })) || [],
+            entries: section.entries?.map(entry => ({
+              ...entry,
+              values: entry.values || {}
+            })) || []
+          }))
+        };
     case 'UPDATE_SECTION':
         return { ...state, [action.payload.section]: action.payload.data };
     case 'ADD_SKILL':
@@ -227,7 +245,14 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
     case 'ADD_CUSTOM_SECTION':
       return {
         ...state,
-        customSections: [...state.customSections, action.payload],
+        customSections: [
+          ...state.customSections, 
+          {
+            ...action.payload,
+            fields: action.payload.fields || [],
+            entries: action.payload.entries || []
+          }
+        ],
       };
     
     case 'UPDATE_CUSTOM_SECTION':
@@ -254,9 +279,24 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
       const { sectionId, field } = action.payload;
       return {
         ...state,
-        customSections: state.customSections.map(sec =>
-          sec.id === sectionId ? { ...sec, fields: [...(sec.fields || []), field] } : sec
-        )
+        customSections: state.customSections.map(sec => {
+          if (sec.id !== sectionId) return sec;
+          
+          // Initialize the new field's value in all existing entries
+          const updatedEntries = (sec.entries || []).map(entry => ({
+            ...entry,
+            values: {
+              ...entry.values,
+              [field.id]: field.type === 'tag' ? [] : ''
+            }
+          }));
+          
+          return {
+            ...sec,
+            fields: [...(sec.fields || []), field],
+            entries: updatedEntries
+          };
+        })
       };
     }
     case 'UPDATE_CUSTOM_FIELD': {
@@ -299,9 +339,29 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
       const { sectionId, entry } = action.payload;
       return {
         ...state,
-        customSections: state.customSections.map(sec =>
-          sec.id === sectionId ? { ...sec, entries: [...(sec.entries || []), entry] } : sec
-        )
+        customSections: state.customSections.map(sec => {
+          if (sec.id !== sectionId) return sec;
+          
+          // Initialize values for all fields
+          const initialValues: Record<string, any> = {};
+          (sec.fields || []).forEach(field => {
+            initialValues[field.id] = field.type === 'tag' ? [] : '';
+          });
+          
+          return {
+            ...sec,
+            entries: [
+              ...(sec.entries || []),
+              {
+                ...entry,
+                values: {
+                  ...initialValues,
+                  ...entry.values
+                }
+              }
+            ]
+          };
+        })
       };
     }
     case 'UPDATE_CUSTOM_ENTRY': {
@@ -391,12 +451,21 @@ export const useResume = () => {
   }
   return context;
 };
-
 interface ResumeProviderProps {
   children: ReactNode;
 }
 
 export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
+  const [savedVersions, setSavedVersions] = useState<SavedVersion[]>(() => {
+    try {
+      const saved = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Failed to load saved versions:', error);
+      return [];
+    }
+  });
+
   const [history, historyDispatch] = useReducer(historyReducer, {
     past: [],
     present: initialResumeData,
@@ -406,7 +475,33 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   const { present: resumeData, past, future } = history;
   const canUndo = past.length > 0;
   const canRedo = future.length > 0;
-  const [savedVersions, setSavedVersions] = useState<SavedVersion[]>([]);
+
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        historyDispatch({ type: 'SET_RESUME_DATA', payload: JSON.parse(savedData) });
+      }
+    } catch (error) {
+      console.error('Failed to load resume data:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+    } catch (error) {
+      console.error('Failed to save resume data:', error);
+    }
+  }, [resumeData]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(savedVersions));
+    } catch (error) {
+      console.error('Failed to save saved versions:', error);
+    }
+  }, [savedVersions]);
 
   const dispatch = useCallback((action: ResumeAction) => {
     const pastLimit = past.length >= HISTORY_LIMIT;
@@ -520,13 +615,44 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     dispatch({ type: 'REMOVE_CUSTOM_ENTRY', payload: { sectionId, entryId } });
   }, [dispatch]);
 
-  const saveResume = useCallback(async (): Promise<void> => {
-    // This is a placeholder. In a real app, you'd save to a server.
-  }, []);
+  const saveResume = useCallback(async (name: string = 'Draft'): Promise<void> => {
+    try {
+      const newVersion: SavedVersion = {
+        id: Date.now().toString(),
+        name,
+        timestamp: new Date().toISOString(),
+        data: { ...resumeData }
+      };
+
+      const updatedVersions = [
+        newVersion,
+        ...savedVersions.filter(v => v.id !== newVersion.id)
+      ].slice(0, 20); // Keep only the 20 most recent versions
+
+      setSavedVersions(updatedVersions);
+      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedVersions));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Failed to save resume:', error);
+      return Promise.reject(error);
+    }
+  }, [resumeData, savedVersions]);
 
   const loadResume = useCallback(async (id: string): Promise<void> => {
-    // This is a placeholder. In a real app, you'd load from a server.
-  }, []);
+    try {
+      const version = savedVersions.find(v => v.id === id);
+      if (version) {
+        dispatch({ type: 'SET_RESUME_DATA', payload: version.data });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(version.data));
+        return Promise.resolve();
+      }
+      return Promise.reject(new Error('Version not found'));
+    } catch (error) {
+      console.error('Failed to load resume:', error);
+      return Promise.reject(error);
+    }
+  }, [savedVersions]);
 
   const undo = useCallback(() => {
     if (canUndo) {

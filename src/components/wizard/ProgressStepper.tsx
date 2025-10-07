@@ -10,19 +10,34 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useEffect } from 'react';
 
 export const ProgressStepper: React.FC = () => {
-  const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion } = useWizard();
+  const { 
+    wizardState, 
+    currentStep, 
+    steps,
+    canNavigateToStep,
+    goToStep
+  } = useWizard();
+  
+  // Debug logs
+  useEffect(() => {
+    console.log('Current step:', currentStep.id);
+    console.log('Completed steps:', wizardState.completedSteps);
+    console.log('Is current step completed?', wizardState.completedSteps.includes(currentStep.id));
+  }, [currentStep.id, wizardState.completedSteps]);
+
   const isMobile = useMediaQuery('(max-width: 767px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
 
   if (isMobile) {
     return (
-      <div className="bg-gradient-card shadow-swiss rounded-lg p-4 mb-6">
-        <div className="text-center">
-          <span className="text-sm text-muted-foreground">Step {wizardState.currentStepIndex + 1} of {steps.length}</span>
-          <h3 className="mt-1 text-lg font-semibold">{currentStep.title}</h3>
-        </div>
+      <div className="text-center">
+        <span className="text-sm text-muted-foreground">
+          Step {wizardState.currentStepIndex + 1} of {steps.length}
+        </span>
+        <h3 className="mt-1 text-lg font-semibold">{currentStep.title}</h3>
       </div>
     );
   }
@@ -119,12 +134,17 @@ export const ProgressStepper: React.FC = () => {
           
           {/* Progress bar fill */}
           <div 
-            className="absolute top-5 left-0 h-1 bg-primary/30 transition-all duration-500"
+            className="absolute top-5 left-0 h-1 transition-all duration-500 bg-primary/30"
             style={{
               width: `${(steps.findIndex(step => step.id === currentStep.id) / Math.max(steps.length - 1, 1)) * 100}%`,
               maxWidth: 'calc(100% - 32px)'
             }}
-          ></div>
+          >
+            {/* Progress indicator for current step */}
+            {wizardState.completedSteps.includes(currentStep.id) && (
+              <div className="absolute right-0 top-0 bottom-0 w-4 bg-green-500 rounded-r-full"></div>
+            )}
+          </div>
         </div>
       </TooltipProvider>
     </div>

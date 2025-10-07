@@ -5,6 +5,8 @@ export interface CustomField {
   id: string;
   name: string;
   type: CustomFieldType;
+  required?: boolean;
+  options?: string[];
 }
 
 export interface CustomSectionEntry {
