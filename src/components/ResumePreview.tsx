@@ -1,18 +1,18 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
 import { Button } from "@/components/ui/button";
+import type { ResumeData, ResumePreviewProps, CustomSection } from "@/types/resume";
 
-interface CustomSectionData {
-  id: string;
-  title: string;
-  description?: string;
-  items: Array<{
+// Reusing the CustomSection type from our types file
+type CustomSectionData = CustomSection & {
+  // Add any additional properties specific to the preview if needed
+  items?: Array<{
     id: string;
     title: string;
     subtitle?: string;
@@ -22,12 +22,7 @@ interface CustomSectionData {
   }>;
 }
 
-interface ResumePreviewProps {
-  resumeData: any;
-  template: string;
-  currentPage: number;
-  sectionOrder: string[];
-}
+// Using imported ResumePreviewProps from types/resume
 
 const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
   if (!section.items || section.items.length === 0) return null;
@@ -89,132 +84,179 @@ const PAGE_MARGIN_MM = 15; // 15mm margins on all sides
 const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - (PAGE_MARGIN_MM * 2);
 const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
 
-// Template styles with different color schemes
-const TEMPLATE_STYLES = {
-  modern: {
-    primary: '#3b82f6',   // blue-500
-    secondary: '#60a5fa', // blue-400
-    accent: '#1e40af',    // blue-700
-    text: '#1f2937',      // gray-800
-    background: '#ffffff',
-    sectionBg: '#f9fafb'  // gray-50
-  },
-  professional: {
-    primary: '#4f46e5',   // indigo-600
-    secondary: '#6366f1', // indigo-500
-    accent: '#3730a3',    // indigo-800
-    text: '#111827',      // gray-900
-    background: '#ffffff',
-    sectionBg: '#f8fafc'  // slate-50
-  },
-  creative: {
-    primary: '#8b5cf6',   // violet-500
-    secondary: '#a78bfa', // violet-400
-    accent: '#6d28d9',    // violet-700
-    text: '#1f2937',      // gray-800
-    background: '#ffffff',
-    sectionBg: '#f5f3ff'  // violet-50
-  },
-  minimal: {
-    primary: '#10b981',   // emerald-500
-    secondary: '#34d399', // emerald-400
-    accent: '#047857',    // emerald-700
-    text: '#1f2937',      // gray-800
-    background: '#ffffff',
-    sectionBg: '#ecfdf5'  // emerald-50
-  }
-} as const;
-
-type TemplateName = keyof typeof TEMPLATE_STYLES;
-
 // Simple page break component
 const PageBreak = () => (
   <div style={{ pageBreakAfter: 'always' }}></div>
 );
 
-// Helper function to get contrast color
-const getContrastColor = (hexColor: string) => {
-  // Convert hex to RGB
-  const r = parseInt(hexColor.slice(1, 3), 16);
-  const g = parseInt(hexColor.slice(3, 5), 16);
-  const b = parseInt(hexColor.slice(5, 7), 16);
-  
-  // Calculate luminance (perceived brightness)
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
-  // Return black for light colors, white for dark colors
-  return luminance > 0.5 ? '#000000' : '#ffffff';
+const PrintStyles = () => {
+  return (
+    <style>
+      {`@media print {
+        @page {
+          size: A4;
+          margin: 15mm 15mm 15mm 15mm;
+        }
+        
+        body, html {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          -webkit-print-color-adjust: exact !important;
+        }
+
+        .page-number {
+          position: absolute;
+          bottom: 10mm;
+          right: 15mm;
+          font-size: 10pt;
+          color: #666;
+        }
+        
+        .page {
+          page-break-after: always;
+        }
+        
+        .page:last-child {
+          page-break-after: auto;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .a4-container {
+          max-width: 95vw;
+          max-height: calc(100vh - 150px);
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .a4-container {
+          max-width: 98vw;
+          max-height: calc(100vh - 120px);
+        }
+      }`}
+    </style>
+  );
 };
 
-export const ResumePreview: React.FC<ResumePreviewProps> = ({ 
-  resumeData = {}, 
-  template = 'modern', 
-  sectionOrder = [] 
-}) => {
-  // Get the selected template styles or default to modern
-  const currentTemplate = template as TemplateName;
-  const templateStyle = TEMPLATE_STYLES[currentTemplate] || TEMPLATE_STYLES.modern;
+// Get template colors based on the selected template
+const getTemplateColors = (templateName: string) => {
+  const templates: Record<string, any> = {
+    colorful: {
+      primary: 'text-indigo-900 dark:text-indigo-300 font-semibold',
+      secondary: 'text-gray-900 dark:text-gray-200',
+      accent: 'bg-indigo-50 dark:bg-indigo-900/40',
+      border: 'border-indigo-200 dark:border-indigo-700',
+      highlight: 'bg-indigo-50/80 dark:bg-indigo-900/30',
+      sectionTitle: 'text-indigo-900 dark:text-indigo-300 border-indigo-400 dark:border-indigo-600 font-bold',
+      link: 'text-indigo-800 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200',
+      card: 'bg-white dark:bg-gray-800',
+      text: 'text-gray-900 dark:text-gray-200',
+      muted: 'text-gray-800 dark:text-gray-400',
+    },
+    experienced: {
+      primary: 'text-gray-900 dark:text-gray-100 font-semibold',
+      secondary: 'text-gray-900 dark:text-gray-300',
+      accent: 'bg-gray-50 dark:bg-gray-800/60',
+      border: 'border-gray-300 dark:border-gray-700',
+      highlight: 'bg-gray-100/50 dark:bg-gray-800/40',
+      sectionTitle: 'text-gray-900 dark:text-gray-100 border-gray-400 dark:border-gray-600 font-bold',
+      link: 'text-blue-800 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200',
+      card: 'bg-white dark:bg-gray-800',
+      text: 'text-gray-900 dark:text-gray-200',
+      muted: 'text-gray-800 dark:text-gray-400',
+    },
+    student: {
+      primary: 'text-emerald-900 dark:text-emerald-300 font-semibold',
+      secondary: 'text-gray-900 dark:text-gray-200',
+      accent: 'bg-emerald-50 dark:bg-emerald-900/40',
+      border: 'border-emerald-300 dark:border-emerald-700',
+      highlight: 'bg-emerald-50/80 dark:bg-emerald-900/30',
+      sectionTitle: 'text-emerald-900 dark:text-emerald-300 border-emerald-400 dark:border-emerald-600 font-bold',
+      link: 'text-emerald-800 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200',
+      card: 'bg-white dark:bg-gray-800',
+      text: 'text-gray-900 dark:text-gray-200',
+      muted: 'text-gray-800 dark:text-gray-400',
+    },
+    creative: {
+      primary: 'text-pink-900 dark:text-pink-300 font-semibold',
+      secondary: 'text-gray-900 dark:text-gray-200',
+      accent: 'bg-pink-50 dark:bg-pink-900/40',
+      border: 'border-pink-300 dark:border-pink-700',
+      highlight: 'bg-pink-50/80 dark:bg-pink-900/30',
+      sectionTitle: 'text-pink-900 dark:text-pink-300 border-pink-400 dark:border-pink-600 font-bold',
+      link: 'text-pink-800 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-200',
+      card: 'bg-white dark:bg-gray-800',
+      text: 'text-gray-900 dark:text-gray-200',
+      muted: 'text-gray-800 dark:text-gray-400',
+    },
+    minimal: {
+      primary: 'text-blue-900 dark:text-blue-300 font-semibold',
+      secondary: 'text-gray-900 dark:text-gray-200',
+      accent: 'bg-blue-50 dark:bg-blue-900/40',
+      border: 'border-blue-300 dark:border-blue-700',
+      highlight: 'bg-blue-50/80 dark:bg-blue-900/30',
+      sectionTitle: 'text-blue-900 dark:text-blue-300 border-blue-400 dark:border-blue-600 font-bold',
+      link: 'text-blue-800 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200',
+      card: 'bg-white dark:bg-gray-800',
+      text: 'text-gray-900 dark:text-gray-200',
+      muted: 'text-gray-800 dark:text-gray-400',
+    }
+  };
+
+  return templates[templateName.toLowerCase()] || templates.minimal;
+};
+
+// Get template styles based on the selected template
+const getTemplateStyles = (templateName: string) => {
+  const colors = getTemplateColors(templateName);
   
-  // Generate CSS variables for the template
-  const templateVars = {
-    '--primary-color': templateStyle.primary,
-    '--secondary-color': templateStyle.secondary,
-    '--accent-color': templateStyle.accent,
-    '--text-color': templateStyle.text,
-    '--section-bg': templateStyle.sectionBg,
-    '--background-color': templateStyle.background,
-    '--border-color': 'rgba(0, 0, 0, 0.1)',
-    '--heading-color': templateStyle.primary,
-    '--subheading-color': templateStyle.secondary,
-    '--link-color': templateStyle.primary,
-    '--link-hover-color': templateStyle.accent
-  } as React.CSSProperties;
+  return {
+    sectionTitle: cn(
+      'text-lg font-bold mb-2 pb-1 border-b',
+      colors.sectionTitle,
+      colors.border
+    ),
+    card: cn(
+      'p-6 rounded-lg shadow-sm',
+      colors.accent,
+      colors.border,
+      'border'
+    ),
+    section: cn('mb-6', colors.secondary),
+    itemTitle: cn('font-semibold', colors.primary),
+    itemSubtitle: 'text-sm text-muted-foreground',
+    date: 'text-sm text-muted-foreground whitespace-nowrap',
+    link: colors.link,
+  };
+};
+
+export default function ResumePreview({ resumeData, template, currentPage, sectionOrder }: ResumePreviewProps) {
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState<number>(1);
   const [currentViewPage, setCurrentViewPage] = useState<number>(1);
   const [contentHeight, setContentHeight] = useState<number>(0);
 
+  // Define colors and styles
+  const colors = useMemo(() => getTemplateColors(template), [template]);
+  const styles = useMemo(() => getTemplateStyles(template), [template]);
+
   // Calculate pages based on content height
   useEffect(() => {
-    const calculatePages = () => {
-      if (contentRef.current) {
-        // Force reflow to ensure content is rendered
-        const height = contentRef.current.scrollHeight;
-        setContentHeight(height);
-        
-        // Calculate number of pages needed based on content height
-        const pageHeight = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
-        const calculatedPages = Math.max(1, Math.ceil(height / pageHeight));
-        setPages(calculatedPages);
-        
-        // Ensure current page is within bounds and reset to first page on content change
-        setCurrentViewPage(prev => {
-          const newPage = Math.min(prev, calculatedPages);
-          return newPage < 1 ? 1 : newPage;
-        });
-        
-        // Scroll to current page
-        if (contentRef.current) {
-          const scrollPosition = (currentViewPage - 1) * pageHeight;
-          contentRef.current.scrollTo({
-            top: scrollPosition,
-            behavior: 'smooth'
-          });
-        }
-      }
-    };
-
-    // Add a small delay to ensure all content is rendered
-    const timer = setTimeout(calculatePages, 100);
-    
-    // Also calculate on window resize
-    window.addEventListener('resize', calculatePages);
-    
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', calculatePages);
-    };
+    if (contentRef.current) {
+      // Calculate the actual height of the content
+      const height = contentRef.current.scrollHeight;
+      setContentHeight(height);
+      
+      // Calculate number of pages needed based on content height
+      // Use the content height minus margins for calculation
+      const calculatedPages = Math.max(1, Math.ceil(height / (A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2))));
+      setPages(calculatedPages);
+      
+      // Reset to first page when content changes
+      setCurrentViewPage(1);
+    }
   }, [resumeData, template, sectionOrder, A4_HEIGHT_PX, PAGE_MARGIN_MM, MM_TO_PX]);
 
   const scrollToPage = useCallback((pageNumber: number) => {
@@ -237,74 +279,32 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     }
   }, [pages]);
 
-  
-  // Force static styling for resume preview - not affected by theme
+// Force static styling for resume preview - not affected by theme
   const previewClasses = cn(
-    'bg-white text-gray-900',
+    'bg-white dark:bg-gray-800',
     'w-full p-0 m-0', // Remove centering and padding for print
     'shadow-lg my-8',
     'transition-none',
-    'h-[calc(100vh-200px)] overflow-main', // Use responsive overflow class
-    'resume-container',
+    'h-[calc(100vh-200px)] overflow-auto', // Use responsive overflow class
+    'resume-container font-sans',
     'relative',
     'mx-[14.17px] my-[14.17px] p-8', // Add 5mm margins and padding for better visibility
-    'aspect-[210/297]' // A4 aspect ratio (210mm x 297mm)
+    'aspect-[210/297]', // A4 aspect ratio (210mm x 297mm)
+    'text-base leading-relaxed',
+    colors.text
   );
-  
-  const getTemplateStyles = (name: string) => {
-    switch ((name || 'minimal').toLowerCase()) {
-      case 'colorful':
-        return {
-          sectionTitle: 'text-lg font-bold border-b-2 border-indigo-600 pb-1 mb-3',
-          link: 'text-indigo-700 hover:underline',
-          accentText: 'text-indigo-700',
-        };
-      case 'experienced':
-        return {
-          sectionTitle: 'text-lg font-bold border-b-2 border-gray-600 pb-1 mb-3',
-          link: 'text-gray-800 hover:underline',
-          accentText: 'text-gray-800',
-        };
-      case 'student':
-        return {
-          sectionTitle: 'text-lg font-bold border-b-2 border-emerald-600 pb-1 mb-3',
-          link: 'text-emerald-700 hover:underline',
-          accentText: 'text-emerald-700',
-        };
-      case 'creative':
-        return {
-          sectionTitle: 'text-lg font-bold border-b-2 border-pink-600 pb-1 mb-3',
-          link: 'text-pink-700 hover:underline',
-          accentText: 'text-pink-700',
-        };
-      case 'minimal':
-      default:
-        return {
-          sectionTitle: 'text-lg font-bold border-b-2 border-gray-800 pb-1 mb-3',
-          link: 'text-blue-900 hover:underline',
-          accentText: 'text-gray-900',
-        };
-    }
-  };
-  const styles = getTemplateStyles(template);
 
   const renderPersonalInfo = () => {
-    // Use the component's templateStyle which is already defined
-    const personal = resumeData?.personal || {};
-    
-    if (!personal || Object.keys(personal).length === 0) {
+    const { personal } = resumeData || {};
+    if (!personal) {
+      console.log('No personal data found in resumeData:', resumeData);
       return (
-        <div className="mb-6 p-4 border border-dashed border-red-300 bg-red-50 rounded">
-          <p className="text-red-700 text-center">No personal information available. Please check your resume data.</p>
+        <div className={cn("mb-6 p-4 border border-dashed rounded", colors.border, colors.accent)}>
+          <p className={cn("text-center", colors.secondary)}>No personal information available. Please check your resume data.</p>
         </div>
       );
     }
-    
-    // Use the component's templateStyle which is already defined
-    const textColor = templateStyle.text || '#111827'; // Default to gray-900 if undefined
-    const primaryColor = templateStyle.primary || '#3b82f6'; // Default to blue-500 if undefined
-    const secondaryColor = templateStyle.secondary || '#60a5fa'; // Default to blue-400 if undefined
-    
+
     const contactItems = [
       { icon: '✉️', value: personal.email },
       { icon: '📱', value: personal.phone },
@@ -314,67 +314,59 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       { icon: '🐙', value: personal.github, isLink: true, prefix: 'github.com/' },
     ].filter(item => item.value);
 
+    // Debug log
+    console.log('Personal info being rendered:', { personal, contactItems });
+
     return (
-      <div className="mb-8" style={{ color: textColor }}>
+      <div className={cn("mb-8", colors.primary)}>
         <div className="text-center mb-4">
-          <h2 
-            className="text-3xl font-bold mb-1"
-            style={{ color: primaryColor }}
-          >
+          <h2 className={cn("text-3xl font-bold mb-1", colors.primary)}>
             {personal.name || 'Your Name'}
           </h2>
           {personal.title && (
-            <h3 
-              className="text-lg font-medium"
-              style={{ color: secondaryColor }}
-            >
-              {personal.title}
-            </h3>
+            <h3 className={cn("text-lg font-medium", colors.secondary)}>{personal.title}</h3>
           )}
         </div>
         
-        {contactItems.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm mb-4">
-            {contactItems.map((item, index) => (
-              <div key={index} className="flex items-center gap-1">
-                <span style={{ color: primaryColor, opacity: 0.8 }}>{item.icon}</span>
+        <div className={cn("flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm mb-6", colors.secondary)}>
+          {contactItems.length > 0 ? (
+            contactItems.map((item, index) => (
+              <div key={index} className="flex items-center gap-1.5">
+                <span className="opacity-80">{item.icon}</span>
                 {item.isLink ? (
                   <a 
                     href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="hover:underline"
-                    style={{ color: primaryColor }}
+                    className={cn("hover:underline", colors.link)}
                   >
                     {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
                   </a>
                 ) : (
-                  <span style={{ color: textColor }}>{item.value}</span>
+                  <span>{item.value}</span>
                 )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground italic">No contact information provided</p>
-        )}
-        <Separator className="my-4" />
+            ))
+          ) : (
+            <p className="text-sm italic text-muted-foreground">No contact information provided</p>
+          )}
+        </div>
+        <Separator className={colors.border} />
       </div>
     );
   };
 
   const renderSummary = () => {
     const summaryText = resumeData.summary || '';
+    
     if (!summaryText) return null;
     
     return (
       <div className="mb-6">
-        <h3 
-          className="text-lg font-bold border-b-2 pb-1 mb-3"
-          style={{ borderColor: templateStyle.primary, color: templateStyle.primary }}
-        >
+        <h3 className={styles.sectionTitle}>
           {SECTION_NAMES.summary.toUpperCase()}
         </h3>
-        <p className="whitespace-pre-line" style={{ color: templateStyle.text }}>
+        <p className="whitespace-pre-line text-gray-800">
           {summaryText}
         </p>
       </div>
@@ -647,7 +639,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     custom: () => null, // We'll handle custom sections separately
   };
 
-  const renderSections = useCallback(() => {
+  const renderSections = () => {
     // First render regular sections
     const regularSections = sectionOrder
       .filter(sectionId => sectionId !== 'custom' && !sectionId.startsWith('custom-'))
@@ -669,51 +661,97 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     )) || [];
 
     return [...regularSections, ...customSections];
-  }, [sectionOrder, resumeData.customSections]);
+  };
+
+  // Render custom section
+  const renderCustomSection = (section: any) => {
+    if (!section) return null;
+    
+    return (
+      <div key={section.id} className={cn("mb-6", colors.secondary)}>
+        <h3 className={styles.sectionTitle}>
+          {section.title?.toUpperCase() || 'CUSTOM SECTION'}
+        </h3>
+        {section.description && (
+          <p className="mb-4">{section.description}</p>
+        )}
+        {section.items?.map((item: any, index: number) => (
+          <div key={item.id || index} className="mb-4">
+            <div className="flex justify-between items-start">
+              <h4 className={cn("font-semibold", colors.primary)}>{item.title}</h4>
+              {item.date && (
+                <span className={cn("text-sm", colors.secondary)}>
+                  {item.date}
+                </span>
+              )}
+            </div>
+            {item.subtitle && (
+              <div className={cn("text-sm", colors.secondary)}>{item.subtitle}</div>
+            )}
+            {item.description && (
+              <p className="text-sm mt-1">{item.description}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   // Render content with proper page breaks
-  const renderContent = useCallback(() => {
+  const renderContent = () => {
     if (!contentRef.current) {
+      console.log('Content ref not ready');
       return null;
     }
     
     // Get all sections to be rendered
     const { personal = {}, customSections = [] } = resumeData || {};
+    console.log('Rendering content with data:', { personal, customSections });
     
-    // Ensure we have a valid section order
-    const validSectionOrder = Array.isArray(sectionOrder) && sectionOrder.length > 0 
-      ? sectionOrder 
-      : ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications', ...(customSections?.map((s: any) => s.id) || [])];
+    // Get custom sections by ID
+    const getCustomSection = (id: string) => {
+      return customSections?.find((s: any) => s.id === id);
+    };
     
     // Render a custom section by ID
     const renderCustomSection = (sectionId: string) => {
-      const section = customSections.find((s: any) => s.id === sectionId);
+      const section = customSections.find((s) => s.id === sectionId);
       if (!section) return null;
       
       return (
-        <div key={section.id} className="mb-6">
-          <h3 className={styles.sectionTitle}>
-            {section.title?.toUpperCase() || 'CUSTOM SECTION'}
+        <div key={section.id} className={cn('mb-8', colors.text)}>
+          <h3 className={cn(
+            'text-xl font-bold border-b-2 pb-2 mb-4',
+            colors.sectionTitle,
+            'uppercase tracking-wide'
+          )}>
+            {section.title || 'Custom Section'}
           </h3>
+          
           {section.description && (
-            <p className="text-gray-700 mb-4">{section.description}</p>
+            <p className={cn('mb-6', colors.text)}>{section.description}</p>
           )}
-          {section.items?.map((item: any, index: number) => (
-            <div key={item.id || index} className="mb-4">
-              <div className="flex justify-between items-start">
-                <h4 className="font-bold">{item.title}</h4>
-                {item.date && (
-                  <span className="text-sm text-gray-600">
-                    {item.date}
-                  </span>
-                )}
-              </div>
-              {item.subtitle && (
-                <div className="text-sm text-gray-700">{item.subtitle}</div>
-              )}
-              {item.description && (
-                <p className="text-sm text-gray-800 mt-1">{item.description}</p>
-              )}
+          
+          {section.entries?.map((entry, index) => (
+            <div 
+              key={entry.id || index} 
+              className={cn('mb-6 p-4 rounded-lg', colors.highlight)}
+            >
+              {section.fields.map((field) => {
+                const value = entry.values[field.id];
+                if (!value) return null;
+                
+                return (
+                  <div key={field.id} className="mb-3 last:mb-0">
+                    <h4 className={cn('font-semibold', colors.primary)}>
+                      {field.name}
+                    </h4>
+                    <div className={cn('mt-1', colors.text)}>
+                      {Array.isArray(value) ? value.join(', ') : String(value)}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -721,11 +759,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     };
     
     // Get all section components in order
-    const renderContent = () => {
-    const customSections = resumeData.customSections || [];
-    const primaryColor = templateStyle.primary || '#3b82f6'; // Default to blue-500 if undefined
-    
-    const sections = {
+    const sectionComponents: { [key: string]: JSX.Element | null } = {
       personal: renderPersonalInfo(),
       summary: renderSummary(),
       experience: renderExperience(),
@@ -734,27 +768,15 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       projects: renderProjects(),
       achievements: renderAchievements(),
       certifications: renderCertifications(),
-      // Add custom sections with consistent styling
-      ...(customSections || []).reduce((acc: any, section: any) => {
-        if (section && section.id) {
-          acc[section.id] = (
-            <div key={section.id} className="mb-6">
-              <h3 
-                className="text-lg font-bold mb-3 pb-2 border-b-2"
-                style={{ borderColor: primaryColor, color: primaryColor }}
-              >
-                {section.title?.toUpperCase() || 'CUSTOM SECTION'}
-              </h3>
-              <CustomSectionPreview section={section} />
-            </div>
-          );
-        }
+      // Add custom sections
+      ...customSections.reduce((acc: any, section: any) => {
+        acc[section.id] = renderCustomSection(section.id);
         return acc;
       }, {})
     };
     
-    // Get the ordered sections to render, filtering out any undefined sections
-    const sectionsToRender = (sectionOrder || [
+    // Get the order of sections to render
+    const sectionsToRender = sectionOrder || [
       'personal',
       'summary',
       'experience',
@@ -763,14 +785,16 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       'projects',
       'achievements',
       'certifications',
-      ...(customSections || []).map((s: any) => s.id)
-    ])
-    .filter((sectionId: string) => sectionComponents[sectionId])
-    .map((sectionId: string) => (
-      <div key={sectionId} className="mb-8">
-        {sectionComponents[sectionId]()}
-      </div>
-    ));
+      ...customSections.map((s: any) => s.id)
+    ];
+    
+    // Filter out null/undefined sections and render them in order
+    const content = sectionsToRender
+      .filter((sectionId: string) => sectionComponents[sectionId])
+      .map((sectionId: string) => sectionComponents[sectionId]);
+    
+    return <div className="space-y-6">{content}</div>;
+    const sections = renderSections();
     
     // Always render all sections in a single container
     // Let the browser handle page breaks naturally based on content
@@ -778,7 +802,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       <div className="relative print:block">
         <div className="page">
           <div className="space-y-8 print:space-y-6">
-            {sectionsToRender}
+            {sections}
           </div>
           {pages > 1 && (
             <div className="page-number print:hidden">Page 1 of {pages}</div>
@@ -872,96 +896,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       background-color: #6b7280;
     }
     
-    /* Print styles */
-    @media print {
-      @page {
-        size: A4;
-        margin: 15mm 15mm 15mm 15mm;
-      }
-      
-      body, html {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        width: 210mm;
-        height: 297mm;
-      }
-
-      body * {
-        visibility: hidden; /* Hide everything by default */
-      }
-
-      .a4-container, .a4-container * {
-        visibility: visible; /* Only show the resume content */
-      }
-
-      .a4-container {
-        position: relative !important;
-        width: 210mm !important;
-        min-height: 297mm !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        transform: none !important;
-        overflow: visible !important;
-        background: white !important;
-      }
-      
-      .resume-card {
-        box-shadow: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        min-height: 100% !important;
-      }
-      
-      .resume-content {
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: visible !important;
-        height: auto !important;
-        min-height: 100% !important;
-      }
-
-      .page {
-        width: 210mm;
-        min-height: 297mm;
-        margin: 0 auto !important;
-        padding: 15mm !important;
-        box-sizing: border-box;
-        position: relative;
-        background: white;
-      }
-
-      .page-number {
-        position: absolute;
-        bottom: 10mm;
-        right: 15mm;
-        font-size: 10pt;
-        color: #666;
-      }
-      
-      /* Let the browser handle page breaks naturally */
-      .page {
-        page-break-after: always;
-      }
-      
-      .page:last-child {
-        page-break-after: auto;
-      }
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .a4-container {
-        max-width: 95vw;
-        max-height: calc(100vh - 150px);
-      }
-    }
+    /* Print styles moved to PrintStyles component */
     
     @media (max-width: 480px) {
       .a4-container {
@@ -979,30 +914,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   const contentWidth = `calc(100% - ${PAGE_MARGIN_MM * 2}mm)`;
   const contentPadding = `${PAGE_MARGIN_MM}mm`;
 
-  // Apply template styles to the main container
-  const containerStyle: React.CSSProperties = {
-    ...templateVars,
-    color: templateStyle.text,
-    backgroundColor: templateStyle.background,
-    '--primary': templateStyle.primary,
-    '--secondary': templateStyle.secondary,
-    '--text': templateStyle.text,
-    '--bg': templateStyle.background,
-    '--section-bg': templateStyle.sectionBg,
-    '--a4-width': `${A4_WIDTH_MM}mm`,
-    '--a4-height': `${A4_HEIGHT_MM}mm`,
-    '--page-margin': `${PAGE_MARGIN_MM}mm`
-  };
-
   return (
-    <div 
-      className="w-full min-h-screen p-4 print:p-0"
-      style={containerStyle}
-    >
+    <div className="w-full min-h-screen bg-gray-100 p-4 print:p-0">
       {/* Print button */}
       <div className="w-full max-w-[210mm] mx-auto mb-4 print:hidden">
         <Button 
-          style={{ borderColor: templateStyle.primary, color: templateStyle.primary }}
+          onClick={handlePrint}
+          variant="outline"
+          className="bg-white hover:bg-gray-50 shadow-md"
         >
           Print / Save as PDF
         </Button>
@@ -1083,4 +1002,4 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       `}</style>
     </div>
   );
-};
+}

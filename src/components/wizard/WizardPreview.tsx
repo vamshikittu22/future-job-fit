@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import ResumePreview from '@/components/ResumePreview';
 import { TEMPLATE_OPTIONS } from '@/config/wizardSteps';
+import type { ResumeData } from '@/types/resume';
 import {
   ZoomIn,
   ZoomOut,
@@ -27,7 +28,26 @@ const WizardPreview: React.FC = () => {
   const template = wizardState.selectedTemplate || TEMPLATE_OPTIONS[0].id;
   
   // Log resume data for debugging
-  console.log('Resume Data in WizardPreview:', JSON.stringify(resumeData, null, 2));
+  if (resumeData) {
+    const logData: Record<string, any> = {
+      personal: resumeData.personal ? Object.keys(resumeData.personal) : 'No personal data',
+      experience: resumeData.experience ? `Array(${resumeData.experience.length})` : 'No experience',
+      education: resumeData.education ? `Array(${resumeData.education.length})` : 'No education',
+      customSections: resumeData.customSections ? `Array(${resumeData.customSections.length})` : 'No custom sections',
+    };
+
+    // Safely access metadata with type checking
+    if ('metadata' in resumeData && resumeData.metadata) {
+      logData.metadata = {
+        ...resumeData.metadata,
+        ...(resumeData.metadata.sectionOrder && { 
+          sectionOrder: `Array(${resumeData.metadata.sectionOrder.length})` 
+        })
+      };
+    }
+
+    console.log('Resume Data in WizardPreview:', JSON.stringify(logData, null, 2));
+  }
   
   // Default section order if not specified
   const defaultSectionOrder = [
@@ -44,7 +64,21 @@ const WizardPreview: React.FC = () => {
   
   // Ensure sectionOrder exists and includes all default sections
   const sectionOrder = useMemo(() => {
-    const customOrder = resumeData?.sectionOrder || [];
+    // Type guard to check if resumeData has metadata with sectionOrder
+    const getSectionOrder = (data: any): string[] => {
+      if (!data) return [];
+      if (typeof data !== 'object') return [];
+      if ('metadata' in data && data.metadata && 
+          typeof data.metadata === 'object' &&
+          'sectionOrder' in data.metadata &&
+          Array.isArray(data.metadata.sectionOrder)) {
+        return data.metadata.sectionOrder as string[];
+      }
+      return [];
+    };
+
+    const customOrder = getSectionOrder(resumeData);
+    
     // Merge with defaults, preserving order and adding any missing sections
     return [
       ...new Set([
@@ -52,7 +86,7 @@ const WizardPreview: React.FC = () => {
         ...defaultSectionOrder.filter(section => !customOrder.includes(section))
       ])
     ];
-  }, [resumeData?.sectionOrder, resumeData?.customSections]);
+  }, [resumeData, defaultSectionOrder]);
   
   const handleDownload = () => {
     // TODO: Implement PDF download
@@ -139,19 +173,16 @@ const WizardPreview: React.FC = () => {
               transformOrigin: 'top center',
               width: '210mm',
               minHeight: '297mm',
-              transition: 'transform 0.2s ease-in-out',
               margin: '0 auto',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
             }}
           >
             <div className="p-8 bg-white">
               <ResumePreview 
-                resumeData={resumeData} 
+                resumeData={resumeData as ResumeData} 
                 template={template}
                 currentPage={1}
                 sectionOrder={sectionOrder}
-                showPersonalInfo={true}
-                showCustomSections={true}
               />
             </div>
           </div>

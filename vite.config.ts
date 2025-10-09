@@ -13,7 +13,13 @@ export default defineConfig({
     }
   },
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [
+          ["@babel/plugin-proposal-decorators", { "legacy": true }]
+        ]
+      }
+    }),
     tsconfigPaths({
       loose: true
     }),
