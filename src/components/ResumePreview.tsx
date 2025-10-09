@@ -9,6 +9,15 @@ import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
 import { Button } from "@/components/ui/button";
 import type { ResumeData, ResumePreviewProps, CustomSection } from "@/types/resume";
 
+// A4 dimensions in mm and pixels (moved to the top)
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const MM_TO_PX = 3.78; // Approximate conversion
+const PAGE_MARGIN_MM = 15;
+const A4_WIDTH_PX = A4_WIDTH_MM * MM_TO_PX;
+const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX;
+const CONTENT_HEIGHT_PX = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
+
 // Reusing the CustomSection type from our types file
 type CustomSectionData = CustomSection & {
   // Add any additional properties specific to the preview if needed
@@ -74,20 +83,8 @@ const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
   );
 };
 
-// A4 dimensions in mm and pixels
-const A4_WIDTH_MM = 210;
-const A4_HEIGHT_MM = 297;
-const MM_TO_PX = 3.78; // Approximate conversion
-const A4_WIDTH_PX = A4_WIDTH_MM * MM_TO_PX;
-const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX;
-const PAGE_MARGIN_MM = 15; // 15mm margins on all sides
-const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - (PAGE_MARGIN_MM * 2);
-const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
-
 // Simple page break component
-const PageBreak = () => (
-  <div style={{ pageBreakAfter: 'always' }}></div>
-);
+const PageBreak = () => <div style={{ pageBreakAfter: 'always' }} />;
 
 const PrintStyles = () => {
   return (
@@ -139,158 +136,329 @@ const PrintStyles = () => {
   );
 };
 
+// Base styles with high contrast defaults
+const baseStyles = {
+  // Text colors - all high contrast
+  primary: 'text-gray-900 font-semibold',
+  secondary: 'text-gray-900',
+  text: 'text-gray-900',
+  muted: 'text-gray-800',
+  
+  // Background and borders - no light colors
+  accent: 'bg-white',
+  border: 'border-gray-300',
+  highlight: 'bg-white',
+  card: 'bg-white',
+  
+  // Links with good contrast
+  link: 'text-blue-700 hover:text-blue-900 font-medium border-b border-blue-700 hover:border-blue-900',
+  
+  // Section styling with clear hierarchy
+  sectionTitle: 'text-gray-900 border-b-2 border-gray-900 font-bold uppercase tracking-wide mb-4 pb-2',
+  
+  // Custom section styles
+  customSection: 'mb-8',
+  customSectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
+  customItem: 'mb-6 pb-6 border-b border-gray-300 last:border-0 last:pb-0',
+  
+  // Personal info section
+  personalInfo: 'mb-10',
+  
+  // Standard section styling
+  section: 'mb-10',
+  item: 'mb-6 pb-6 border-b border-gray-300 last:border-0 last:pb-0',
+  itemTitle: 'text-gray-900 font-semibold',
+  itemSubtitle: 'text-gray-900 text-sm font-medium',
+  date: 'text-sm text-gray-900 font-medium',
+};
+
+// Creative template styles - high contrast with pink accents
+const creativeStyles = {
+  ...baseStyles,
+  // Text colors with pink accent
+  primary: 'text-pink-800 font-semibold',
+  secondary: 'text-gray-900',
+  text: 'text-gray-900',
+  muted: 'text-gray-900',
+  
+  // Interactive elements
+  link: 'text-pink-800 hover:text-pink-900 font-medium border-b border-pink-800 hover:border-pink-900',
+  
+  // Section styling
+  sectionTitle: 'text-pink-800 border-b-2 border-pink-800 font-bold uppercase tracking-wide mb-4 pb-2',
+  section: 'mb-10 p-6 border border-pink-200 rounded-lg',
+  item: 'mb-6 pb-6 border-b border-pink-200 last:border-0 last:pb-0',
+  
+  // Personal info with subtle pink background
+  personalInfo: 'mb-10 p-8 border border-pink-200 rounded-lg bg-pink-50',
+  
+  // Custom sections
+  customSection: 'mb-8 p-6 border border-pink-200 rounded-lg',
+  customSectionTitle: 'text-pink-800 font-semibold uppercase tracking-wider text-sm border-b-2 border-pink-800 pb-2 mb-4',
+  customItem: 'mb-6 pb-6 border-b border-pink-200 last:border-0 last:pb-0',
+  
+  // Ensure text remains high contrast
+  itemTitle: 'text-pink-800 font-semibold',
+  itemSubtitle: 'text-gray-900 text-sm font-medium',
+  date: 'text-sm text-gray-900 font-medium',
+};
+
+// Modern template - clean with blue accents and high contrast
+const modernStyles = {
+  ...baseStyles,
+  // Text colors with blue accent
+  primary: 'text-blue-800 font-semibold',
+  link: 'text-blue-800 hover:text-blue-900 font-medium border-b border-blue-800 hover:border-blue-900',
+  
+  // Section styling with blue accents
+  sectionTitle: 'text-blue-800 border-b-2 border-blue-800 font-bold uppercase tracking-wide mb-4 pb-2',
+  
+  // Personal info with subtle blue background
+  personalInfo: 'mb-10 p-8 border border-blue-200 rounded-lg bg-blue-50',
+  
+  // Custom sections
+  customSectionTitle: 'text-blue-800 font-semibold uppercase tracking-wider text-sm border-b-2 border-blue-800 pb-2 mb-4',
+  
+  // Ensure text remains high contrast
+  itemTitle: 'text-blue-800 font-semibold',
+};
+
+// Minimal template styles - clean and modern with proper contrast
+const minimalStyles = {
+  ...baseStyles,
+  // Base text colors with good contrast
+  primary: 'text-gray-900 font-semibold',
+  secondary: 'text-gray-800',
+  text: 'text-gray-900',
+  muted: 'text-gray-800',
+  
+  // Section styling with proper contrast
+  sectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
+  
+  // Layout and spacing
+  section: 'mb-10',
+  item: 'mb-8 last:mb-0 pb-8 border-b border-gray-900 last:border-0',
+  
+  // Typography with better contrast
+  itemTitle: 'text-gray-900 font-semibold',
+  itemSubtitle: 'text-gray-900 text-sm font-medium',
+  
+  // Date and meta information
+  date: 'text-sm text-gray-900 font-medium',
+  
+  // Links with good contrast
+  link: 'text-blue-700 hover:text-blue-900 font-medium border-b border-blue-700 hover:border-blue-900',
+  
+  // Personal info section
+  personalInfo: 'mb-10',
+  
+  // Custom sections
+  customSection: 'mb-8',
+  customSectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
+  customItem: 'mb-6 pb-6 border-b border-gray-200 last:border-0 last:pb-0',
+  
+  // Remove unnecessary decorations
+  card: '',
+  border: 'border-gray-200',
+  highlight: 'bg-gray-50',
+  
+  // Ensure text is always dark on light background
+  '& *': 'text-gray-900'
+};
+
 // Get template colors based on the selected template
 const getTemplateColors = (templateName: string) => {
-  const templates: Record<string, any> = {
-    colorful: {
-      primary: 'text-indigo-900 dark:text-indigo-300 font-semibold',
-      secondary: 'text-gray-900 dark:text-gray-200',
-      accent: 'bg-indigo-50 dark:bg-indigo-900/40',
-      border: 'border-indigo-200 dark:border-indigo-700',
-      highlight: 'bg-indigo-50/80 dark:bg-indigo-900/30',
-      sectionTitle: 'text-indigo-900 dark:text-indigo-300 border-indigo-400 dark:border-indigo-600 font-bold',
-      link: 'text-indigo-800 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200',
-      card: 'bg-white dark:bg-gray-800',
-      text: 'text-gray-900 dark:text-gray-200',
-      muted: 'text-gray-800 dark:text-gray-400',
-    },
-    experienced: {
-      primary: 'text-gray-900 dark:text-gray-100 font-semibold',
-      secondary: 'text-gray-900 dark:text-gray-300',
-      accent: 'bg-gray-50 dark:bg-gray-800/60',
-      border: 'border-gray-300 dark:border-gray-700',
-      highlight: 'bg-gray-100/50 dark:bg-gray-800/40',
-      sectionTitle: 'text-gray-900 dark:text-gray-100 border-gray-400 dark:border-gray-600 font-bold',
-      link: 'text-blue-800 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200',
-      card: 'bg-white dark:bg-gray-800',
-      text: 'text-gray-900 dark:text-gray-200',
-      muted: 'text-gray-800 dark:text-gray-400',
-    },
-    student: {
-      primary: 'text-emerald-900 dark:text-emerald-300 font-semibold',
-      secondary: 'text-gray-900 dark:text-gray-200',
-      accent: 'bg-emerald-50 dark:bg-emerald-900/40',
-      border: 'border-emerald-300 dark:border-emerald-700',
-      highlight: 'bg-emerald-50/80 dark:bg-emerald-900/30',
-      sectionTitle: 'text-emerald-900 dark:text-emerald-300 border-emerald-400 dark:border-emerald-600 font-bold',
-      link: 'text-emerald-800 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200',
-      card: 'bg-white dark:bg-gray-800',
-      text: 'text-gray-900 dark:text-gray-200',
-      muted: 'text-gray-800 dark:text-gray-400',
-    },
-    creative: {
-      primary: 'text-pink-900 dark:text-pink-300 font-semibold',
-      secondary: 'text-gray-900 dark:text-gray-200',
-      accent: 'bg-pink-50 dark:bg-pink-900/40',
-      border: 'border-pink-300 dark:border-pink-700',
-      highlight: 'bg-pink-50/80 dark:bg-pink-900/30',
-      sectionTitle: 'text-pink-900 dark:text-pink-300 border-pink-400 dark:border-pink-600 font-bold',
-      link: 'text-pink-800 hover:text-pink-900 dark:text-pink-400 dark:hover:text-pink-200',
-      card: 'bg-white dark:bg-gray-800',
-      text: 'text-gray-900 dark:text-gray-200',
-      muted: 'text-gray-800 dark:text-gray-400',
-    },
-    minimal: {
-      primary: 'text-blue-900 dark:text-blue-300 font-semibold',
-      secondary: 'text-gray-900 dark:text-gray-200',
-      accent: 'bg-blue-50 dark:bg-blue-900/40',
-      border: 'border-blue-300 dark:border-blue-700',
-      highlight: 'bg-blue-50/80 dark:bg-blue-900/30',
-      sectionTitle: 'text-blue-900 dark:text-blue-300 border-blue-400 dark:border-blue-600 font-bold',
-      link: 'text-blue-800 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200',
-      card: 'bg-white dark:bg-gray-800',
-      text: 'text-gray-900 dark:text-gray-200',
-      muted: 'text-gray-800 dark:text-gray-400',
-    }
-  };
-
-  return templates[templateName.toLowerCase()] || templates.minimal;
+  const template = templateName.toLowerCase();
+  
+  if (template === 'creative') {
+    return creativeStyles;
+  }
+  
+  if (template === 'modern') {
+    return modernStyles;
+  }
+  
+  if (template === 'minimal') {
+    return minimalStyles;
+  }
+  
+  // For classic and other templates, use the base styles
+  return baseStyles;
 };
 
 // Get template styles based on the selected template
 const getTemplateStyles = (templateName: string) => {
   const colors = getTemplateColors(templateName);
-  
-  return {
+  const isCreative = templateName.toLowerCase() === 'creative';
+  const isModern = templateName.toLowerCase() === 'modern';
+
+  // Base styles for all templates
+  const baseStyles = {
     sectionTitle: cn(
-      'text-lg font-bold mb-2 pb-1 border-b',
-      colors.sectionTitle,
-      colors.border
+      'text-lg font-bold mb-4 pb-2',
+      colors.sectionTitle
     ),
     card: cn(
-      'p-6 rounded-lg shadow-sm',
-      colors.accent,
-      colors.border,
-      'border'
+      'rounded-lg shadow-sm',
+      colors.card,
+      'border',
+      colors.border
     ),
-    section: cn('mb-6', colors.secondary),
+    section: cn(colors.section),
+    item: cn(colors.item),
     itemTitle: cn('font-semibold', colors.primary),
-    itemSubtitle: 'text-sm text-muted-foreground',
-    date: 'text-sm text-muted-foreground whitespace-nowrap',
+    itemSubtitle: cn('text-sm', colors.muted),
+    date: cn('text-sm whitespace-nowrap', colors.muted),
     link: colors.link,
+    personalInfo: colors.personalInfo,
+    customSection: colors.customSection,
+    customSectionTitle: colors.customSectionTitle,
+    customItem: colors.customItem
   };
+
+  // Creative template applies custom styling to all sections
+  if (isCreative) {
+    return {
+      ...baseStyles,
+      section: cn(colors.section, 'p-6 rounded-lg border shadow-sm'),
+      item: cn(colors.item, 'p-4')
+    };
+  }
+
+  // Modern template only styles the personal info section
+  if (isModern) {
+    return {
+      ...baseStyles,
+      personalInfo: colors.personalInfo
+    };
+  }
+
+  // Default template (plain)
+  return baseStyles;
 };
 
-export default function ResumePreview({ resumeData, template, currentPage, sectionOrder }: ResumePreviewProps) {
-  const pageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [pages, setPages] = useState<number>(1);
-  const [currentViewPage, setCurrentViewPage] = useState<number>(1);
-  const [contentHeight, setContentHeight] = useState<number>(0);
+interface ResumePreviewProps {
+  resumeData: ResumeData | null;
+  template: string;
+  currentPage: number;
+  sectionOrder: string[];
+  onTotalPagesChange?: (pages: number) => void;
+  onPageChange?: (page: number) => void;
+}
 
-  // Define colors and styles
+export default function ResumePreview({ 
+  resumeData, 
+  template, 
+  currentPage,
+  sectionOrder,
+  onTotalPagesChange,
+  onPageChange
+}: ResumePreviewProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  
+  // Calculate total pages and notify parent
+  const totalPages = useMemo(() => {
+    if (!resumeData) return 1;
+    
+    // For now, return 1 as the default number of pages
+    // We'll update this once renderContent is properly defined
+    return 1;
+    
+    // The following code is commented out because it depends on renderContent
+    // which is causing initialization issues
+    /*
+    let count = 1;
+    const content = renderContent();
+    if (content?.props?.children) {
+      count += React.Children.toArray(content.props.children).filter((child: any) => 
+        React.isValidElement(child) && child.type === PageBreak
+      ).length;
+    }
+    return count;
+    */
+  }, [resumeData]);
+  
+  // Notify parent when total pages change
+  useEffect(() => {
+    if (onTotalPagesChange) {
+      onTotalPagesChange(totalPages);
+    }
+  }, [totalPages, onTotalPagesChange]);
+
   const colors = useMemo(() => getTemplateColors(template), [template]);
   const styles = useMemo(() => getTemplateStyles(template), [template]);
-
-  // Calculate pages based on content height
-  useEffect(() => {
-    if (contentRef.current) {
-      // Calculate the actual height of the content
-      const height = contentRef.current.scrollHeight;
-      setContentHeight(height);
-      
-      // Calculate number of pages needed based on content height
-      // Use the content height minus margins for calculation
-      const calculatedPages = Math.max(1, Math.ceil(height / (A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2))));
-      setPages(calculatedPages);
-      
-      // Reset to first page when content changes
-      setCurrentViewPage(1);
-    }
-  }, [resumeData, template, sectionOrder, A4_HEIGHT_PX, PAGE_MARGIN_MM, MM_TO_PX]);
-
-  const scrollToPage = useCallback((pageNumber: number) => {
-    if (contentRef.current) {
-      const scrollPosition = (pageNumber - 1) * CONTENT_HEIGHT_PX;
-      contentRef.current.scrollTo({
-        top: scrollPosition,
-        behavior: 'smooth'
-      });
-      setCurrentViewPage(pageNumber);
-    }
-  }, []);
+  
+  // Light mode styles
+  const lightModeStyles = {
+    '--text-primary': '#1f2937',    // text-gray-800
+    '--bg-primary': '#ffffff',      // bg-white
+    '--border-primary': '#e5e7eb',  // border-gray-200
+    '--text-secondary': '#4b5563',  // text-gray-600
+    '--text-heading': '#111827',    // text-gray-900
+    '--link': '#2563eb',            // text-blue-600
+    '--link-hover': '#1d4ed8'       // text-blue-700
+  } as React.CSSProperties;
 
   // Handle scroll events to update current page
   const handleScroll = useCallback(() => {
-    if (contentRef.current) {
+    if (contentRef.current && onPageChange) {
       const scrollPosition = contentRef.current.scrollTop;
-      const currentPage = Math.floor(scrollPosition / CONTENT_HEIGHT_PX) + 1;
-      setCurrentViewPage(Math.min(Math.max(1, currentPage), pages));
+      const scrollPage = Math.floor(scrollPosition / (297 * 3.78)) + 1; // 297mm in pixels
+      if (scrollPage >= 1 && scrollPage <= totalPages) {
+        onPageChange(scrollPage);
+      }
     }
-  }, [pages]);
+  }, [totalPages, onPageChange]);
 
-// Force static styling for resume preview - not affected by theme
+  // Handle page change with scroll
+  const scrollToPage = useCallback((page: number) => {
+    if (contentRef.current) {
+      const pageHeight = 297 * 3.78; // A4 height in pixels
+      contentRef.current.scrollTo({
+        top: (page - 1) * pageHeight,
+        behavior: 'smooth'
+      });
+      
+      // Update the current page
+      if (onPageChange) {
+        onPageChange(page);
+      }
+    }
+  }, [onPageChange]);
+
+// Force light mode colors for all elements
   const previewClasses = cn(
-    'bg-white dark:bg-gray-800',
-    'w-full p-0 m-0', // Remove centering and padding for print
+    // Base layout and sizing
+    'w-full p-0 m-0',
     'shadow-lg my-8',
     'transition-none',
-    'h-[calc(100vh-200px)] overflow-auto', // Use responsive overflow class
+    'h-[calc(100vh-200px)] overflow-auto',
     'resume-container font-sans',
     'relative',
-    'mx-[14.17px] my-[14.17px] p-8', // Add 5mm margins and padding for better visibility
+    'mx-[14.17px] my-[14.17px] p-8',
     'aspect-[210/297]', // A4 aspect ratio (210mm x 297mm)
     'text-base leading-relaxed',
+    // Force light colors
+    'bg-white text-gray-800',
+    // Force all text to be dark
+    '[&]:text-gray-800',
+    // Force all backgrounds to be white
+    '[&]:bg-white',
+    // Force all borders to be light
+    '[&]:border-gray-200',
+    // Force specific element colors
+    '[&_.text-muted-foreground]:text-gray-600',
+    '[&_.text-muted]:text-gray-600',
+    '[&_h1]:text-gray-900',
+    '[&_h2]:text-gray-800',
+    '[&_h3]:text-gray-700',
+    // Force links
+    '[&_a]:text-blue-600',
+    '[&_a:hover]:text-blue-800',
+    // Force section titles
+    '[&_.section-title]:text-gray-900',
+    // Apply theme colors (light mode only)
     colors.text
   );
 
@@ -299,8 +467,8 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
     if (!personal) {
       console.log('No personal data found in resumeData:', resumeData);
       return (
-        <div className={cn("mb-6 p-4 border border-dashed rounded", colors.border, colors.accent)}>
-          <p className={cn("text-center", colors.secondary)}>No personal information available. Please check your resume data.</p>
+        <div className={cn("p-6 rounded-lg border shadow-sm", styles.personalInfo)}>
+          <p className="text-center text-gray-600">No personal information available. Please check your resume data.</p>
         </div>
       );
     }
@@ -314,21 +482,18 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
       { icon: '🐙', value: personal.github, isLink: true, prefix: 'github.com/' },
     ].filter(item => item.value);
 
-    // Debug log
-    console.log('Personal info being rendered:', { personal, contactItems });
-
     return (
-      <div className={cn("mb-8", colors.primary)}>
+      <div className={styles.personalInfo}>
         <div className="text-center mb-4">
-          <h2 className={cn("text-3xl font-bold mb-1", colors.primary)}>
+          <h2 className={cn("text-3xl font-bold mb-2", styles.itemTitle)}>
             {personal.name || 'Your Name'}
           </h2>
           {personal.title && (
-            <h3 className={cn("text-lg font-medium", colors.secondary)}>{personal.title}</h3>
+            <h3 className={cn("text-xl", styles.itemSubtitle)}>{personal.title}</h3>
           )}
         </div>
         
-        <div className={cn("flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm mb-6", colors.secondary)}>
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
           {contactItems.length > 0 ? (
             contactItems.map((item, index) => (
               <div key={index} className="flex items-center gap-1.5">
@@ -338,7 +503,7 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
                     href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className={cn("hover:underline", colors.link)}
+                    className={cn("hover:underline", styles.link)}
                   >
                     {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
                   </a>
@@ -357,9 +522,7 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
   };
 
   const renderSummary = () => {
-    const summaryText = resumeData.summary || '';
-    
-    if (!summaryText) return null;
+    if (!resumeData?.summary) return null;
     
     return (
       <div className="mb-6">
@@ -367,7 +530,7 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
           {SECTION_NAMES.summary.toUpperCase()}
         </h3>
         <p className="whitespace-pre-line text-gray-800">
-          {summaryText}
+          {resumeData.summary}
         </p>
       </div>
     );
@@ -697,66 +860,60 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
     );
   };
 
-  // Render content with proper page breaks
-  const renderContent = () => {
-    if (!contentRef.current) {
-      console.log('Content ref not ready');
-      return null;
-    }
+  // Render a section with appropriate styling based on template
+  const renderSection = (sectionId: string, content: React.ReactNode) => {
+    if (!content) return null;
     
-    // Get all sections to be rendered
-    const { personal = {}, customSections = [] } = resumeData || {};
-    console.log('Rendering content with data:', { personal, customSections });
+    const isCreative = template.toLowerCase() === 'creative';
+    const isModern = template.toLowerCase() === 'modern';
+    const isPersonalInfo = sectionId === 'personal';
     
-    // Get custom sections by ID
-    const getCustomSection = (id: string) => {
-      return customSections?.find((s: any) => s.id === id);
-    };
-    
-    // Render a custom section by ID
-    const renderCustomSection = (sectionId: string) => {
-      const section = customSections.find((s) => s.id === sectionId);
-      if (!section) return null;
-      
+    // For creative template, all sections get the creative styling
+    if (isCreative) {
       return (
-        <div key={section.id} className={cn('mb-8', colors.text)}>
-          <h3 className={cn(
-            'text-xl font-bold border-b-2 pb-2 mb-4',
-            colors.sectionTitle,
-            'uppercase tracking-wide'
-          )}>
-            {section.title || 'Custom Section'}
-          </h3>
-          
-          {section.description && (
-            <p className={cn('mb-6', colors.text)}>{section.description}</p>
+        <div 
+          key={sectionId} 
+          className={cn(
+            'p-6 rounded-lg border shadow-sm mb-6',
+            'bg-pink-50 border-pink-100', // Full opacity for better consistency
+            isPersonalInfo && 'border-pink-200 shadow-md', // Keep special border for personal info
+            styles.section,
+            'text-gray-800' // Ensure text is readable on the pink background
           )}
-          
-          {section.entries?.map((entry, index) => (
-            <div 
-              key={entry.id || index} 
-              className={cn('mb-6 p-4 rounded-lg', colors.highlight)}
-            >
-              {section.fields.map((field) => {
-                const value = entry.values[field.id];
-                if (!value) return null;
-                
-                return (
-                  <div key={field.id} className="mb-3 last:mb-0">
-                    <h4 className={cn('font-semibold', colors.primary)}>
-                      {field.name}
-                    </h4>
-                    <div className={cn('mt-1', colors.text)}>
-                      {Array.isArray(value) ? value.join(', ') : String(value)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+        >
+          {content}
         </div>
       );
-    };
+    }
+    
+    // Modern template: Only personal info gets special treatment
+    if (isModern && isPersonalInfo) {
+      return (
+        <div key={sectionId} className={styles.personalInfo}>
+          {content}
+        </div>
+      );
+    }
+    
+    // Default: Plain section with standard spacing
+    return (
+      <div key={sectionId} className="mb-6">
+        {content}
+      </div>
+    );
+  };
+
+  // Render content with proper page breaks and template-specific styling
+  const renderContent = useCallback(() => {
+    if (!resumeData) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500">
+          No resume data available
+        </div>
+      );
+    }
+    
+    const { customSections = [] } = resumeData || {};
     
     // Get all section components in order
     const sectionComponents: { [key: string]: JSX.Element | null } = {
@@ -788,29 +945,31 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
       ...customSections.map((s: any) => s.id)
     ];
     
-    // Filter out null/undefined sections and render them in order
-    const content = sectionsToRender
-      .filter((sectionId: string) => sectionComponents[sectionId])
-      .map((sectionId: string) => sectionComponents[sectionId]);
+    // Filter out null/undefined sections and render them with appropriate styling
+    const content = (
+      <div className="space-y-6">
+        {sectionsToRender
+          .filter((sectionId: string) => sectionComponents[sectionId])
+          .map((sectionId: string) => 
+            renderSection(sectionId, sectionComponents[sectionId])
+          )}
+      </div>
+    );
     
-    return <div className="space-y-6">{content}</div>;
-    const sections = renderSections();
-    
-    // Always render all sections in a single container
-    // Let the browser handle page breaks naturally based on content
+    // Render the content in a page container
     return (
       <div className="relative print:block">
         <div className="page">
           <div className="space-y-8 print:space-y-6">
-            {sections}
+            {content}
           </div>
-          {pages > 1 && (
-            <div className="page-number print:hidden">Page 1 of {pages}</div>
+          {totalPages > 1 && (
+            <div className="page-number print:hidden">Page {currentPage} of {totalPages}</div>
           )}
         </div>
       </div>
     );
-  };
+  }, [resumeData, sectionOrder, template]);
 
   // Screen and print styles for the resume container
   const screenStyles = `
@@ -898,108 +1057,192 @@ export default function ResumePreview({ resumeData, template, currentPage, secti
     
     /* Print styles moved to PrintStyles component */
     
-    @media (max-width: 480px) {
+    @media (max-width: 1024px) {
       .a4-container {
-        max-width: 98vw;
-        max-height: calc(100vh - 120px);
+        width: 100% !important;
+        height: auto !important;
+        max-height: calc(100vh - 160px) !important;
+        aspect-ratio: 210/297;
+        padding: 0.5rem;
+      }
+      
+      /* Adjust for smaller screens */
+      @media (max-height: 800px) {
+        .a4-container {
+          max-height: 70vh !important;
+        }
+      }
+      
+      /* Mobile specific adjustments */
+      @media (max-width: 480px) {
+        .a4-container {
+          max-height: 60vh !important;
+          padding: 0.25rem;
+        }
       }
     }
   `;
-  // Add a print button handler
+  // Handle scroll events to update current page
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    
+    const handleScroll = () => {
+      const scrollPosition = content.scrollTop;
+      const newPage = Math.round(scrollPosition / CONTENT_HEIGHT_PX) + 1;
+      
+      if (newPage !== currentPage && onPageChange) {
+        onPageChange(newPage);
+      }
+    };
+    
+    content.addEventListener('scroll', handleScroll);
+    return () => content.removeEventListener('scroll', handleScroll);
+  }, [currentPage, onPageChange, CONTENT_HEIGHT_PX]);
+  
+  // Handle scroll events to update current page
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    
+    const handleScroll = () => {
+      const pageHeight = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
+      const scrollPosition = content.scrollTop;
+      const newPage = Math.round(scrollPosition / pageHeight) + 1;
+      
+      if (newPage !== currentPage && onPageChange) {
+        onPageChange(newPage);
+      }
+    };
+    
+    content.addEventListener('scroll', handleScroll);
+    return () => content.removeEventListener('scroll', handleScroll);
+  }, [currentPage, onPageChange]);
+  
+  // Handle print
   const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
-
-  // Calculate content width with margins
-  const contentWidth = `calc(100% - ${PAGE_MARGIN_MM * 2}mm)`;
+    // Ensure we're on the first page before printing
+    scrollToPage(1);
+    // Small delay to ensure scroll completes
+    setTimeout(() => window.print(), 100);
+  }, [scrollToPage]);
+  
+  // Calculate content dimensions
   const contentPadding = `${PAGE_MARGIN_MM}mm`;
+  const contentWidth = `calc(100% - ${PAGE_MARGIN_MM * 2}mm)`;
+
+  // Light mode styles are defined at the top of the component
+
+
+
+  // Render only the current page's content
+  const renderCurrentPage = () => {
+    const content = renderContent();
+    if (!content || !content.props || !content.props.children) return null;
+    
+    // If it's a single page, return as is
+    if (totalPages === 1) return content;
+
+    // Find all page breaks
+    const children = React.Children.toArray(content.props.children);
+    const pageBreaks = children.reduce<number[]>((acc, child, index) => {
+      if (React.isValidElement(child) && child.type === PageBreak) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+
+    // Calculate start and end indices for current page
+    const startIdx = currentPage === 1 ? 0 : (pageBreaks[currentPage - 2] || 0) + 1;
+    const endIdx = pageBreaks[currentPage - 1] || children.length;
+
+    // Return only the current page's content
+    return React.cloneElement(content, {
+      children: children.slice(startIdx, endIdx).filter(child => 
+        !(React.isValidElement(child) && child.type === PageBreak)
+      )
+    });
+  };
 
   return (
-    <div className="w-full min-h-screen bg-gray-100 p-4 print:p-0">
-      {/* Print button */}
-      <div className="w-full max-w-[210mm] mx-auto mb-4 print:hidden">
-        <Button 
-          onClick={handlePrint}
-          variant="outline"
-          className="bg-white hover:bg-gray-50 shadow-md"
-        >
-          Print / Save as PDF
-        </Button>
-      </div>
-
-      {/* A4 Container */}
+    <div className="flex flex-col h-full">
       <div 
-        className="mx-auto bg-white shadow-lg print:shadow-none"
-        style={{
-          width: '210mm',
-          minHeight: '297mm',
-          maxWidth: '100%',
-          position: 'relative',
-          overflow: 'hidden',
-          boxSizing: 'border-box',
-          padding: contentPadding
-        }}
-      >
-        {/* Main content area */}
-        <div 
-          ref={contentRef}
-          style={{
-            width: '100%',
-            height: '100%',
-            overflow: 'visible',
-            position: 'relative'
-          }}
-        >
-          {renderContent()}
-        </div>
-
-        {/* Page navigation */}
-        {pages > 1 && (
-          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 print:hidden">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => scrollToPage(currentViewPage - 1)}
-              disabled={currentViewPage <= 1}
-              className="bg-white/90 backdrop-blur-sm"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center px-4 text-sm text-gray-600 bg-white/90 backdrop-blur-sm rounded-md">
-              Page {currentViewPage} of {pages}
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => scrollToPage(currentViewPage + 1)}
-              disabled={currentViewPage >= pages}
-              className="bg-white/90 backdrop-blur-sm"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        className={cn(
+          'flex-1',
+          'print:overflow-visible',
+          template.toLowerCase() === 'creative' ? 'bg-pink-50' : 'bg-white',
+          'resume-content',
+          'print:shadow-none',
+          'relative',
+          'overflow-auto'
         )}
+        style={{
+          ...lightModeStyles,
+          color: 'rgb(31, 41, 55)',
+          backgroundColor: template.toLowerCase() === 'creative' ? '#fdf2f8' : 'white',
+          padding: '15mm',
+          boxSizing: 'border-box',
+        }}
+        ref={contentRef}
+      >
+        {renderCurrentPage()}
       </div>
 
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 py-4 print:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange && onPageChange(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="w-24"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange && onPageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className="w-24"
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
+      
       {/* Print styles */}
-      <style jsx global>{`
-        @page {
-          size: A4;
-          margin: 0;
-        }
-        
-        @media print {
-          body {
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @page {
+            size: A4;
             margin: 0;
-            padding: 0;
-            background: white;
           }
           
-          .print\:hidden {
-            display: none !important;
+          @media print {
+            body, html {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+            }
+            
+            .print\:hidden {
+              display: none !important;
+            }
+
+            .page-break {
+              page-break-after: always;
+              break-after: page;
+            }
           }
-        }
-      `}</style>
+        `
+      }} />
     </div>
   );
 }

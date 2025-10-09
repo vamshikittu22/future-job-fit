@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { Outlet } from 'react-router-dom';
 import { WizardProvider } from '@/contexts/WizardContext';
 import { WizardSidebar } from '@/components/wizard/WizardSidebar';
@@ -8,16 +9,26 @@ import { Menu, Eye, Sun, Moon, Undo2, Redo2, Save, MoonIcon, SunIcon, Loader2 } 
 import { useToast } from '@/components/ui/use-toast';
 import { useResume } from '@/contexts/ResumeContext';
 import { useTheme } from '@/hooks/useTheme';
-import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 export const WizardLayout: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
   const isMobile = useMediaQuery('(max-width: 767px)');
+  
+  // Default to showing preview on desktop/tablet, hidden on mobile
+  const [isPreviewVisible, setIsPreviewVisible] = useState(!isMobile);
+  
+  // Adjust preview visibility based on screen size
+  useEffect(() => {
+    if (isMobile) {
+      setIsPreviewVisible(false);
+    } else {
+      setIsPreviewVisible(true);
+    }
+  }, [isMobile]);
   const { theme, setTheme } = useTheme();
   
   // Get resume context for saving/loading drafts
@@ -59,6 +70,19 @@ export const WizardLayout: React.FC = () => {
     }
   };
 
+  // Calculate dynamic widths based on sidebar and preview visibility
+  const getContentWidth = () => {
+    if (isMobile) return 'w-full';
+    if (!isPreviewVisible) return 'w-full';
+    if (isSidebarCollapsed) return 'w-3/5';
+    return 'w-1/2';
+  };
+
+  const getPreviewWidth = () => {
+    if (isSidebarCollapsed) return 'w-2/5';
+    return 'w-1/2';
+  };
+
   return (
     <WizardProvider>
       <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
@@ -68,8 +92,9 @@ export const WizardLayout: React.FC = () => {
           <div
             className={cn(
               'transition-all duration-300 ease-in-out border-r bg-card h-full overflow-y-auto',
-              isMobile ? 'hidden' : isSidebarCollapsed ? 'w-16' : 'w-64 lg:w-72',
-              'flex-shrink-0'
+              isMobile ? 'hidden' : isSidebarCollapsed ? 'w-16' : 'w-72',
+              'flex-shrink-0',
+              'z-10' // Ensure sidebar stays above other content
             )}
           >
             <WizardSidebar 
@@ -79,13 +104,14 @@ export const WizardLayout: React.FC = () => {
           </div>
 
           {/* Main content area with preview */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Form content */}
+          <div className="flex-1 flex overflow-hidden min-w-0">
+            {/* Form content - Always takes remaining space */}
             <div
               className={cn(
                 'flex flex-col h-full overflow-y-auto',
-                isMobile ? 'w-full' : isPreviewVisible ? 'w-1/2' : 'w-full',
-                'min-w-0' // Ensure flex items can shrink below their content size
+                'transition-all duration-300',
+                getContentWidth(),
+                'min-w-0' // Allow content to shrink below its minimum size
               )}
             >
             {/* Mobile header with menu toggle */}
@@ -179,15 +205,29 @@ export const WizardLayout: React.FC = () => {
             )}
 
               {/* Main content area - full height with scrolling */}
-              <div className="flex-1 min-h-0">
-                <Outlet />
+              <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                <div className="max-w-4xl mx-auto w-full">
+                  <Outlet />
+                </div>
               </div>
             </div>
 
             {/* Right Preview Panel */}
             {!isMobile && isPreviewVisible && (
-              <div className="w-1/2 border-l bg-muted/30 flex-shrink-0 overflow-y-auto">
-                <WizardPreview />
+              <div 
+                className={cn(
+                  'border-l bg-muted/30 flex-shrink-0 overflow-y-auto',
+                  'transition-all duration-300',
+                  getPreviewWidth(),
+                  'flex flex-col',
+                  'min-w-0' // Allow preview to shrink if needed
+                )}
+              >
+                <div className="flex-1 overflow-y-auto p-2 flex justify-center">
+                  <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
+                    <WizardPreview />
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -206,31 +246,32 @@ export const WizardLayout: React.FC = () => {
 
         {/* Mobile preview modal */}
         {isMobile && isPreviewOpen && (
-          <div className="fixed inset-0 z-50 bg-background">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b p-4">
-                <h2 className="text-lg font-semibold">Preview</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsPreviewOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-background flex flex-col">
+            <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold">Preview</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPreviewOpen(false)}
+                className="ml-auto"
+              >
+                Close
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 flex justify-center">
+              <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
                 <WizardPreview />
               </div>
             </div>
           </div>
         )}
-
         {/* Mobile sidebar overlay */}
         {isMobile && !isSidebarCollapsed && (
           <>
-            <div
-              className="fixed inset-0 z-40 bg-black/50"
+            <div 
+              className="fixed inset-0 z-40 bg-black/50" 
               onClick={() => setIsSidebarCollapsed(true)}
+              aria-hidden="true"
             />
             <div className="fixed inset-y-0 left-0 z-50 w-80 bg-card shadow-xl">
               <WizardSidebar
