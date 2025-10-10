@@ -60,6 +60,7 @@ type ResumeAction =
 
 interface ResumeContextType {
   resumeData: ResumeData;
+  setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
   updateResumeData: (section: keyof ResumeData, data: any) => void;
   addSkill: (category: 'languages' | 'frameworks' | 'tools', skill: string) => void;
   removeSkill: (category: 'languages' | 'frameworks' | 'tools', index: number) => void;
@@ -466,13 +467,16 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     }
   });
 
-  const [history, historyDispatch] = useReducer(historyReducer, {
-    past: [],
-    present: initialResumeData,
-    future: []
-  });
+  const [history, historyDispatch] = useReducer(
+    historyReducer as React.Reducer<HistoryState, ResumeAction>,
+    {
+      past: [],
+      present: initialResumeData,
+      future: []
+    } as HistoryState
+  );
 
-  const { present: resumeData, past, future } = history;
+  const { present: resumeData, past = [], future = [] } = history;
   const canUndo = past.length > 0;
   const canRedo = future.length > 0;
 
@@ -504,9 +508,18 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   }, [savedVersions]);
 
   const dispatch = useCallback((action: ResumeAction) => {
-    const pastLimit = past.length >= HISTORY_LIMIT;
-    historyDispatch({ ...action, pastLimit });
+    const pastLimit = past.length >= 100; // Using a reasonable default limit
+    historyDispatch({ ...action, pastLimit } as any);
   }, [past.length]);
+  
+  // Set resume data function
+  const setResumeData = useCallback((data: React.SetStateAction<ResumeData>) => {
+    const newData = typeof data === 'function' ? data(resumeData) : data;
+    historyDispatch({
+      type: 'SET_RESUME_DATA',
+      payload: newData
+    } as any);
+  }, [resumeData]);
 
   const debouncedSave = useRef(
     debounce((data: ResumeData) => {
@@ -674,6 +687,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   const contextValue: ResumeContextType = {
     resumeData,
+    setResumeData,
     updateResumeData,
     addSkill,
     removeSkill,

@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { ResumeData } from '@/lib/initialData';
+import { ExportResumeModal } from '@/components/resume-wizard/ExportResumeModal';
+import { ImportResumeModal } from '@/components/resume-wizard/ImportResumeModal';
+import { Header } from '@/components/resume-wizard/header';
+import { Sidebar } from '@/components/resume-wizard/sidebar';
 
 // Types
 type Experience = ResumeData['experience'][0];
@@ -15,12 +19,14 @@ type Section = {
   id: string;
   title: string;
   value: string;
+  icon: React.ReactNode;
 };
 
 // Icons
 import { 
   User, Briefcase, GraduationCap, Code, Award, FileText, Plus, X, Pencil, Trash2, Mail, 
-  Phone, MapPin, Globe, Linkedin, Github, Share2, Folder, BadgeCheck 
+  Phone, MapPin, Globe, Linkedin, Github, Share2, Folder, BadgeCheck, Download, Upload,
+  RotateCcw, RotateCw, Save, Home
 } from 'lucide-react';
 
 // Components
@@ -45,17 +51,79 @@ import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 
 // Sidebar Component
-const Sidebar = ({ sections, activeTab, onTabChange }: { 
-  sections: Section[], 
-  activeTab: string, 
-  onTabChange: (value: string) => void 
+const Sidebar = ({ 
+  sections, 
+  activeTab, 
+  onTabChange, 
+  onSave, 
+  onImport, 
+  onExport,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  isSaving 
+}: { 
+  sections: Section[]; 
+  activeTab: string; 
+  onTabChange: (value: string) => void;
+  onSave: () => Promise<void>;
+  onImport: () => void;
+  onExport: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  isSaving: boolean;
 }) => {
   return (
-    <div className="w-64 border-r h-screen fixed left-0 top-0 p-4 bg-background overflow-y-auto">
-      <div className="space-y-4">
+    <div className="w-64 border-r h-screen fixed left-0 top-0 p-4 bg-background overflow-y-auto flex flex-col">
+      <div className="space-y-4 flex-1">
         <div className="flex items-center space-x-2 p-2">
           <FileText className="h-6 w-6 text-primary" />
           <h2 className="text-xl font-bold">Resume Builder</h2>
+        </div>
+        
+        {/* Undo/Redo Buttons */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1" 
+            onClick={onUndo}
+            disabled={!canUndo}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Undo
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1" 
+            onClick={onRedo}
+            disabled={!canRedo}
+          >
+            <RotateCw className="h-4 w-4 mr-2" />
+            Redo
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={onImport}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={onExport}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
         
         <div className="space-y-1">
@@ -75,21 +143,35 @@ const Sidebar = ({ sections, activeTab, onTabChange }: {
         <Separator className="my-4" />
         
         <div className="p-2 space-y-2">
-          <Button variant="outline" className="w-full" onClick={() => window.print()}>
-            <FileText className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
           <Button variant="outline" className="w-full">
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
         </div>
-        
-        <div className="absolute bottom-4 left-0 right-0 p-4">
-          <Button className="w-full" size="sm">
-            Save & Exit
-          </Button>
-        </div>
+      </div>
+      
+      <div className="mt-auto pt-4 border-t">
+        <Button 
+          className="w-full mb-2" 
+          onClick={onSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <Save className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Resume
+            </>
+          )}
+        </Button>
+        <Button variant="outline" className="w-full" size="sm">
+          <Home className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
       </div>
     </div>
   );
@@ -99,12 +181,33 @@ const ResumeWizard = () => {
   // Hooks - Single declarations only
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { resumeData, updateResumeData, saveResume } = useResume();
+  const { 
+    resumeData, 
+    updateResumeData, 
+    saveResume, 
+    undo, 
+    redo, 
+    canUndo, 
+    canRedo,
+    setResumeData
+  } = useResume();
   
   // UI State
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  
+  // Debug log for modal state changes
+  useEffect(() => {
+    console.log('Import modal state:', showImportModal);
+  }, [showImportModal]);
+  
+  useEffect(() => {
+    console.log('Export modal state:', showExportModal);
+  }, [showExportModal]);
   
   // Navigation sections
   const sections: Section[] = [
@@ -178,12 +281,36 @@ const ResumeWizard = () => {
   // Handle saving resume
   const handleSaveResume = async () => {
     try {
+      setIsSaving(true);
       await saveResume();
       toast({
         title: "Success",
         description: "Resume saved successfully!",
       });
     } catch (error) {
+      console.error('Error saving resume:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save resume. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle import/export
+  const handleImport = () => setShowImportModal(true);
+  const handleExport = () => setShowExportModal(true);
+
+  // Handle successful import
+  const handleImportSuccess = () => {
+    setShowImportModal(false);
+    toast({
+      title: "Success",
+      description: "Resume imported successfully!",
+    });
+  };
       console.error('Error saving resume:', error);
       toast({
         title: "Error",
@@ -237,20 +364,11 @@ const ResumeWizard = () => {
   });
 
   const [certificationForm, setCertificationForm] = useState<Omit<Certification, 'id'>>({
-    name: '',
-    issuer: '',
-    date: '',
-    url: ''
-  });
-  
-  // Dialog states
   const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const [isEducationDialogOpen, setIsEducationDialogOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isAchievementDialogOpen, setIsAchievementDialogOpen] = useState(false);
   const [isCertificationDialogOpen, setIsCertificationDialogOpen] = useState(false);
-  
-  // Editing states
   const [editingExperience, setEditingExperience] = useState<number | null>(null);
   const [editingEducation, setEditingEducation] = useState<number | null>(null);
   const [editingProject, setEditingProject] = useState<number | null>(null);
@@ -654,40 +772,47 @@ const ResumeWizard = () => {
 
   const completionPercentage = calculateCompletion();
 
+  // Add theme state
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // Add your theme toggling logic here
+  };
+
+  const togglePreview = () => {
+    setIsPreviewOpen(!isPreviewOpen);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Resume Builder</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2">
-              <span className="text-sm font-medium">{completionPercentage}% Complete</span>
-              <Progress value={completionPercentage} className="h-2 w-24" />
-            </div>
-            <Button 
-              onClick={handleSaveResume}
-              variant="outline"
-              size="sm"
-            >
-              Save Resume
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className={`min-h-screen bg-background ${isDarkMode ? 'dark' : ''}`}>
+      <Header
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onSave={handleSaveResume}
+        onToggleTheme={toggleTheme}
+        onTogglePreview={togglePreview}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        isSaving={isSaving}
+        isDarkMode={isDarkMode}
+        isPreviewOpen={isPreviewOpen}
+      />
 
       <div className="container py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sections</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Sidebar
+            sections={sections}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            completionPercentage={completionPercentage}
+            isMobileMenuOpen={isMobileMenuOpen}
+            onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          />
+          
+          {/* Main Content */}
+          <div className="lg:col-span-3">
                 <div className="space-y-2">
                   {sections.map((section) => (
                     <Button
@@ -1546,11 +1671,27 @@ const ResumeWizard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Import/Export Modals - Moved to root level */}
+      <ImportResumeModal 
+        open={showImportModal} 
+        onOpenChange={(open) => {
+          console.log('Import modal open state:', open);
+          setShowImportModal(open);
+        }} 
+      />
+      
+      <ExportResumeModal 
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        resumeData={formData}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 export default ResumeWizard;
