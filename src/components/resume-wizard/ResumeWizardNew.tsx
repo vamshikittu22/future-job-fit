@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   FileText, 
   Briefcase, 
@@ -35,66 +35,15 @@ import { SkillsForm } from './forms/SkillsForm';
 import { ProjectsForm } from './forms/ProjectsForm';
 import { CertificationsForm } from './forms/CertificationsForm';
 
-// Types
-interface Experience {
-  id: string;
-  title: string;
-  company: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
-interface Education {
-  id: string;
-  degree: string;
-  institution: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
-interface Skill {
-  id: string;
-  name: string;
-  level: number;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  technologies: string[];
-  url?: string;
-}
-
-interface Certification {
-  id: string;
-  name: string;
-  issuer: string;
-  date: string;
-  url?: string;
-}
-
-interface ResumeData {
-  personal: {
-    name: string;
-    email: string;
-    phone: string;
-    location: string;
-    portfolioUrl?: string;
-    linkedinUrl?: string;
-    githubUrl?: string;
-    summary: string;
-  };
-  experience: Experience[];
-  education: Education[];
-  skills: Skill[];
-  projects: Project[];
-  certifications: Certification[];
-  achievements: string[];
-  languages: string[];
-}
+import type { 
+  Experience, 
+  Education, 
+  Skill, 
+  Project, 
+  Certification, 
+  ResumeData,
+  PersonalInfo
+} from './types/resume.types';
 
 // Simple ResumePreview component
 const ResumePreview = ({ data }: { data: ResumeData }) => (
@@ -110,42 +59,52 @@ const ResumePreview = ({ data }: { data: ResumeData }) => (
 
     {data.personal.summary && (
       <div>
-        <h2 className="text-lg font-semibold border-b">Summary</h2>
-        <p className="mt-2">{data.personal.summary}</p>
+        <h2 className="text-lg font-semibold mb-2">Summary</h2>
+        <p className="text-sm">{data.personal.summary}</p>
       </div>
     )}
 
     {data.experience.length > 0 && (
       <div>
-        <h2 className="text-lg font-semibold border-b">Experience</h2>
-        <div className="mt-2 space-y-4">
-          {data.experience.map((exp, i) => (
-            <div key={i}>
-              <h3 className="font-medium">{exp.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {exp.company} • {exp.startDate} - {exp.endDate || 'Present'}
-              </p>
-              <p className="mt-1 text-sm">{exp.description}</p>
+        <h2 className="text-lg font-semibold mb-2">Experience</h2>
+        {data.experience.map((exp, index) => (
+          <div key={exp.id || index} className="mb-4">
+            <div className="flex justify-between">
+              <h3 className="font-medium">{exp.position}</h3>
+              <span className="text-sm text-muted-foreground">
+                {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'Present'}
+              </span>
             </div>
-          ))}
-        </div>
+            <p className="text-sm text-muted-foreground">
+              {exp.company} • {exp.location}
+            </p>
+            {exp.description && exp.description.length > 0 && (
+              <ul className="list-disc list-inside text-sm mt-1 space-y-1">
+                {exp.description.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
       </div>
     )}
 
     {data.education.length > 0 && (
       <div>
-        <h2 className="text-lg font-semibold border-b">Education</h2>
-        <div className="mt-2 space-y-4">
-          {data.education.map((edu, i) => (
-            <div key={i}>
-              <h3 className="font-medium">{edu.degree}</h3>
-              <p className="text-sm text-muted-foreground">
-                {edu.institution} • {edu.startDate} - {edu.endDate}
-              </p>
-              {edu.description && <p className="mt-1 text-sm">{edu.description}</p>}
+        <h2 className="text-lg font-semibold mb-2">Education</h2>
+        {data.education.map((edu, index) => (
+          <div key={edu.id || index} className="mb-4">
+            <div className="flex justify-between">
+              <h3 className="font-medium">{edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}</h3>
+              <span className="text-sm text-muted-foreground">
+                {edu.startDate} - {edu.current ? 'Present' : edu.endDate || 'Present'}
+              </span>
             </div>
-          ))}
-        </div>
+            <p className="text-sm text-muted-foreground">{edu.institution}</p>
+            {edu.description && <p className="text-sm mt-1">{edu.description}</p>}
+          </div>
+        ))}
       </div>
     )}
 
@@ -240,6 +199,7 @@ interface Skill {
 }
 
 interface Project {
+  name: any;
   id: string;
   title: string;
   description: string;
@@ -248,6 +208,7 @@ interface Project {
 }
 
 interface Certification {
+  credentialUrl: any;
   id: string;
   name: string;
   issuer: string;
@@ -359,20 +320,24 @@ const ResumeWizardNew = () => {
     }));
   };
 
-  // Toggle preview panel
-  const togglePreview = () => setShowPreview(!showPreview);
-  
-  // Toggle mobile menu
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  // Toggle theme
+  const toggleTheme = useCallback(() => {
+    setDarkMode(prev => !prev);
+  }, []);
+
+  // Toggle preview
+  const togglePreview = useCallback(() => {
+    setIsPreviewOpen(prev => !prev);
+  }, []);
 
   // Handle tab change
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
     // Close mobile menu when a tab is selected
     if (window.innerWidth < 1024) {
       setIsMobileMenuOpen(false);
     }
-  };
+  }, []);
 
   // Handle form updates
   const handlePersonalInfoChange = useCallback((data: Partial<ResumeData['personal']>) => {
@@ -406,18 +371,32 @@ const ResumeWizardNew = () => {
   const handleProjectsChange = useCallback((projects: Project[]) => {
     setResumeData(prev => ({
       ...prev,
-      projects
+      projects: projects.map(p => ({
+        ...p,
+        id: p.id || crypto.randomUUID(),
+        name: (p as any).title || p.name || 'Untitled Project',
+        description: p.description || '',
+        technologies: p.technologies || [],
+        url: (p as any).url || ''
+      }))
     }));
   }, []);
 
   const handleCertificationsChange = useCallback((certifications: Certification[]) => {
     setResumeData(prev => ({
       ...prev,
-      certifications
+      certifications: certifications.map(c => ({
+        ...c,
+        id: c.id || crypto.randomUUID(),
+        name: c.name || 'Untitled Certification',
+        issuer: c.issuer || '',
+        date: c.date || new Date().toISOString().split('T')[0],
+        credentialUrl: (c as any).url || c.credentialUrl || ''
+      }))
     }));
   }, []);
 
- // Print resume
+  // Print resume
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
@@ -427,11 +406,13 @@ const ResumeWizardNew = () => {
     try {
       setIsSaving(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
+      const { toast } = await import('@/components/ui/use-toast');
       toast({
         title: "Success",
         description: "Your resume has been saved successfully.",
       });
     } catch (error) {
+      const { toast } = await import('@/components/ui/use-toast');
       toast({
         title: "Error",
         description: "Failed to save resume. Please try again.",
@@ -439,27 +420,33 @@ const ResumeWizardNew = () => {
       });
     } finally {
       setIsSaving(false);
-      // Create a new object with all required fields
-      const newResumeData = {
-        ...initialResumeData,
-        personal: {
-          ...initialResumeData.personal,
-          portfolioUrl: initialResumeData.personal.portfolioUrl || '',
-          linkedinUrl: initialResumeData.personal.linkedinUrl || '',
-          githubUrl: initialResumeData.personal.githubUrl || ''
-        }
-      };
-      setResumeData(newResumeData);
     }
-  }, [isSaving]);
+  }, []);
+
+  // Initialize resume data
+  useEffect(() => {
+    setResumeData({
+      ...initialResumeData,
+      personal: {
+        ...initialResumeData.personal,
+        portfolioUrl: initialResumeData.personal.portfolioUrl || '',
+        linkedinUrl: initialResumeData.personal.linkedinUrl || '',
+        githubUrl: initialResumeData.personal.githubUrl || ''
+      }
+    });
+  }, [initialResumeData]);
 
   // Download resume as PDF
-  const handleDownloadPdf = useCallback(() => {
-    // Implement PDF download logic here
-    toast({
-      title: 'Download',
-      description: 'Preparing your PDF download...',
-    });
+  const handleDownloadPdf = useCallback(async () => {
+    try {
+      const { toast } = await import('@/components/ui/use-toast');
+      toast({
+        title: 'Download',
+        description: 'Preparing your PDF download...',
+      });
+    } catch (error) {
+      console.error('Failed to load toast:', error);
+    }
   }, []);
 
   // Calculate completion percentage
@@ -709,6 +696,40 @@ const ResumeWizardNew = () => {
             )}
           </div>
         );
+      case 'projects':
+        return (
+          <div>
+            <Button className="mb-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Project
+            </Button>
+            {resumeData.projects.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No projects added yet
+              </div>
+            )}
+            <ProjectsForm
+              projects={resumeData.projects}
+              onChange={handleProjectsChange}
+            />
+          </div>
+        );
+      case 'certifications':
+        return (
+          <div>
+            <Button className="mb-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Certification
+            </Button>
+            {resumeData.certifications.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No certifications added yet
+              </div>
+            )}
+            <CertificationsForm
+              certifications={resumeData.certifications}
+              onChange={handleCertificationsChange}
+            />
+          </div>
+        );
       default:
         return null;
     }
@@ -777,11 +798,26 @@ const ResumeWizardNew = () => {
                   <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
                     <TabsTrigger value="personal">Personal</TabsTrigger>
                     <TabsTrigger value="summary">Summary</TabsTrigger>
-                    <TabsTrigger value="experience">Experience</TabsTrigger>
-                    <TabsTrigger value="education">Education</TabsTrigger>
-                    <TabsTrigger value="skills">Skills</TabsTrigger>
-                    <TabsTrigger value="projects">Projects</TabsTrigger>
-                    <TabsTrigger value="certifications">Certifications</TabsTrigger>
+                    <TabsTrigger value="experience">
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Experience
+                    </TabsTrigger>
+                    <TabsTrigger value="education">
+                      <GraduationCap className="h-4 w-4 mr-2" />
+                      Education
+                    </TabsTrigger>
+                    <TabsTrigger value="skills">
+                      <Code2 className="h-4 w-4 mr-2" />
+                      Skills
+                    </TabsTrigger>
+                    <TabsTrigger value="projects">
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Projects
+                    </TabsTrigger>
+                    <TabsTrigger value="certifications">
+                      <Award className="h-4 w-4 mr-2" />
+                      Certifications
+                    </TabsTrigger>
                   </TabsList>
 
                   <div className="h-[calc(100vh-400px)] overflow-y-auto pr-4">
@@ -844,6 +880,20 @@ const ResumeWizardNew = () => {
                         onChange={handleSkillsChange}
                       />
                     </TabsContent>
+
+                    <TabsContent value="projects" className="m-0">
+                      <ProjectsForm
+                        projects={resumeData.projects}
+                        onChange={handleProjectsChange}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="certifications" className="m-0">
+                      <CertificationsForm
+                        certifications={resumeData.certifications}
+                        onChange={handleCertificationsChange}
+                      />
+                    </TabsContent>
                   </div>
                 </Tabs>
               </CardContent>
@@ -861,7 +911,7 @@ const ResumeWizardNew = () => {
                   </Button>
                   <Button
                     variant={isPreviewOpen ? 'default' : 'outline'} 
-                    onClick={onTogglePreview}
+                    onClick={togglePreview}
                     className="flex items-center"
                     disabled={isSaving}
                   >

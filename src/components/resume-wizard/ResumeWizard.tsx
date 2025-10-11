@@ -8,6 +8,7 @@ import { useResume } from "@/contexts/ResumeContext";
 import PersonalInfo from "./personal-info/PersonalInfo";
 import Summary from "./summary/Summary";
 import { ExperienceList, ExperienceForm } from "./experience";
+import { CertificationsForm } from "./forms/CertificationsForm";
 
 const ResumeWizard = () => {
   const { resumeData, updateResumeData } = useResume();
@@ -24,6 +25,8 @@ const ResumeWizard = () => {
   ];
   const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<number | null>(null);
+  const [isCertificationDialogOpen, setIsCertificationDialogOpen] = useState(false);
+  const [editingCertification, setEditingCertification] = useState<number | null>(null);
 
   const handlePersonalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,6 +74,18 @@ const ResumeWizard = () => {
   const handleRemoveExperience = (index: number) => {
     const updatedExperiences = resumeData.experience.filter((_, i) => i !== index);
     updateResumeData('experience', updatedExperiences);
+  };
+
+  const handleCertificationsChange = (certifications: Array<{
+    id: string;
+    name: string;
+    issuer: string;
+    date: string;
+    expiryDate?: string;
+    credentialId?: string;
+    credentialUrl?: string;
+  }>) => {
+    updateResumeData('certifications', certifications);
   };
 
   const calculateCompletion = () => {
@@ -154,9 +169,41 @@ const ResumeWizard = () => {
                     className="w-full justify-start px-4 py-3"
                     onClick={() => setActiveTab("experience")}
                   >
+                    <Briefcase className="mr-2 h-4 w-4" />
                     Experience
                   </TabsTrigger>
-                  {/* Add other sections as needed */}
+                  <TabsTrigger 
+                    value="education" 
+                    className="w-full justify-start px-4 py-3"
+                    onClick={() => setActiveTab("education")}
+                  >
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Education
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="skills" 
+                    className="w-full justify-start px-4 py-3"
+                    onClick={() => setActiveTab("skills")}
+                  >
+                    <Code className="mr-2 h-4 w-4" />
+                    Skills
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="certifications" 
+                    className="w-full justify-start px-4 py-3"
+                    onClick={() => setActiveTab("certifications")}
+                  >
+                    <Award className="mr-2 h-4 w-4" />
+                    Certifications
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="ats" 
+                    className="w-full justify-start px-4 py-3"
+                    onClick={() => setActiveTab("ats")}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    ATS Score
+                  </TabsTrigger>
                 </TabsList>
               </CardContent>
             </Card>
@@ -170,43 +217,79 @@ const ResumeWizard = () => {
                   {activeTab === 'personal' && 'Personal Information'}
                   {activeTab === 'summary' && 'Professional Summary'}
                   {activeTab === 'experience' && 'Work Experience'}
+                  {activeTab === 'education' && 'Education'}
+                  {activeTab === 'skills' && 'Skills'}
+                  {activeTab === 'certifications' && 'Certifications'}
+                  {activeTab === 'ats' && 'ATS Score'}
                 </CardTitle>
+                <CardDescription>
                   {activeTab === 'personal' && 'Tell us about yourself'}
                   {activeTab === 'summary' && 'Write a brief overview of your professional background'}
                   {activeTab === 'experience' && 'List your work experience in reverse chronological order'}
+                  {activeTab === 'education' && 'Add your educational background'}
+                  {activeTab === 'skills' && 'List your skills and proficiencies'}
+                  {activeTab === 'certifications' && 'Add your professional certifications and licenses'}
+                  {activeTab === 'ats' && 'Check your resume\'s ATS compatibility'}
                 </CardDescription>
               </CardHeader>
-         return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r p-4 fixed h-screen">
-        <h2 className="text-xl font-bold mb-6">Resume Builder</h2>
-        <div className="space-y-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex items-center w-full px-4 py-2 text-left rounded-md ${
-                activeTab === item.id ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'
-              }`}
-            >
-              <span className="mr-2">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
+              <CardContent>
+                {activeTab === 'personal' && (
+                  <PersonalInfo 
+                    data={resumeData.personal} 
+                    onChange={handlePersonalChange} 
+                  />
+                )}
+                
+                {activeTab === 'summary' && (
+                  <Summary 
+                    value={resumeData.summary} 
+                    onChange={handleSummaryChange} 
+                  />
+                )}
+                
+                {activeTab === 'experience' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Work Experience</h3>
+                      <Button 
+                        onClick={() => {
+                          setEditingExperience(null);
+                          setIsExperienceDialogOpen(true);
+                        }}
+                        size="sm"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Experience
+                      </Button>
+                    </div>
+                    <ExperienceList 
+                      experiences={resumeData.experience || []}
+                      onEdit={handleEditExperience}
+                      onRemove={handleRemoveExperience}
+                    />
+                    {isExperienceDialogOpen && (
+                      <ExperienceForm
+                        experience={editingExperience !== null ? resumeData.experience[editingExperience] : undefined}
+                        onSubmit={handleExperienceSubmit}
+                        onCancel={() => {
+                          setIsExperienceDialogOpen(false);
+                          setEditingExperience(null);
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
 
-      {/* Main Content */}
-      <div className="ml-64 flex-1 p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                  {/* Personal Info Tab */}
-                  <TabsContent value="personal" className="mt-0">
-                    <PersonalInfo 
-                      data={resumeData.personal} 
-                      onChange={handlePersonalChange} 
-{{ ... }}
-                </Tabs>
+                {activeTab === 'certifications' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">Professional Certifications</h3>
+                    </div>
+                    <CertificationsForm 
+                      certifications={resumeData.certifications || []}
+                      onChange={handleCertificationsChange}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -215,3 +298,5 @@ const ResumeWizard = () => {
     </div>
   );
 };
+
+export default ResumeWizard;

@@ -30,6 +30,17 @@ export interface ResumeMetadata {
   version?: string;
 }
 
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  expiryDate?: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  description?: string;
+}
+
 export interface ResumeData {
   personal: {
     name: string;
@@ -42,6 +53,7 @@ export interface ResumeData {
     title?: string;
   };
   summary: string;
+  certifications?: Certification[];
   experience: Array<{
     id: string;
     title: string;
