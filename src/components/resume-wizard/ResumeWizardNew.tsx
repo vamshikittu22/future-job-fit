@@ -1,9 +1,163 @@
 import { useState, useCallback } from 'react';
-import { FileText, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles, Eye, X, Menu, Plus, Edit, Printer, FileDown } from 'lucide-react';
+import { 
+  FileText, 
+  Briefcase, 
+  GraduationCap, 
+  Code2, 
+  FolderOpen, 
+  Award, 
+  Sparkles, 
+  Eye, 
+  FileDown, 
+  Plus, 
+  Edit, 
+  Printer, 
+  X,
+  Menu as MenuIcon,
+  Sun,
+  Moon,
+  Undo2,
+  Redo2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/components/ui/use-toast';
-// Import Header component if it exists, or use a local header
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { initialResumeData } from './data/initialData';
+import { useToast } from '@/components/ui/use-toast';
+
+// Types
+interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+interface Education {
+  id: string;
+  degree: string;
+  institution: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+interface Skill {
+  id: string;
+  name: string;
+  level: number;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  url?: string;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  url?: string;
+}
+
+interface ResumeData {
+  personal: {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    githubUrl?: string;
+    summary: string;
+  };
+  experience: Experience[];
+  education: Education[];
+  skills: Skill[];
+  projects: Project[];
+  certifications: Certification[];
+  achievements: string[];
+  languages: string[];
+}
+
+// Simple ResumePreview component
+const ResumePreview = ({ data }: { data: ResumeData }) => (
+  <div className="space-y-6 p-4">
+    <div className="text-center">
+      <h1 className="text-2xl font-bold">{data.personal.name || 'Your Name'}</h1>
+      <p className="text-muted-foreground">
+        {[data.personal.email, data.personal.phone, data.personal.location]
+          .filter(Boolean)
+          .join(' • ')}
+      </p>
+    </div>
+
+    {data.personal.summary && (
+      <div>
+        <h2 className="text-lg font-semibold border-b">Summary</h2>
+        <p className="mt-2">{data.personal.summary}</p>
+      </div>
+    )}
+
+    {data.experience.length > 0 && (
+      <div>
+        <h2 className="text-lg font-semibold border-b">Experience</h2>
+        <div className="mt-2 space-y-4">
+          {data.experience.map((exp, i) => (
+            <div key={i}>
+              <h3 className="font-medium">{exp.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                {exp.company} • {exp.startDate} - {exp.endDate || 'Present'}
+              </p>
+              <p className="mt-1 text-sm">{exp.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {data.education.length > 0 && (
+      <div>
+        <h2 className="text-lg font-semibold border-b">Education</h2>
+        <div className="mt-2 space-y-4">
+          {data.education.map((edu, i) => (
+            <div key={i}>
+              <h3 className="font-medium">{edu.degree}</h3>
+              <p className="text-sm text-muted-foreground">
+                {edu.institution} • {edu.startDate} - {edu.endDate}
+              </p>
+              {edu.description && <p className="mt-1 text-sm">{edu.description}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {data.skills.length > 0 && (
+      <div>
+        <h2 className="text-lg font-semibold border-b">Skills</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {data.skills.map((skill, i) => (
+            <span key={i} className="bg-secondary px-3 py-1 rounded-full text-sm">
+              {skill.name}
+            </span>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
 interface HeaderProps {
   onSave: () => void;
   isSaving: boolean;
@@ -596,6 +750,215 @@ const ResumeWizardNew = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
+                <TabsTrigger value="personal">Personal</TabsTrigger>
+                <TabsTrigger value="experience">Experience</TabsTrigger>
+                <TabsTrigger value="education">Education</TabsTrigger>
+                <TabsTrigger value="skills">Skills</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="personal" className="m-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Personal Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {renderForm()}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="experience" className="m-0">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Work Experience</CardTitle>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" /> Add Experience
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {resumeData.experience.length > 0 ? (
+                      <div className="space-y-4">
+                        {resumeData.experience.map((exp, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex justify-between">
+                              <div>
+                                <h4 className="font-medium">{exp.title}</h4>
+                                <p className="text-sm text-muted-foreground">{exp.company}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {exp.startDate} - {exp.endDate || 'Present'}
+                                </p>
+                              </div>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="mt-2 text-sm">{exp.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Briefcase className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <h3 className="mt-2 text-sm font-medium text-muted-foreground">No work experience added</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Add your work experience to showcase your professional background.
+                        </p>
+                        <Button className="mt-4" size="sm">
+                          <Plus className="h-4 w-4 mr-2" /> Add Experience
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="education" className="m-0">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Education</CardTitle>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" /> Add Education
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {resumeData.education.length > 0 ? (
+                      <div className="space-y-4">
+                        {resumeData.education.map((edu, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex justify-between">
+                              <div>
+                                <h4 className="font-medium">{edu.degree}</h4>
+                                <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {edu.startDate} - {edu.endDate}
+                                </p>
+                              </div>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {edu.description && (
+                              <p className="mt-2 text-sm">{edu.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <GraduationCap className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <h3 className="mt-2 text-sm font-medium text-muted-foreground">No education added</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Add your education history to showcase your academic background.
+                        </p>
+                        <Button className="mt-4" size="sm">
+                          <Plus className="h-4 w-4 mr-2" /> Add Education
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="skills" className="m-0">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Skills</CardTitle>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" /> Add Skill
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {resumeData.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {resumeData.skills.map((skill, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm flex items-center">
+                            {skill.name}
+                            <button className="ml-2 text-muted-foreground hover:text-foreground">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Code2 className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <h3 className="mt-2 text-sm font-medium text-muted-foreground">No skills added</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Add your skills to showcase your expertise.
+                        </p>
+                        <Button className="mt-4" size="sm">
+                          <Plus className="h-4 w-4 mr-2" /> Add Skill
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Preview Panel */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="aspect-[1/1.4142] bg-white border rounded-md flex items-center justify-center p-4">
+                    <ResumePreview data={resumeData} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" onClick={handleDownloadPdf}>
+                      <FileDown className="h-4 w-4 mr-2" /> PDF
+                    </Button>
+                    <Button variant="outline" onClick={handlePrint}>
+                      <Printer className="h-4 w-4 mr-2" /> Print
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resume Sections</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {resumeSections.map((section) => (
+                    <Button
+                      key={section.id}
+                      variant={activeTab === section.value ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => handleTabChange(section.value)}
+                    >
+                      {section.icon}
+                      {section.title}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-2">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center mb-6">
@@ -611,8 +974,14 @@ const ResumeWizardNew = () => {
                   <Separator className="mb-6" />
 
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                    <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6">
+                      <TabsTrigger value="personal">Personal</TabsTrigger>
+                      <TabsTrigger value="summary">Summary</TabsTrigger>
+                      <TabsTrigger value="experience">Experience</TabsTrigger>
+                      <TabsTrigger value="education">Education</TabsTrigger>
+                      <TabsTrigger value="skills">Skills</TabsTrigger>
+                    </TabsList>
                     <div className="h-[calc(100vh-400px)] overflow-y-auto pr-4">
-                      {/* Personal Info */}
                       {/* Personal Info */}
                       <TabsContent value="personal" className="m-0">
                         <div className="space-y-6">
@@ -677,56 +1046,65 @@ const ResumeWizardNew = () => {
                           onChange={handleSkillsChange} 
                         />
                       </TabsContent>
+                    </div>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
 
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-          
             {/* Preview Panel - Desktop */}
-            <div className="hidden lg:block w-1/3">
-              <Card className="h-full">
+            <div className="hidden lg:block lg:col-span-1">
+              <Card className="sticky top-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Preview</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleDownloadPdf}
+                    >
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handlePrint}
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-4">
-                  <ResumePreview 
-                    data={resumeData}
-                    currentPage={1}
-                    totalPages={1}
-                    onPageChange={() => {}}
-                    onDownload={handleDownloadPdf}
-                    onPrint={handlePrint}
-                  />
+                  <div className="aspect-[1/1.4142] bg-white border rounded-md overflow-auto">
+                    <ResumePreview data={resumeData} />
+                  </div>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Preview Modal - Mobile */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-6xl w-[90%] h-[90vh] p-0 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b">
-            <DialogHeader>
-              <DialogTitle>Resume Preview</DialogTitle>
-            </DialogHeader>
-            <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="h-[calc(100%-60px)] p-4">
-            <ResumePreview 
-              data={resumeData}
-              currentPage={1}
-              totalPages={1}
-              onPageChange={() => {}}
-              onDownload={handleDownloadPdf}
-              onPrint={handlePrint}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+        {/* Preview Modal - Mobile */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-6xl w-[90%] h-[90vh] p-0 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <DialogHeader>
+                <DialogTitle>Resume Preview</DialogTitle>
+              </DialogHeader>
+              <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="h-[calc(100%-60px)] p-4 overflow-auto">
+              <ResumePreview data={resumeData} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
+
+  return renderContent();
 };
 
 export default ResumeWizardNew;
