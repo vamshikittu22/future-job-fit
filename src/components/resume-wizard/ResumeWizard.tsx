@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Briefcase, GraduationCap, Code, Award, Sparkles } from "lucide-react";
 import { useResume } from "@/contexts/ResumeContext";
 import PersonalInfo from "./personal-info/PersonalInfo";
 import Summary from "./summary/Summary";
@@ -12,6 +12,16 @@ import { ExperienceList, ExperienceForm } from "./experience";
 const ResumeWizard = () => {
   const { resumeData, updateResumeData } = useResume();
   const [activeTab, setActiveTab] = useState("personal");
+  
+  const menuItems = [
+    { id: 'personal', label: 'Personal Info', icon: <FileText className="h-4 w-4" /> },
+    { id: 'summary', label: 'Summary', icon: <FileText className="h-4 w-4" /> },
+    { id: 'experience', label: 'Experience', icon: <Briefcase className="h-4 w-4" /> },
+    { id: 'education', label: 'Education', icon: <GraduationCap className="h-4 w-4" /> },
+    { id: 'skills', label: 'Skills', icon: <Code className="h-4 w-4" /> },
+    { id: 'certifications', label: 'Certifications', icon: <Award className="h-4 w-4" /> },
+    { id: 'ats', label: 'ATS Score', icon: <Sparkles className="h-4 w-4" /> },
+  ];
   const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<number | null>(null);
 
@@ -161,71 +171,41 @@ const ResumeWizard = () => {
                   {activeTab === 'summary' && 'Professional Summary'}
                   {activeTab === 'experience' && 'Work Experience'}
                 </CardTitle>
-                <CardDescription>
                   {activeTab === 'personal' && 'Tell us about yourself'}
                   {activeTab === 'summary' && 'Write a brief overview of your professional background'}
                   {activeTab === 'experience' && 'List your work experience in reverse chronological order'}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+         return (
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 bg-white border-r p-4 fixed h-screen">
+        <h2 className="text-xl font-bold mb-6">Resume Builder</h2>
+        <div className="space-y-1">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center w-full px-4 py-2 text-left rounded-md ${
+                activeTab === item.id ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'
+              }`}
+            >
+              <span className="mr-2">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="ml-64 flex-1 p-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
                   {/* Personal Info Tab */}
                   <TabsContent value="personal" className="mt-0">
                     <PersonalInfo 
                       data={resumeData.personal} 
                       onChange={handlePersonalChange} 
-                    />
-                  </TabsContent>
-
-                  {/* Summary Tab */}
-                  <TabsContent value="summary" className="mt-0">
-                    <Summary 
-                      value={resumeData.summary} 
-                      onChange={handleSummaryChange} 
-                    />
-                  </TabsContent>
-
-                  {/* Experience Tab */}
-                  <TabsContent value="experience">
-                    <ExperienceList 
-                      experiences={resumeData.experience}
-                      onEdit={handleEditExperience}
-                      onRemove={handleRemoveExperience}
-                    />
-                    
-                    <Button 
-                      className="mt-6" 
-                      onClick={() => {
-                        setEditingExperience(null);
-                        setIsExperienceDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Experience
-                    </Button>
-
-                    {/* Experience Form Dialog */}
-                    <ExperienceForm 
-                      experience={editingExperience !== null ? resumeData.experience[editingExperience] : {}}
-                      onSubmit={handleExperienceSubmit}
-                      onChange={(field, value) => {
-                        // Handle form field changes
-                        const updatedExperience = editingExperience !== null 
-                          ? { ...resumeData.experience[editingExperience], [field]: value }
-                          : { [field]: value };
-                        
-                        if (editingExperience !== null) {
-                          const updatedExperiences = [...resumeData.experience];
-                          updatedExperiences[editingExperience] = updatedExperience as any;
-                          updateResumeData('experience', updatedExperiences);
-                        }
-                      }}
-                      isEditing={editingExperience !== null}
-                      onCancel={() => {
-                        setIsExperienceDialogOpen(false);
-                        setEditingExperience(null);
-                      }}
-                    />
-                  </TabsContent>
+{{ ... }}
                 </Tabs>
               </CardContent>
             </Card>
@@ -235,5 +215,3 @@ const ResumeWizard = () => {
     </div>
   );
 };
-
-export default ResumeWizard;

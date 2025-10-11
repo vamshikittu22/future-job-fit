@@ -1,88 +1,192 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
-import { format } from 'date-fns';
-import { FileText, Eye, Download, Printer, Plus, X } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { Header } from './header';
-import { Sidebar } from './sidebar';
-import { ResumePreview } from './preview/ResumePreview';
+import { useState, useCallback } from 'react';
+import { FileText, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles, Eye, X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/use-toast';
+// Import Header component if it exists, or use a local header
+const Header = ({ onSave, isSaving, onUndo }: { onSave: () => void; isSaving: boolean; onUndo: () => void }) => (
+  <header className="bg-white shadow-sm">
+    <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 className="text-xl font-semibold">Resume Builder</h1>
+      <div className="flex space-x-2">
+        <Button variant="outline" onClick={onUndo} disabled={isSaving}>
+          Undo
+        </Button>
+        <Button onClick={onSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Resume'}
+        </Button>
+      </div>
+    </div>
+  </header>
+);
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
-// Form Components
-import { PersonalInfoForm } from './forms/PersonalInfoForm';
-import { ExperienceForm } from './forms/ExperienceForm';
-import { EducationForm } from './forms/EducationForm';
-import { SkillsForm } from './forms/SkillsForm';
-import { ProjectsForm } from './forms/ProjectsForm';
-import { CertificationsForm } from './forms/CertificationsForm';
+import { initialResumeData } from './data/initialData';
 
 // Types
-import { ResumeData, PersonalInfo, Experience, Education, Project, Skill, Certification } from './types';
+interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
 
+interface Education {
+  id: string;
+  degree: string;
+  institution: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
 
-// Initial data
-const initialResumeData: ResumeData = {
+interface Skill {
+  id: string;
+  name: string;
+  level: number;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  url?: string;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  url?: string;
+}
+
+interface ResumeData {
   personal: {
-    id: uuidv4(),
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    portfolioUrl: '',
-    linkedinUrl: '',
-    githubUrl: '',
-    summary: '',
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    portfolioUrl: string;
+    linkedinUrl: string;
+    githubUrl: string;
+    summary: string;
+  };
+  experience: any[];
+  education: any[];
+  skills: any[];
+  projects: any[];
+  certifications: any[];
+  achievements: any[];
+  languages: any[];
+}
+
+const resumeSections = [
+  { 
+    id: 'personal', 
+    title: 'Personal Info', 
+    value: 'personal', 
+    icon: <FileText className="h-4 w-4 mr-2" /> 
   },
-  experience: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certifications: [],
-  achievements: [],
-  languages: [],
-};
+  { 
+    id: 'experience', 
+    title: 'Experience', 
+    value: 'experience', 
+    icon: <Briefcase className="h-4 w-4 mr-2" /> 
+  },
+  { 
+    id: 'education', 
+    title: 'Education', 
+    value: 'education', 
+    icon: <GraduationCap className="h-4 w-4 mr-2" /> 
+  },
+  { 
+    id: 'skills', 
+    title: 'Skills', 
+    value: 'skills', 
+    icon: <Code2 className="h-4 w-4 mr-2" /> 
+  },
+  { 
+    id: 'projects', 
+    title: 'Projects', 
+    value: 'projects', 
+    icon: <FolderOpen className="h-4 w-4 mr-2" /> 
+  },
+  { 
+    id: 'certifications', 
+    title: 'Certifications', 
+    value: 'certifications', 
+    icon: <Award className="h-4 w-4 mr-2" /> 
+  },
+  { 
+    id: 'ats', 
+    title: 'ATS Score', 
+    value: 'ats', 
+    icon: <Sparkles className="h-4 w-4 mr-2" /> 
+  }
+];
 
 const ResumeWizardNew = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const [resumeData, setResumeData] = useState<ResumeData>(() => {
-    const saved = localStorage.getItem('resumeData');
-    return saved ? JSON.parse(saved) : {
-      personal: {
-        id: uuidv4(),
-        name: '',
-        email: '',
-        phone: '',
-        location: '',
-        summary: '',
-      },
-      experience: [],
-      education: [],
-      skills: [],
-      projects: [],
-      certifications: [],
-    };
-  });
-  
   const [activeTab, setActiveTab] = useState('personal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    personal: {
+      name: '',
+      email: '',
+      phone: '',
+      location: '',
+      portfolioUrl: '',
+      linkedinUrl: '',
+      githubUrl: '',
+      summary: '',
+    },
+    experience: [],
+    education: [],
+    skills: [],
+    projects: [],
+    certifications: [],
+    achievements: [],
+    languages: [],
+  });
 
-  // Save resume data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('resumeData', JSON.stringify(resumeData));
-  }, [resumeData]);
+  // Handle form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setResumeData(prev => ({
+      ...prev,
+      personal: {
+        ...prev.personal,
+        [name]: value
+      }
+    }));
+  };
+
+  // Toggle preview panel
+  const togglePreview = () => setShowPreview(!showPreview);
+  
+  // Toggle mobile menu
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Close mobile menu when a tab is selected
+    if (window.innerWidth < 1024) {
+      setIsMobileMenuOpen(false);
+    }
+  };
 
   // Handle form updates
-  const handlePersonalInfoChange = useCallback((data: Partial<PersonalInfo>) => {
+  const handlePersonalInfoChange = useCallback((data: Partial<ResumeData['personal']>) => {
     setResumeData(prev => ({
       ...prev,
       personal: { ...prev.personal, ...data }
@@ -124,31 +228,31 @@ const ResumeWizardNew = () => {
     }));
   }, []);
 
-  // Print resume
+ // Print resume
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
 
   // Save resume
   const handleSaveResume = useCallback(async () => {
-    setIsSaving(true);
     try {
-      // Simulate API call
+      setIsSaving(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
-        title: 'Success',
-        description: 'Resume saved successfully!',
+        title: "Success",
+        description: "Your resume has been saved successfully.",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to save resume. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to save resume. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
+      setResumeData(initialResumeData);
     }
-  }, [toast]);
+  }, [isSaving, initialResumeData]);
 
   // Download resume as PDF
   const handleDownloadPdf = useCallback(() => {
@@ -157,7 +261,7 @@ const ResumeWizardNew = () => {
       title: 'Download',
       description: 'Preparing your PDF download...',
     });
-  }, [toast]);
+  }, []);
 
   // Calculate completion percentage
   const calculateCompletion = useCallback(() => {

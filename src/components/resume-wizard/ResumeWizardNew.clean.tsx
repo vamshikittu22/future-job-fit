@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Eye, Download, Printer, X, Briefcase, GraduationCap, Code2, FolderOpen, Award } from 'lucide-react';
+import { FileText, Eye, Download, Printer, X, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Sidebar } from './sidebar';
 
 // Components
 import { Header } from './header';
@@ -43,10 +44,36 @@ const ResumeWizardNew = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData>(() => {
     const saved = localStorage.getItem('resumeData');
     return saved ? JSON.parse(saved) : initialResumeData;
   });
+
+  // Calculate completion percentage
+  const calculateCompletion = () => {
+    const totalSections = sections.length;
+    let completedSections = 0;
+
+    // Check each section for completion
+    sections.forEach(section => {
+      if (section.id === 'personal' && resumeData.personal?.name) completedSections++;
+      else if (section.id === 'experience' && resumeData.experience?.length > 0) completedSections++;
+      else if (section.id === 'education' && resumeData.education?.length > 0) completedSections++;
+      else if (section.id === 'skills' && resumeData.skills?.length > 0) completedSections++;
+      else if (section.id === 'projects' && resumeData.projects?.length > 0) completedSections++;
+      else if (section.id === 'certifications' && resumeData.certifications?.length > 0) completedSections++;
+      else if (section.id === 'ats' && resumeData.atsScore) completedSections++;
+    });
+
+    return Math.round((completedSections / totalSections) * 100);
+  };
+
+  const completionPercentage = calculateCompletion();
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   // Save to localStorage when resumeData changes
   useEffect(() => {
@@ -101,44 +128,40 @@ const ResumeWizardNew = () => {
 
   // Other handler functions for different sections...
 
+  // Toggle preview panel
+  const [showPreview, setShowPreview] = useState(false);
+  const togglePreview = () => setShowPreview(!showPreview);
+
   return (
     <div className="min-h-screen bg-muted/40">
-      <Header 
-        onPreview={() => setIsPreviewOpen(true)}
-        onDownload={() => {}}
-      />
+      <div className="flex justify-between items-center p-4 border-b">
+        <h1 className="text-xl font-bold">Resume Builder</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={togglePreview}>
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+          <Button onClick={() => setIsPreviewOpen(true)}>
+            <Eye className="mr-2 h-4 w-4" /> Fullscreen Preview
+          </Button>
+        </div>
+      </div>
 
       <div className="container py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Sections</CardTitle>
-                <CardDescription>
-                  Complete all sections to create a strong resume
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TabsList className="flex flex-col h-auto p-0">
-                  {sections.map((section) => (
-                    <TabsTrigger 
-                      key={section.id}
-                      value={section.value}
-                      className="w-full justify-start px-4 py-3"
-                      onClick={() => setActiveTab(section.value)}
-                    >
-                      {section.icon}
-                      {section.title}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </CardContent>
-            </Card>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar - Always visible on desktop, collapsible on mobile */}
+          <div className={`lg:w-1/4 ${isMobileMenuOpen ? 'block' : 'hidden lg:block'}`}>
+            <Sidebar
+              sections={sections}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              completionPercentage={completionPercentage}
+              isMobileMenuOpen={isMobileMenuOpen}
+              onToggleMobileMenu={toggleMobileMenu}
+            />
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className={`${showPreview ? 'lg:w-1/2' : 'lg:w-3/4'} w-full`}>
             <Tabs value={activeTab} className="space-y-6">
               {/* Personal Info Tab */}
               <TabsContent value="personal" className="m-0">
@@ -168,15 +191,36 @@ const ResumeWizardNew = () => {
               {/* Add other tabs here following the same pattern */}
             </Tabs>
           </div>
+
+          {/* Preview Panel */}
+          {showPreview && (
+            <div className="lg:w-1/4 w-full lg:block">
+              <Card className="h-full">
+                <CardHeader className="border-b">
+                  <CardTitle>Preview</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 h-[calc(100vh-200px)] overflow-auto">
+                  <ResumePreview 
+                    data={resumeData}
+                    currentPage={1}
+                    totalPages={1}
+                    onPageChange={() => {}}
+                    onDownload={() => {}}
+                    onPrint={() => {}}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Preview Modal */}
+      {/* Fullscreen Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-6xl w-[90%] h-[90vh] p-0 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader>
-              <DialogTitle>Resume Preview</DialogTitle>
+              <DialogTitle>Fullscreen Preview</DialogTitle>
             </DialogHeader>
             <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)}>
               <X className="h-4 w-4" />
