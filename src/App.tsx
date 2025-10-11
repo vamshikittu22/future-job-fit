@@ -25,6 +25,7 @@ import { SkillsStep } from "./pages/wizard/steps/SkillsStep";
 import { ProjectsStep } from "./pages/wizard/steps/ProjectsStep";
 import { ReviewStep } from "./pages/wizard/steps/ReviewStep";
 import CustomSectionStep from "./pages/wizard/steps/CustomSectionStep";
+import ResumeBuilderTest from "./pages/ResumeBuilderTest";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
   { path: "/create-resume", element: <CreateResumeBuilder /> },
   { path: "/new-resume", element: <NewResumePage /> },
   { path: "/enhanced-resume", element: <EnhancedResumeBuilder /> },
+  { path: "/resume-test", element: <ResumeBuilderTest /> },
   {
     path: "/resume-wizard",
     element: <WizardLayout />,

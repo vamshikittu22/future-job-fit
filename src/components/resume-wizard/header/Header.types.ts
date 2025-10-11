@@ -11,6 +11,7 @@ export interface HeaderProps {
   isSaving: boolean;
   isDarkMode: boolean;
   isPreviewOpen: boolean;
+  completionPercentage: number;
 }
 
 export interface HeaderButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

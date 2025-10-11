@@ -1,6 +1,7 @@
-import { RotateCcw, RotateCw, Save, Moon, Sun, Eye, EyeOff } from 'lucide-react';
+import { RotateCcw, RotateCw, Save, Moon, Sun, Eye, EyeOff, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { HeaderProps, HeaderButtonProps } from './Header.types';
 
 const HeaderButton = ({
@@ -34,13 +35,24 @@ export const Header = ({
   isSaving,
   isDarkMode,
   isPreviewOpen,
+  completionPercentage = 0,
 }: HeaderProps) => {
   return (
     <header className="border-b bg-card sticky top-0 z-50">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">Resume Builder</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <h1 className="text-lg font-semibold">Resume Builder</h1>
+            </div>
+            <div className="hidden md:flex items-center gap-2 w-40">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {completionPercentage}% Complete
+              </span>
+              <Progress value={completionPercentage} className="h-2" />
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-2 bg-background/50 backdrop-blur-md p-1 rounded-lg border">

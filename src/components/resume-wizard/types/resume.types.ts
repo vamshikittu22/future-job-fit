@@ -1,27 +1,34 @@
 import { LucideIcon } from 'lucide-react';
 
+export interface Language {
+  id: string;
+  name: string;
+  proficiency: 'Basic' | 'Conversational' | 'Professional' | 'Native';
+}
+
 export interface Section {
   id: string;
   title: string;
   value: string;
-  icon: LucideIcon;
+  icon: LucideIcon | (() => JSX.Element);
 }
 
 export interface PersonalInfo {
+  id: string;
   name: string;
   email: string;
   phone: string;
   location: string;
-  website?: string;
-  linkedin?: string;
-  github?: string;
+  portfolioUrl?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
   summary: string;
 }
 
 export interface Experience {
   id: string;
-  company: string;
   position: string;
+  company: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -50,11 +57,21 @@ export interface Project {
   githubUrl?: string;
 }
 
+export type SkillCategory =
+  | 'Programming Languages'
+  | 'Frameworks & Libraries'
+  | 'Tools & Platforms'
+  | 'Design'
+  | 'Soft Skills'
+  | 'Languages'
+  | 'Other';
+
 export interface Skill {
   id: string;
   name: string;
-  level: number; // 1-5
-  category: string;
+  level: 1 | 2 | 3 | 4 | 5;
+  category: SkillCategory;
+  showProficiency?: boolean;
 }
 
 export interface Achievement {
@@ -70,6 +87,14 @@ export interface Certification {
   issuer: string;
   date: string;
   credentialUrl?: string;
+  description?: string;
+}
+
+export interface ATSScore {
+  score: number;
+  suggestions: string[];
+  lastUpdated: string;
+  jobDescription: string;
 }
 
 export interface ResumeData {
@@ -78,16 +103,14 @@ export interface ResumeData {
   education: Education[];
   projects: Project[];
   skills: Skill[];
-  achievements: Achievement[];
   certifications: Certification[];
-  languages: {
-    name: string;
-    level: string;
-  }[];
+  achievements: Achievement[];
+  languages: Language[];
+  atsScore?: ATSScore;
 }
 
 export interface ResumeFormProps {
-  formData: ResumeData;
+  resumeData: ResumeData;
   onChange: (data: Partial<ResumeData>) => void;
   onSave: () => Promise<void>;
   isSaving: boolean;
