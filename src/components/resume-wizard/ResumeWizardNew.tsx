@@ -1,10 +1,36 @@
 import { useState, useCallback } from 'react';
-import { FileText, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles, Eye, X, Menu } from 'lucide-react';
+import { FileText, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles, Eye, X, Menu, Plus, Edit, Printer, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 // Import Header component if it exists, or use a local header
-const Header = ({ onSave, isSaving, onUndo }: { onSave: () => void; isSaving: boolean; onUndo: () => void }) => (
+interface HeaderProps {
+  onSave: () => void;
+  isSaving: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  onToggleTheme: () => void;
+  onTogglePreview: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  isDarkMode: boolean;
+  isPreviewOpen: boolean;
+  completionPercentage: number;
+}
+
+const Header = ({ 
+  onSave, 
+  isSaving, 
+  onUndo, 
+  onRedo, 
+  onToggleTheme, 
+  onTogglePreview, 
+  canUndo, 
+  canRedo, 
+  isDarkMode, 
+  isPreviewOpen,
+  completionPercentage
+}: HeaderProps) => (
   <header className="bg-white shadow-sm">
     <div className="container mx-auto px-4 py-3 flex justify-between items-center">
       <h1 className="text-xl font-semibold">Resume Builder</h1>
@@ -19,11 +45,12 @@ const Header = ({ onSave, isSaving, onUndo }: { onSave: () => void; isSaving: bo
     </div>
   </header>
 );
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { initialResumeData } from './data/initialData';
+import { Separator } from '@/components/ui/separator';
 
 // Types
 interface Experience {
@@ -72,9 +99,9 @@ interface ResumeData {
     email: string;
     phone: string;
     location: string;
-    portfolioUrl: string;
-    linkedinUrl: string;
-    githubUrl: string;
+    portfolioUrl?: string;
+    linkedinUrl?: string;
+    githubUrl?: string;
     summary: string;
   };
   experience: any[];
@@ -250,9 +277,19 @@ const ResumeWizardNew = () => {
       });
     } finally {
       setIsSaving(false);
-      setResumeData(initialResumeData);
+      // Create a new object with all required fields
+      const newResumeData = {
+        ...initialResumeData,
+        personal: {
+          ...initialResumeData.personal,
+          portfolioUrl: initialResumeData.personal.portfolioUrl || '',
+          linkedinUrl: initialResumeData.personal.linkedinUrl || '',
+          githubUrl: initialResumeData.personal.githubUrl || ''
+        }
+      };
+      setResumeData(newResumeData);
     }
-  }, [isSaving, initialResumeData]);
+  }, [isSaving]);
 
   // Download resume as PDF
   const handleDownloadPdf = useCallback(() => {
@@ -420,6 +457,101 @@ const ResumeWizardNew = () => {
     },
   ];
 
+  // Simple form components
+  const renderForm = () => {
+    switch (activeTab) {
+      case 'personal':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Full Name</label>
+                <Input
+                  value={resumeData.personal.name}
+                  onChange={(e) => handlePersonalInfoChange({ name: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={resumeData.personal.email}
+                  onChange={(e) => handlePersonalInfoChange({ email: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={resumeData.personal.phone}
+                  onChange={(e) => handlePersonalInfoChange({ phone: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Location</label>
+                <Input
+                  value={resumeData.personal.location}
+                  onChange={(e) => handlePersonalInfoChange({ location: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Summary</label>
+              <Textarea
+                value={resumeData.personal.summary}
+                onChange={(e) => handlePersonalInfoChange({ summary: e.target.value })}
+                className="mt-1 min-h-[100px]"
+              />
+            </div>
+          </div>
+        );
+      case 'experience':
+        return (
+          <div>
+            <Button className="mb-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Experience
+            </Button>
+            {resumeData.experience.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No experience added yet
+              </div>
+            )}
+          </div>
+        );
+      case 'education':
+        return (
+          <div>
+            <Button className="mb-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Education
+            </Button>
+            {resumeData.education.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No education added yet
+              </div>
+            )}
+          </div>
+        );
+      case 'skills':
+        return (
+          <div>
+            <Button className="mb-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Skill
+            </Button>
+            {resumeData.skills.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No skills added yet
+              </div>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -436,20 +568,34 @@ const ResumeWizardNew = () => {
         completionPercentage={completionPercentage}
       />
       
-      <div className="container py-8">
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* Left Sidebar */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resume Sections</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {resumeSections.map((section) => (
+                    <Button
+                      key={section.id}
+                      variant={activeTab === section.value ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => handleTabChange(section.value)}
+                    >
+                      {section.icon}
+                      {section.title}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
           <div className="lg:col-span-2">
-            <Sidebar
-              sections={sections}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              completionPercentage={completionPercentage}
-              isMobileMenuOpen={isMobileMenuOpen}
-              onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
-            
-            <div className="mt-8">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center mb-6">
@@ -532,42 +678,26 @@ const ResumeWizardNew = () => {
                         />
                       </TabsContent>
 
-                      {/* Projects */}
-                      <TabsContent value="projects" className="m-0">
-                        <ProjectsForm 
-                          projects={resumeData.projects} 
-                          onChange={handleProjectsChange} 
-                        />
-                      </TabsContent>
+          </div>
 
-                      {/* Certifications */}
-                      <TabsContent value="certifications" className="m-0">
-                        <CertificationsForm 
-                          certifications={resumeData.certifications} 
-                          onChange={handleCertificationsChange} 
-                        />
-                      </TabsContent>
-                    </div>
-                  </Tabs>
+          {/* Main Content */}
+          <div className="flex-1">
+          
+            {/* Preview Panel - Desktop */}
+            <div className="hidden lg:block w-1/3">
+              <Card className="h-full">
+                <CardContent className="p-4">
+                  <ResumePreview 
+                    data={resumeData}
+                    currentPage={1}
+                    totalPages={1}
+                    onPageChange={() => {}}
+                    onDownload={handleDownloadPdf}
+                    onPrint={handlePrint}
+                  />
                 </CardContent>
               </Card>
             </div>
-          </div>
-          
-          {/* Preview Panel - Desktop */}
-          <div className="hidden lg:block lg:col-span-3">
-            <Card className="h-full">
-              <CardContent className="p-6 h-full">
-                <ResumePreview 
-                  data={resumeData}
-                  currentPage={1}
-                  totalPages={1}
-                  onPageChange={() => {}}
-                  onDownload={handleDownloadPdf}
-                  onPrint={handlePrint}
-                />
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
