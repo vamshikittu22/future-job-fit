@@ -311,14 +311,6 @@ const ResumeWizard = () => {
       description: "Resume imported successfully!",
     });
   };
-      console.error('Error saving resume:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save resume. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Save resume data to localStorage on changes
   useEffect(() => {
@@ -364,6 +356,12 @@ const ResumeWizard = () => {
   });
 
   const [certificationForm, setCertificationForm] = useState<Omit<Certification, 'id'>>({
+    name: '',
+    issuer: '',
+    date: '',
+    credentialUrl: ''
+  });
+
   const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const [isEducationDialogOpen, setIsEducationDialogOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
@@ -811,35 +809,6 @@ const ResumeWizard = () => {
             onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           />
           
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-                <div className="space-y-2">
-                  {sections.map((section) => (
-                    <Button
-                      key={section.id}
-                      variant={activeTab === section.value ? 'secondary' : 'ghost'}
-                      className={`w-full justify-start ${activeTab === section.value ? 'bg-accent' : ''}`}
-                      onClick={() => setActiveTab(section.value)}
-                    >
-                      <span className="mr-2">{section.icon}</span>
-                      {section.title}
-                    </Button>
-                  ))}
-                </div>
-                <div className="mt-6 pt-4 border-t">
-                  <Button variant="outline" className="w-full mb-2" onClick={() => window.print()}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Export PDF
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Card>
@@ -1675,6 +1644,8 @@ const ResumeWizard = () => {
             </Tabs>
           </CardContent>
         </Card>
+      </div>
+        </div>
       </div>
 
       {/* Import/Export Modals - Moved to root level */}
