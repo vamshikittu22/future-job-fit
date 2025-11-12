@@ -28,7 +28,7 @@ export default function ConfirmationModal({
   const formatInstructionsSummary = () => {
     if (!customInstructions) return "Using default AI instructions";
     
-    const sections = [];
+    const sections: string[] = [];
     
     if (customInstructions.selectedTags?.length > 0) {
       sections.push(`Focus areas: ${customInstructions.selectedTags.join(', ')}`);

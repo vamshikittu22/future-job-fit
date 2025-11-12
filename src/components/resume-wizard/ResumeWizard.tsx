@@ -107,10 +107,18 @@ const ResumeWizard = () => {
     if (resumeData.education.length > 0) completed += 20;
 
     // Skills
-    if (resumeData.skills.technical.length > 0 || 
-        resumeData.skills.soft.length > 0 || 
-        resumeData.skills.languages.length > 0) {
-      completed += 20;
+    if (Array.isArray(resumeData.skills)) {
+      if (resumeData.skills.length > 0) {
+        completed += 20;
+      }
+    } else if (resumeData.skills && typeof resumeData.skills === 'object') {
+      if ((resumeData.skills as any).technical?.length > 0 || 
+          (resumeData.skills as any).soft?.length > 0 || 
+          (resumeData.skills as any).languages?.length > 0 ||
+          (resumeData.skills as any).frameworks?.length > 0 ||
+          (resumeData.skills as any).tools?.length > 0) {
+        completed += 20;
+      }
     }
 
     return Math.min(Math.round((completed / total) * 100), 100);
@@ -268,8 +276,10 @@ const ResumeWizard = () => {
                     />
                     {isExperienceDialogOpen && (
                       <ExperienceForm
-                        experience={editingExperience !== null ? resumeData.experience[editingExperience] : undefined}
+                        experience={editingExperience !== null ? resumeData.experience[editingExperience] : {}}
                         onSubmit={handleExperienceSubmit}
+                        onChange={() => {}}
+                        isEditing={editingExperience !== null}
                         onCancel={() => {
                           setIsExperienceDialogOpen(false);
                           setEditingExperience(null);

@@ -1,6 +1,8 @@
 import { Briefcase, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Experience } from "@/lib/initialData";
+import type { ResumeData } from "@/lib/initialData";
+
+type Experience = ResumeData['experience'][number];
 
 interface ExperienceListProps {
   experiences: Experience[];

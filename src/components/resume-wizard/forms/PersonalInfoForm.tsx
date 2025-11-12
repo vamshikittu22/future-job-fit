@@ -19,72 +19,77 @@ export const PersonalInfoForm = ({ data, onChange }: PersonalInfoFormProps) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name">Full Name *</Label>
           <Input
             id="name"
             value={data.name}
             onChange={handleChange('name')}
             placeholder="John Doe"
+            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email *</Label>
           <Input
             id="email"
             type="email"
             value={data.email}
             onChange={handleChange('email')}
             placeholder="john@example.com"
+            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">Phone *</Label>
           <Input
             id="phone"
+            type="tel"
             value={data.phone}
             onChange={handleChange('phone')}
             placeholder="+1 (555) 123-4567"
+            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">Location *</Label>
           <Input
             id="location"
             value={data.location}
             onChange={handleChange('location')}
-            placeholder="City, Country"
+            placeholder="San Francisco, CA"
+            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website">Website (optional)</Label>
+          <Label htmlFor="portfolioUrl">Portfolio URL (optional)</Label>
           <Input
-            id="website"
-            value={data.website || ''}
-            onChange={handleChange('website')}
+            id="portfolioUrl"
+            value={data.portfolioUrl || ''}
+            onChange={handleChange('portfolioUrl')}
             placeholder="https://yourwebsite.com"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="linkedin">LinkedIn (optional)</Label>
+          <Label htmlFor="linkedinUrl">LinkedIn (optional)</Label>
           <Input
-            id="linkedin"
-            value={data.linkedin || ''}
-            onChange={handleChange('linkedin')}
+            id="linkedinUrl"
+            value={data.linkedinUrl || ''}
+            onChange={handleChange('linkedinUrl')}
             placeholder="https://linkedin.com/in/username"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="github">GitHub (optional)</Label>
+          <Label htmlFor="githubUrl">GitHub (optional)</Label>
           <Input
-            id="github"
-            value={data.github || ''}
-            onChange={handleChange('github')}
+            id="githubUrl"
+            value={data.githubUrl || ''}
+            onChange={handleChange('githubUrl')}
             placeholder="https://github.com/username"
           />
         </div>
@@ -96,8 +101,8 @@ export const PersonalInfoForm = ({ data, onChange }: PersonalInfoFormProps) => {
           id="summary"
           value={data.summary}
           onChange={handleChange('summary')}
-          placeholder="A passionate software engineer with X years of experience..."
-          className="min-h-[120px]"
+          placeholder="Write a brief professional summary..."
+          rows={4}
         />
       </div>
     </div>
