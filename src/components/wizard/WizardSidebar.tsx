@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 // Simple sortable item component
@@ -42,6 +43,10 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
   const [sectionTitle, setSectionTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { atsScore, analysis } = useATS(resumeData);
+  
+  const prefersReducedMotion = useMemo(() => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
 
   const getStatusColor = (stepId: string) => {
     const completion = getStepCompletion(stepId);
@@ -226,7 +231,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           {/* Step Navigation */}
           <div className="space-y-1">
             <h3 className="mb-3 text-sm font-medium text-muted-foreground">Sections</h3>
-            {steps.map((step) => {
+            {steps.map((step, index) => {
               const Icon = step.icon;
               const isActive = currentStep.id === step.id;
               const canNavigate = canNavigateToStep(step.id);
@@ -237,33 +242,71 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                 (resumeData.customSections || []).find((s: any) => s.id === sectionId) : null;
 
               return (
-                <div 
+                <motion.div 
                   key={step.id}
+                  initial={prefersReducedMotion ? {} : { opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.2 }}
                   className={cn(
-                    'flex items-center gap-2 p-2 rounded-md',
-                    isActive ? 'bg-accent' : 'hover:bg-accent/50',
+                    'relative flex items-center gap-2 p-2 rounded-md transition-all',
+                    isActive ? 'bg-accent shadow-sm' : 'hover:bg-accent/50',
                     'cursor-pointer',
                     !canNavigate && 'opacity-50 cursor-not-allowed'
                   )}
                   onClick={() => canNavigate && goToStep(step.id)}
+                  whileHover={!prefersReducedMotion ? { x: 2 } : {}}
+                  whileTap={!prefersReducedMotion ? { scale: 0.98 } : {}}
                 >
+                  {/* Connector line to next step */}
+                  {index < steps.length - 1 && (
+                    <motion.div 
+                      className="absolute left-5 top-full w-px bg-border"
+                      initial={{ height: 0 }}
+                      animate={{ height: completion === 100 ? 16 : 16 }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.3, delay: 0.1 }}
+                    />
+                  )}
+                  
                   <div className="flex-1 flex items-center gap-2 min-w-0">
-                    {getStatusIcon(step.id)}
-                    <span className="truncate">
+                    <motion.div
+                      animate={
+                        isActive && !prefersReducedMotion 
+                          ? { scale: [1, 1.1, 1] } 
+                          : completion === 100 && !prefersReducedMotion
+                          ? { scale: [1, 1.2, 1] }
+                          : {}
+                      }
+                      transition={{ duration: 0.3 }}
+                    >
+                      {completion === 100 ? (
+                        <motion.div
+                          initial={prefersReducedMotion ? {} : { scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                        >
+                          {getStatusIcon(step.id)}
+                        </motion.div>
+                      ) : (
+                        getStatusIcon(step.id)
+                      )}
+                    </motion.div>
+                    <span className={cn('truncate', isActive && 'font-semibold')}>
                       {isCustomStep ? (section?.title || 'Untitled Section') : step.title}
                     </span>
                   </div>
                   {!isCollapsed && (
                     <div className="w-16">
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={cn('h-full', getStatusColor(step.id))}
-                          style={{ width: `${completion}%` }}
+                        <motion.div 
+                          className={cn('h-full transition-colors', getStatusColor(step.id))}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${completion}%` }}
+                          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: 'easeOut' }}
                         />
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -322,6 +365,8 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                                     onKeyDown={(e) => handleKeyDown(e, section.id, index)}
                                     onBlur={() => handleBlur(section.id, index)}
                                     className="w-full bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
+                                    aria-label="Edit section title"
+                                    placeholder="Section title"
                                     autoFocus
                                   />
                                 ) : (
@@ -398,7 +443,12 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           </div>
 
           {/* ATS Score */}
-          <div className="space-y-3">
+          <motion.div 
+            className="space-y-3"
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <h3 className="text-sm font-medium text-muted-foreground">ATS Score</h3>
             <div className="rounded-lg border bg-card p-4">
               <div className="flex items-center justify-center">
@@ -414,7 +464,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                       fill="transparent"
                       className="text-muted"
                     />
-                    <circle
+                    <motion.circle
                       cx="64"
                       cy="64"
                       r="56"
@@ -422,15 +472,22 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                       strokeWidth="8"
                       fill="transparent"
                       strokeDasharray={`${2 * Math.PI * 56}`}
-                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - atsScore / 100)}`}
-                      className={cn('transition-all duration-500', getATSScoreColor(atsScore))}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 56 }}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 56 * (1 - atsScore / 100) }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 1, ease: 'easeOut', delay: 0.5 }}
+                      className={cn('transition-colors duration-500', getATSScoreColor(atsScore))}
                       strokeLinecap="round"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={cn('text-3xl font-bold', getATSScoreColor(atsScore))}>
+                    <motion.span 
+                      className={cn('text-3xl font-bold', getATSScoreColor(atsScore))}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.8, duration: 0.3 }}
+                    >
                       {atsScore}
-                    </span>
+                    </motion.span>
                     <span className="text-xs text-muted-foreground">out of 100</span>
                   </div>
                 </div>
@@ -441,7 +498,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                 </Badge>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* ATS Suggestions */}
           {analysis.suggestions && analysis.suggestions.length > 0 && (

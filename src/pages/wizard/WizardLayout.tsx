@@ -1,226 +1,186 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Menu, Eye, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 import { cn } from '@/lib/utils';
-import { Outlet } from 'react-router-dom';
-import { WizardProvider } from '@/contexts/WizardContext';
+import { WizardProvider, useWizard } from '@/contexts/WizardContext';
+import { useResume } from '@/contexts/ResumeContext';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 import { WizardSidebar } from '@/components/wizard/WizardSidebar';
 import WizardPreview from '@/components/wizard/WizardPreview';
-import { Button } from '@/components/ui/button';
-import { Menu, Eye, Sun, Moon, Undo2, Redo2, Save, MoonIcon, SunIcon, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useResume } from '@/contexts/ResumeContext';
-import { useTheme } from '@/hooks/useTheme';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import QuickActionsBar from '@/components/resume-wizard/QuickActionsBar';
+import SampleDataLoader from '@/components/resume-wizard/SampleDataLoader';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
+import { ExportResumeModal } from '@/components/resume-wizard/ExportResumeModal';
 
-export const WizardLayout: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)');
+const WizardLayoutContent: React.FC = () => {
+  const { currentStep } = useWizard();
   const isMobile = useMediaQuery('(max-width: 767px)');
-  
-  // Default to showing preview on desktop/tablet, hidden on mobile
-  const [isPreviewVisible, setIsPreviewVisible] = useState(!isMobile);
-  
-  // Adjust preview visibility based on screen size
+  const location = useLocation();
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isSampleDataModalOpen, setIsSampleDataModalOpen] = useState(false);
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [lastStepId, setLastStepId] = useState<string|undefined>(currentStep?.id);
+
   useEffect(() => {
-    if (isMobile) {
-      setIsPreviewVisible(false);
-    } else {
-      setIsPreviewVisible(true);
+    if (currentStep?.id) {
+      setLastStepId(currentStep.id);
+    }
+  }, [currentStep?.id]);
+
+  const { resumeData, setResumeData } = useResume();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsPreviewVisible(!isMobile);
+    if (!isMobile) {
+      setIsPreviewOpen(false);
     }
   }, [isMobile]);
-  const { theme, setTheme } = useTheme();
-  
-  // Get resume context for saving/loading drafts
-  const { undo, redo, canUndo, canRedo, saveResume } = useResume();
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const { toast } = useToast();
 
-  const handleUndo = () => {
-    if (canUndo) {
-      undo();
+  // Listen for collapse-sidebar event from WizardStepContainer
+  useEffect(() => {
+    const handleCollapseSidebar = () => {
+      if (isMobile) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+
+    window.addEventListener('collapse-sidebar', handleCollapseSidebar);
+    return () => window.removeEventListener('collapse-sidebar', handleCollapseSidebar);
+  }, [isMobile]);
+
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return true;
     }
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+    toast({
+      title: 'Resume enhanced!',
+      description: 'Your resume has been enhanced with AI.',
+    });
   };
 
-  const handleRedo = () => {
-    if (canRedo) {
-      redo();
-    }
-  };
-
-  const handleSaveDraft = async () => {
-    try {
-      setIsSaving(true);
-      await saveResume();
-      setLastSaved(new Date());
-      toast({
-        title: 'Draft saved',
-        description: 'Your progress has been saved successfully.',
-      });
-    } catch (error) {
-      console.error('Failed to save draft:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save draft. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Calculate dynamic widths based on sidebar and preview visibility
   const getContentWidth = () => {
-    if (isMobile) return 'w-full';
-    if (!isPreviewVisible) return 'w-full';
+    if (isMobile || !isPreviewVisible) return 'w-full';
     if (isSidebarCollapsed) return 'w-3/5';
     return 'w-1/2';
   };
 
-  const getPreviewWidth = () => {
-    if (isSidebarCollapsed) return 'w-2/5';
-    return 'w-1/2';
-  };
+  const getPreviewWidth = () => (isSidebarCollapsed ? 'w-2/5' : 'w-1/2');
 
   return (
-    <WizardProvider>
+    <>
       <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
-        {/* Main grid container */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Sidebar - Collapsible */}
           <div
             className={cn(
               'transition-all duration-300 ease-in-out border-r bg-card h-full overflow-y-auto',
               isMobile ? 'hidden' : isSidebarCollapsed ? 'w-16' : 'w-72',
-              'flex-shrink-0',
-              'z-10' // Ensure sidebar stays above other content
+              'flex-shrink-0 z-10'
             )}
           >
-            <WizardSidebar 
+            <WizardSidebar
               isCollapsed={isSidebarCollapsed}
-              onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
             />
           </div>
 
-          {/* Main content area with preview */}
           <div className="flex-1 flex overflow-hidden min-w-0">
-            {/* Form content - Always takes remaining space */}
             <div
               className={cn(
                 'flex flex-col h-full overflow-y-auto',
                 'transition-all duration-300',
                 getContentWidth(),
-                'min-w-0' // Allow content to shrink below its minimum size
+                'min-w-0'
               )}
             >
-            {/* Mobile header with menu toggle */}
-            {isMobile && (
               <div className="flex items-center justify-between border-b bg-card p-4 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-                <h1 className="text-lg font-semibold">Resume Wizard</h1>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsPreviewOpen(true)}
-                >
-                  <Eye className="h-5 w-5" />
-                </Button>
-              </div>
-            )}
-
-            {/* Desktop Toolbar */}
-            {!isMobile && (
-              <div className="flex items-center justify-between border-b bg-card/80 backdrop-blur-sm px-4 py-2 flex-shrink-0">
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleUndo}
-                    disabled={!canUndo}
-                    title="Undo (Ctrl+Z)"
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                <div className="flex items-center space-x-2">
+                  {isMobile && (
+                    <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed((prev) => !prev)}>
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="hidden md:flex items-center gap-2 font-semibold text-lg"
+                    onClick={() => navigate('/')}
                   >
-                    <Undo2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRedo}
-                    disabled={!canRedo}
-                    title="Redo (Ctrl+Shift+Z)"
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  >
-                    <Redo2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSaveDraft}
-                    disabled={isSaving}
-                    title="Save Draft (Ctrl+S)"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    <span>Save Draft</span>
+                    <span className="bg-primary text-primary-foreground rounded-md px-2 py-1">Resume</span>
+                    <span>AI</span>
                   </Button>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="text-muted-foreground hover:text-foreground"
-                    title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                <h1 className="text-lg font-semibold">Resume Wizard</h1>
+                
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => navigate('/')}
+                    title="Go to Home"
                   >
-                    {theme === 'dark' ? (
-                      <SunIcon className="h-4 w-4" />
-                    ) : (
-                      <MoonIcon className="h-4 w-4" />
-                    )}
+                    <Home className="h-5 w-5" />
                   </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsPreviewVisible(!isPreviewVisible)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    {isPreviewVisible ? 'Hide' : 'Show'} Preview
-                  </Button>
+                  {isMobile && (
+                    <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)}>
+                      <Eye className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
-            )}
 
-              {/* Main content area - full height with scrolling */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-4">
-                <div className="max-w-4xl mx-auto w-full">
-                  <Outlet />
+              {!isMobile && (
+                <QuickActionsBar
+                  onLoadSample={() => setIsSampleDataModalOpen(true)}
+                  onAIEnhance={() => setIsAIEnhanceModalOpen(true)}
+                  onTogglePreview={() => setIsPreviewVisible((prev) => !prev)}
+                  onExport={() => setIsExportModalOpen(true)}
+                  isPreviewVisible={isPreviewVisible}
+                  isSaving={false}
+                />
+              )}
+
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="max-w-4xl mx-auto w-full h-full p-4">
+                  <motion.div
+                    key={`${location.pathname}-${currentStep?.id || lastStepId || 'default'}`}
+                    initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      duration: prefersReducedMotion ? 0 : 0.15,
+                      ease: 'easeOut'
+                    }}
+                    className="w-full h-full"
+                  >
+                    <Outlet />
+                  </motion.div>
                 </div>
               </div>
             </div>
 
-            {/* Right Preview Panel */}
             {!isMobile && isPreviewVisible && (
-              <div 
+              <div
                 className={cn(
                   'border-l bg-muted/30 flex-shrink-0 overflow-y-auto',
                   'transition-all duration-300',
                   getPreviewWidth(),
-                  'flex flex-col',
-                  'min-w-0' // Allow preview to shrink if needed
+                  'flex flex-col min-w-0'
                 )}
               >
                 <div className="flex-1 overflow-y-auto p-2 flex justify-center">
@@ -233,55 +193,65 @@ export const WizardLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile FAB for preview */}
-        {isMobile && (
-          <Button
-            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
-            size="icon"
-            onClick={() => setIsPreviewOpen(true)}
-          >
-            <Eye className="h-6 w-6" />
-          </Button>
-        )}
+        <SampleDataLoader open={isSampleDataModalOpen} onOpenChange={setIsSampleDataModalOpen} />
 
-        {/* Mobile preview modal */}
-        {isMobile && isPreviewOpen && (
-          <div className="fixed inset-0 z-50 bg-background flex flex-col">
-            <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
-              <h2 className="text-lg font-semibold">Preview</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsPreviewOpen(false)}
-                className="ml-auto"
-              >
-                Close
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-2 flex justify-center">
-              <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
-                <WizardPreview />
-              </div>
+        <AIEnhanceModal
+          open={isAIEnhanceModalOpen}
+          onOpenChange={setIsAIEnhanceModalOpen}
+          resumeData={resumeData}
+          onEnhance={handleAIEnhance}
+        />
+
+        <ExportResumeModal open={isExportModalOpen} onOpenChange={setIsExportModalOpen} />
+      </div>
+
+      {isMobile && (
+        <Button
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
+          size="icon"
+          onClick={() => setIsPreviewOpen(true)}
+        >
+          <Eye className="h-6 w-6" />
+        </Button>
+      )}
+
+      {isMobile && isPreviewOpen && (
+        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+          <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
+            <h2 className="text-lg font-semibold">Preview</h2>
+            <Button variant="ghost" size="sm" onClick={() => setIsPreviewOpen(false)} className="ml-auto">
+              Close
+            </Button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 flex justify-center">
+            <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
+              <WizardPreview />
             </div>
           </div>
-        )}
-        {/* Mobile sidebar overlay */}
-        {isMobile && !isSidebarCollapsed && (
-          <>
-            <div 
-              className="fixed inset-0 z-40 bg-black/50" 
-              onClick={() => setIsSidebarCollapsed(true)}
-              aria-hidden="true"
-            />
-            <div className="fixed inset-y-0 left-0 z-50 w-80 bg-card shadow-xl">
-              <WizardSidebar
-                isCollapsed={false}
-                onToggle={() => setIsSidebarCollapsed(true)}
-              />
-            </div>
-          </>
-        )}
-      </div>
-    </WizardProvider>
+        </div>
+      )}
+
+      {isMobile && !isSidebarCollapsed && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50"
+            onClick={() => setIsSidebarCollapsed(true)}
+            aria-hidden="true"
+          />
+          <div className="fixed inset-y-0 left-0 z-50 w-80 bg-card shadow-xl">
+            <WizardSidebar isCollapsed={false} onToggle={() => setIsSidebarCollapsed(true)} />
+          </div>
+        </>
+      )}
+    </>
   );
 };
+
+const WizardLayout: React.FC = () => (
+  <WizardProvider>
+    <WizardLayoutContent />
+  </WizardProvider>
+);
+
+export { WizardLayout };
+export default WizardLayout;

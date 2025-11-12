@@ -3,12 +3,13 @@ import { useResume } from '@/contexts/ResumeContext';
 import { WizardStepContainer } from '@/components/wizard/WizardStepContainer';
 import { ProgressStepper } from '@/components/wizard/ProgressStepper';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, GripVertical, Briefcase } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, GripVertical, Briefcase, Sparkles } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Dialog,
@@ -18,16 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { AnimatedAccordion } from '@/components/resume-wizard/AnimatedAccordion';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
 
 export const ExperienceStep: React.FC = () => {
-  const { resumeData, addExperience, updateExperience, removeExperience } = useResume();
+  const { resumeData, addExperience, updateExperience, removeExperience, setResumeData } = useResume();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -88,6 +86,50 @@ export const ExperienceStep: React.FC = () => {
     }
   };
 
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+  };
+
+  const experienceItems = resumeData.experience?.map((exp, index) => ({
+    id: exp.id || `exp-${index}`,
+    title: `${exp.title} at ${exp.company}`,
+    badge: exp.current ? 'Current' : undefined,
+    icon: <Briefcase className="h-4 w-4 text-muted-foreground" />,
+    content: (
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {exp.location && <span>{exp.location}</span>}
+            {exp.location && <span>•</span>}
+            <span>{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
+          </div>
+          {exp.description && (
+            <div className="text-sm whitespace-pre-line bg-muted/50 p-4 rounded-md">
+              {exp.description}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenDialog(index)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete(index)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    ),
+  })) || [];
+
   return (
     <WizardStepContainer
       title="Work Experience"
@@ -96,58 +138,24 @@ export const ExperienceStep: React.FC = () => {
       <ProgressStepper />
 
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAIEnhanceModalOpen(true)}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            Enhance with AI
+          </Button>
+        </div>
+
         {resumeData.experience && resumeData.experience.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            {resumeData.experience.map((exp, index) => (
-              <AccordionItem key={exp.id} value={exp.id} asChild>
-                <Card>
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-start gap-4 flex-1 text-left">
-                      <GripVertical className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base">{exp.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {exp.company}
-                          {exp.location && ` • ${exp.location}`}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
-                        </p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CardContent className="pt-0">
-                      <div className="space-y-4">
-                        {exp.description && (
-                          <div className="text-sm whitespace-pre-line bg-muted/50 p-4 rounded-md">
-                            {exp.description}
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenDialog(index)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(index)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <AnimatedAccordion
+            items={experienceItems}
+            type="single"
+            defaultValue={experienceItems[0]?.id}
+          />
         ) : (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -274,6 +282,14 @@ export const ExperienceStep: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={handleAIEnhance}
+        step="experience"
+      />
     </WizardStepContainer>
   );
 };

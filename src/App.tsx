@@ -8,10 +8,6 @@ import { ResumeProvider } from "@/contexts/ResumeContext";
 import Home from "./pages/Home";
 import ResumeInput from "./pages/ResumeInput";
 import Results from "./pages/Results";
-import ResumeBuilder from "./pages/ResumeBuilder";
-import CreateResumeBuilder from "./pages/CreateResumeBuilder";
-import NewResumePage from "./pages/NewResumePage";
-import EnhancedResumeBuilder from "./pages/EnhancedResumeBuilder";
 import NotFound from "./pages/NotFound";
 
 // New Wizard Routes
@@ -25,7 +21,6 @@ import { SkillsStep } from "./pages/wizard/steps/SkillsStep";
 import { ProjectsStep } from "./pages/wizard/steps/ProjectsStep";
 import { ReviewStep } from "./pages/wizard/steps/ReviewStep";
 import CustomSectionStep from "./pages/wizard/steps/CustomSectionStep";
-import ResumeBuilderTest from "./pages/ResumeBuilderTest";
 
 const queryClient = new QueryClient();
 
@@ -33,11 +28,6 @@ const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "/input", element: <ResumeInput /> },
   { path: "/results", element: <Results /> },
-  { path: "/builder", element: <ResumeBuilder /> },
-  { path: "/create-resume", element: <CreateResumeBuilder /> },
-  { path: "/new-resume", element: <NewResumePage /> },
-  { path: "/enhanced-resume", element: <EnhancedResumeBuilder /> },
-  { path: "/resume-test", element: <ResumeBuilderTest /> },
   {
     path: "/resume-wizard",
     element: <WizardLayout />,

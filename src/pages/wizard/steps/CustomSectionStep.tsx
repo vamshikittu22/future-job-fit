@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useResume } from '@/contexts/ResumeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { WizardStepContainer } from '@/components/wizard/WizardStepContainer';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { CustomField, CustomFieldType, CustomSectionEntry } from '@/lib/initialData';
 
 const fieldTypes: { label: string; value: CustomFieldType }[] = [
@@ -28,7 +28,9 @@ export const CustomSectionStep: React.FC = () => {
     addCustomEntry,
     updateCustomEntry,
     removeCustomEntry,
+    removeCustomSection,
   } = useResume();
+  const navigate = useNavigate();
 
   const section = useMemo(
     () => resumeData.customSections.find((s) => s.id === id),
@@ -37,6 +39,17 @@ export const CustomSectionStep: React.FC = () => {
 
   const [newFieldName, setNewFieldName] = useState('');
   const [newFieldType, setNewFieldType] = useState<CustomFieldType>('text');
+
+  const handleDeleteSection = () => {
+    if (!section) return;
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this custom section? This will remove all fields and entries in it.'
+    );
+    if (!confirmed) return;
+
+    removeCustomSection(section.id);
+    navigate('/resume-wizard');
+  };
 
   if (!section) {
     return (
@@ -183,6 +196,15 @@ export const CustomSectionStep: React.FC = () => {
               <Plus className="h-4 w-4 mr-1" /> Add Entry
             </Button>
           </div>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteSection}
+          >
+            <Trash2 className="h-4 w-4 mr-2" /> Delete Section
+          </Button>
         </div>
 
       {/* Fields Editor */}

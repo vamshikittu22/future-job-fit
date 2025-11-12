@@ -6,11 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Sparkles, Code } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AnimatedAccordion } from '@/components/resume-wizard/AnimatedAccordion';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
 
 export const SkillsStep: React.FC = () => {
-  const { resumeData, updateResumeData } = useResume();
+  const { resumeData, updateResumeData, setResumeData } = useResume();
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [inputs, setInputs] = useState({
     languages: '',
     frameworks: '',
@@ -61,6 +64,52 @@ export const SkillsStep: React.FC = () => {
                       (skills.frameworks?.length || 0) + 
                       (skills.tools?.length || 0);
 
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+  };
+
+  const skillCategories = [
+    {
+      id: 'languages',
+      title: 'Programming Languages',
+      description: 'Languages you\'re proficient in',
+      icon: <Code className="h-4 w-4 text-muted-foreground" />,
+      skills: skills.languages || [],
+      input: inputs.languages,
+      onInputChange: (value: string) => setInputs({ ...inputs, languages: value }),
+      onAdd: () => handleAddSkill('languages'),
+      onRemove: (index: number) => handleRemoveSkill('languages', index),
+      onKeyPress: (e: React.KeyboardEvent) => handleKeyPress(e, 'languages'),
+      suggested: suggestedSkills.languages,
+    },
+    {
+      id: 'frameworks',
+      title: 'Frameworks & Libraries',
+      description: 'Frameworks and libraries you work with',
+      icon: <Code className="h-4 w-4 text-muted-foreground" />,
+      skills: skills.frameworks || [],
+      input: inputs.frameworks,
+      onInputChange: (value: string) => setInputs({ ...inputs, frameworks: value }),
+      onAdd: () => handleAddSkill('frameworks'),
+      onRemove: (index: number) => handleRemoveSkill('frameworks', index),
+      onKeyPress: (e: React.KeyboardEvent) => handleKeyPress(e, 'frameworks'),
+      suggested: suggestedSkills.frameworks,
+    },
+    {
+      id: 'tools',
+      title: 'Tools & Technologies',
+      description: 'Development tools and platforms you use',
+      icon: <Code className="h-4 w-4 text-muted-foreground" />,
+      skills: skills.tools || [],
+      input: inputs.tools,
+      onInputChange: (value: string) => setInputs({ ...inputs, tools: value }),
+      onAdd: () => handleAddSkill('tools'),
+      onRemove: (index: number) => handleRemoveSkill('tools', index),
+      onKeyPress: (e: React.KeyboardEvent) => handleKeyPress(e, 'tools'),
+      suggested: suggestedSkills.tools,
+    },
+  ];
+
   return (
     <WizardStepContainer
       title="Skills"
@@ -69,229 +118,112 @@ export const SkillsStep: React.FC = () => {
       <ProgressStepper />
 
       <div className="space-y-6">
-        {/* Total Skills Counter */}
-        {totalSkills > 0 && (
-          <div className="text-center">
+        <div className="flex items-center justify-between">
+          {/* Total Skills Counter */}
+          {totalSkills > 0 && (
             <Badge variant={totalSkills >= 5 ? 'default' : 'secondary'} className="text-lg px-4 py-2">
               {totalSkills} Total Skills
               {totalSkills < 5 && ' (Add at least 5)'}
             </Badge>
-          </div>
-        )}
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAIEnhanceModalOpen(true)}
+            className="gap-2 ml-auto"
+          >
+            <Sparkles className="h-4 w-4" />
+            Enhance with AI
+          </Button>
+        </div>
 
-        {/* Programming Languages */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Programming Languages</CardTitle>
-            <CardDescription>
-              Languages you're proficient in
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputs.languages}
-                onChange={(e) => setInputs({ ...inputs, languages: e.target.value })}
-                onKeyPress={(e) => handleKeyPress(e, 'languages')}
-                placeholder="Type a language and press Enter"
-              />
-              <Button
-                onClick={() => handleAddSkill('languages')}
-                disabled={!inputs.languages.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {skills.languages && skills.languages.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {skills.languages.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm gap-2"
-                  >
-                    {skill}
-                    <button
-                      onClick={() => handleRemoveSkill('languages', index)}
-                      className="hover:text-destructive"
+        <AnimatedAccordion
+          items={skillCategories.map((category) => ({
+            id: category.id,
+            title: category.title,
+            badge: category.skills.length > 0 ? `${category.skills.length} skills` : undefined,
+            icon: category.icon,
+            content: (
+              <CardContent className="pt-0">
+                <CardDescription className="mb-4">{category.description}</CardDescription>
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      value={category.input}
+                      onChange={(e) => category.onInputChange(e.target.value)}
+                      onKeyPress={category.onKeyPress}
+                      placeholder={`Type a ${category.id === 'languages' ? 'language' : category.id === 'frameworks' ? 'framework' : 'tool'} and press Enter`}
+                    />
+                    <Button
+                      onClick={category.onAdd}
+                      disabled={!category.input.trim()}
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-            {/* Suggestions */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Suggested:</p>
-              <div className="flex flex-wrap gap-2">
-                {suggestedSkills.languages
-                  .filter((s) => !skills.languages?.includes(s))
-                  .slice(0, 6)
-                  .map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-accent"
-                      onClick={() => {
-                        updateResumeData('skills', {
-                          ...skills,
-                          languages: [...(skills.languages || []), skill],
-                        });
-                      }}
-                    >
-                      + {skill}
-                    </Badge>
-                  ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  {category.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {category.skills.map((skill, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="px-3 py-1 text-sm gap-2"
+                        >
+                          {skill}
+                          <button
+                            onClick={() => category.onRemove(index)}
+                            className="hover:text-destructive"
+                            aria-label={`Remove ${skill}`}
+                            title={`Remove ${skill}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
-        {/* Frameworks & Libraries */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Frameworks & Libraries</CardTitle>
-            <CardDescription>
-              Frameworks and libraries you work with
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputs.frameworks}
-                onChange={(e) => setInputs({ ...inputs, frameworks: e.target.value })}
-                onKeyPress={(e) => handleKeyPress(e, 'frameworks')}
-                placeholder="Type a framework and press Enter"
-              />
-              <Button
-                onClick={() => handleAddSkill('frameworks')}
-                disabled={!inputs.frameworks.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {skills.frameworks && skills.frameworks.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {skills.frameworks.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm gap-2"
-                  >
-                    {skill}
-                    <button
-                      onClick={() => handleRemoveSkill('frameworks', index)}
-                      className="hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Suggestions */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Suggested:</p>
-              <div className="flex flex-wrap gap-2">
-                {suggestedSkills.frameworks
-                  .filter((s) => !skills.frameworks?.includes(s))
-                  .slice(0, 6)
-                  .map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-accent"
-                      onClick={() => {
-                        updateResumeData('skills', {
-                          ...skills,
-                          frameworks: [...(skills.frameworks || []), skill],
-                        });
-                      }}
-                    >
-                      + {skill}
-                    </Badge>
-                  ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tools & Technologies */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tools & Technologies</CardTitle>
-            <CardDescription>
-              Development tools and platforms you use
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputs.tools}
-                onChange={(e) => setInputs({ ...inputs, tools: e.target.value })}
-                onKeyPress={(e) => handleKeyPress(e, 'tools')}
-                placeholder="Type a tool and press Enter"
-              />
-              <Button
-                onClick={() => handleAddSkill('tools')}
-                disabled={!inputs.tools.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {skills.tools && skills.tools.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {skills.tools.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm gap-2"
-                  >
-                    {skill}
-                    <button
-                      onClick={() => handleRemoveSkill('tools', index)}
-                      className="hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Suggestions */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Suggested:</p>
-              <div className="flex flex-wrap gap-2">
-                {suggestedSkills.tools
-                  .filter((s) => !skills.tools?.includes(s))
-                  .slice(0, 6)
-                  .map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-accent"
-                      onClick={() => {
-                        updateResumeData('skills', {
-                          ...skills,
-                          tools: [...(skills.tools || []), skill],
-                        });
-                      }}
-                    >
-                      + {skill}
-                    </Badge>
-                  ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  {/* Suggestions */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Suggested:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {category.suggested
+                        .filter((s) => !category.skills.includes(s))
+                        .slice(0, 6)
+                        .map((skill) => (
+                          <Badge
+                            key={skill}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-accent"
+                            onClick={() => {
+                              updateResumeData('skills', {
+                                ...skills,
+                                [category.id]: [...category.skills, skill],
+                              });
+                            }}
+                          >
+                            + {skill}
+                          </Badge>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            ),
+          }))}
+          type="single"
+          defaultValue="languages"
+        />
       </div>
+
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={handleAIEnhance}
+        step="skills"
+      />
     </WizardStepContainer>
   );
 };

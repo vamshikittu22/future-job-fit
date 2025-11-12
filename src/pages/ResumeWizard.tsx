@@ -860,6 +860,28 @@ const ResumeWizard = () => {
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+
+                   {/* Summary Tab */}
+            <TabsContent value="summary" className="mt-0">
+              <div>
+                <Textarea
+                  className="min-h-[200px]"
+                  value={formData.summary}
+                    onChange={(e) => {
+                      const newSummary = e.target.value;
+                      // Update local state
+                      setFormData(prev => ({
+                        ...prev,
+                        summary: newSummary
+                      }));
+                      // Update context
+                      updateResumeData('summary', newSummary);
+                    }}
+                    placeholder="Experienced professional with a passion for..."
+                  />
+                </div>
+              </TabsContent>
+
             {/* Personal Info Tab */}
             <TabsContent value="personal" className="mt-0">
               <div className="space-y-4">
@@ -936,27 +958,6 @@ const ResumeWizard = () => {
                       />
                     </div>
                   </div>
-                </div>
-              </TabsContent>
-
-            {/* Summary Tab */}
-            <TabsContent value="summary" className="mt-0">
-              <div>
-                <Textarea
-                  className="min-h-[200px]"
-                  value={formData.summary}
-                    onChange={(e) => {
-                      const newSummary = e.target.value;
-                      // Update local state
-                      setFormData(prev => ({
-                        ...prev,
-                        summary: newSummary
-                      }));
-                      // Update context
-                      updateResumeData('summary', newSummary);
-                    }}
-                    placeholder="Experienced professional with a passion for..."
-                  />
                 </div>
               </TabsContent>
 

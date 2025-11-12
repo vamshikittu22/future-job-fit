@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Plus, Trash2, Edit, X, Save } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, Edit, X, Save, Code } from 'lucide-react';
+import { AnimatedAccordion } from '@/components/resume-wizard/AnimatedAccordion';
 
 export const ProjectsStep: React.FC = () => {
   const { resumeData, addProject, updateProject, removeProject } = useResume();
@@ -180,6 +182,8 @@ export const ProjectsStep: React.FC = () => {
                             type="button"
                             onClick={() => removeTechnology(tech)}
                             className="text-muted-foreground hover:text-foreground"
+                            aria-label={`Remove ${tech}`}
+                            title={`Remove ${tech}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -235,63 +239,71 @@ export const ProjectsStep: React.FC = () => {
         )}
 
         {/* Projects List */}
-        <div className="space-y-4">
-          {resumeData.projects?.map((project, index) => (
-            <Card key={index}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{project.name}</h3>
-                    {project.role && <p className="text-sm text-muted-foreground">{project.role}</p>}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEdit(project, index)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => removeProject(index)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                {(project.startDate || project.endDate) && (
-                  <p className="text-xs text-muted-foreground">
-                    {project.startDate} - {project.endDate || 'Present'}
-                    {project.url && (
-                      <span className="ml-2">• <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View Project</a></span>
+        {resumeData.projects && resumeData.projects.length > 0 ? (
+          <AnimatedAccordion
+            items={resumeData.projects.map((project, index) => ({
+              id: project.id || `project-${index}`,
+              title: project.name,
+              badge: project.role || undefined,
+              icon: <Code className="h-4 w-4 text-muted-foreground" />,
+              content: (
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    {(project.startDate || project.endDate) && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{project.startDate} - {project.endDate || 'Present'}</span>
+                        {project.url && (
+                          <>
+                            <span>•</span>
+                            <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              View Project
+                            </a>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-sm">{project.description}</p>
-                {project.technologies && project.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {project.technologies.map(tech => (
-                      <span key={tech} className="bg-muted px-2 py-1 rounded-md text-xs">
-                        {tech}
-                      </span>
-                    ))}
+                    {project.description && (
+                      <p className="text-sm whitespace-pre-line bg-muted/50 p-4 rounded-md">{project.description}</p>
+                    )}
+                    {project.technologies && project.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {project.technologies.map(tech => (
+                          <Badge key={tech} variant="secondary" className="text-xs">
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(project, index)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeProject(index)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-          
-          {resumeData.projects?.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No projects added yet. Click "Add Project" to get started.</p>
-            </div>
-          )}
-        </div>
+                </CardContent>
+              ),
+            }))}
+            type="single"
+            defaultValue={resumeData.projects[0]?.id || `project-0`}
+          />
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No projects added yet. Click "Add Project" to get started.</p>
+          </div>
+        )}
       </div>
     </WizardStepContainer>
   );

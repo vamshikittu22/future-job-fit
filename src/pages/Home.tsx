@@ -4,11 +4,9 @@ import { CheckCircle, Target, Zap, FileText, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Footer from "@/components/Footer";
-import CreateResumeModal from "@/components/CreateResumeModal";
 import AppNavigation from "@/components/AppNavigation";
 
 export default function Home() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJDModal, setShowJDModal] = useState(false);
 
   return (
@@ -17,7 +15,7 @@ export default function Home() {
       
       {/* Sticky Navigation Buttons */}
       <div className="sticky top-4 z-50 flex justify-center gap-4 px-6 py-4">
-        <Link to="/create-resume">
+        <Link to="/resume-wizard">
           <Button
             variant="secondary"
             size="sm"
@@ -54,7 +52,7 @@ export default function Home() {
             Paste your resume. Add a job description. Get an ATS-friendly version in seconds.
           </p>
           
-          <Link to="/input">
+          <Link to="/resume-wizard">
             <Button variant="hero" size="lg" className="text-lg px-8 py-6">
               Start Now
             </Button>
@@ -94,11 +92,6 @@ export default function Home() {
           </Card>
         </div>
       </main>
-      
-      <CreateResumeModal
-        open={showCreateModal}
-        onOpenChange={setShowCreateModal}
-      />
       
       <Footer />
     </div>

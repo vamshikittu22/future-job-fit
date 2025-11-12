@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sparkles, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AIEnhanceModal from '@/components/AIEnhanceModal';
 import {
   Accordion,
   AccordionContent,
@@ -17,10 +18,11 @@ import {
 } from '@/components/ui/accordion';
 
 export const SummaryStep: React.FC = () => {
-  const { resumeData, updateResumeData } = useResume();
+  const { resumeData, updateResumeData, setResumeData } = useResume();
   const [summary, setSummary] = useState(resumeData.summary || '');
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
 
   useEffect(() => {
     const words = summary.trim().split(/\s+/).filter(Boolean).length;
@@ -73,7 +75,12 @@ export const SummaryStep: React.FC = () => {
                   Aim for 100-150 words that capture your experience, skills, and career goals
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setIsAIEnhanceModalOpen(true)}
+              >
                 <Sparkles className="h-4 w-4" />
                 Enhance with AI
               </Button>
@@ -180,6 +187,19 @@ export const SummaryStep: React.FC = () => {
           </AccordionItem>
         </Accordion>
       </div>
+
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={(enhancedData) => {
+          setResumeData(enhancedData);
+          if (enhancedData.summary) {
+            setSummary(enhancedData.summary);
+          }
+        }}
+        step="summary"
+      />
     </WizardStepContainer>
   );
 };

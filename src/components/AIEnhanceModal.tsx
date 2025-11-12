@@ -15,6 +15,7 @@ interface AIEnhanceModalProps {
   onOpenChange: (open: boolean) => void;
   resumeData: any;
   onEnhance: (enhancedData: any) => void;
+  step?: 'summary' | 'experience' | 'skills' | null;
 }
 
 const tonePresets = [
@@ -57,7 +58,8 @@ export default function AIEnhanceModal({
   open, 
   onOpenChange, 
   resumeData, 
-  onEnhance 
+  onEnhance,
+  step = null
 }: AIEnhanceModalProps) {
   const [selectedTone, setSelectedTone] = useState('modern');
   const [selectedFocus, setSelectedFocus] = useState<string[]>(['technical']);
@@ -80,38 +82,121 @@ export default function AIEnhanceModal({
     // Simulate AI enhancement
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Mock enhancement based on preset
+    // Mock enhancement based on preset and step
     const enhanced = { ...resumeData };
     
-    switch (presetId) {
-      case 'ats-optimized':
-        // Add more keywords, standardize formatting
-        if (enhanced.summary?.summary) {
-          enhanced.summary.summary = enhanced.summary.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
-        }
-        break;
-      case 'concise':
-        // Shorten content
-        if (enhanced.experience?.experiences) {
-          enhanced.experience.experiences.forEach((exp: any) => {
-            if (exp.description && exp.description.length > 200) {
-              exp.description = exp.description.substring(0, 197) + "...";
-            }
-          });
-        }
-        break;
-      case 'impactful':
-        // Add metrics and strong verbs
-        if (enhanced.experience?.experiences) {
-          enhanced.experience.experiences.forEach((exp: any) => {
-            if (exp.description) {
-              exp.description = exp.description.replace(/^•\s*[a-z]/, (match: string) => 
+    if (step === 'summary') {
+      switch (presetId) {
+        case 'ats-optimized':
+          if (enhanced.summary) {
+            enhanced.summary = enhanced.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
+          }
+          break;
+        case 'concise':
+          if (enhanced.summary && enhanced.summary.length > 200) {
+            enhanced.summary = enhanced.summary.substring(0, 197) + "...";
+          }
+          break;
+        case 'impactful':
+          if (enhanced.summary) {
+            enhanced.summary = enhanced.summary.replace(/^[a-z]/, (match: string) => 
+              match.toUpperCase()
+            );
+          }
+          break;
+      }
+    } else if (step === 'experience') {
+      switch (presetId) {
+        case 'ats-optimized':
+          if (enhanced.experience) {
+            enhanced.experience = enhanced.experience.map((exp: any) => ({
+              ...exp,
+              description: exp.description + "\n• Utilized industry best practices and modern development methodologies"
+            }));
+          }
+          break;
+        case 'concise':
+          if (enhanced.experience) {
+            enhanced.experience = enhanced.experience.map((exp: any) => ({
+              ...exp,
+              description: exp.description && exp.description.length > 200 
+                ? exp.description.substring(0, 197) + "..."
+                : exp.description
+            }));
+          }
+          break;
+        case 'impactful':
+          if (enhanced.experience) {
+            enhanced.experience = enhanced.experience.map((exp: any) => ({
+              ...exp,
+              description: exp.description?.replace(/^•\s*[a-z]/, (match: string) => 
                 '• ' + ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
-              );
-            }
-          });
-        }
-        break;
+              )
+            }));
+          }
+          break;
+      }
+    } else if (step === 'skills') {
+      switch (presetId) {
+        case 'ats-optimized':
+          if (enhanced.skills) {
+            const additionalSkills = ['Agile', 'Scrum', 'DevOps', 'CI/CD'];
+            enhanced.skills = {
+              ...enhanced.skills,
+              tools: [...(enhanced.skills.tools || []), ...additionalSkills.filter(s => !enhanced.skills.tools?.includes(s))]
+            };
+          }
+          break;
+        case 'concise':
+          // Keep only top skills
+          if (enhanced.skills) {
+            enhanced.skills = {
+              languages: enhanced.skills.languages?.slice(0, 5) || [],
+              frameworks: enhanced.skills.frameworks?.slice(0, 5) || [],
+              tools: enhanced.skills.tools?.slice(0, 5) || []
+            };
+          }
+          break;
+        case 'impactful':
+          // Add modern equivalents
+          if (enhanced.skills) {
+            const modernSkills = ['TypeScript', 'React', 'Node.js', 'Docker', 'Kubernetes'];
+            enhanced.skills = {
+              ...enhanced.skills,
+              frameworks: [...(enhanced.skills.frameworks || []), ...modernSkills.filter(s => !enhanced.skills.frameworks?.includes(s))]
+            };
+          }
+          break;
+      }
+    } else {
+      // Global enhancement (no step specified)
+      switch (presetId) {
+        case 'ats-optimized':
+          if (enhanced.summary) {
+            enhanced.summary = enhanced.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
+          }
+          break;
+        case 'concise':
+          if (enhanced.experience) {
+            enhanced.experience = enhanced.experience.map((exp: any) => ({
+              ...exp,
+              description: exp.description && exp.description.length > 200 
+                ? exp.description.substring(0, 197) + "..."
+                : exp.description
+            }));
+          }
+          break;
+        case 'impactful':
+          if (enhanced.experience) {
+            enhanced.experience = enhanced.experience.map((exp: any) => ({
+              ...exp,
+              description: exp.description?.replace(/^•\s*[a-z]/, (match: string) => 
+                '• ' + ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
+              )
+            }));
+          }
+          break;
+      }
     }
     
     setIsEnhancing(false);
@@ -120,7 +205,7 @@ export default function AIEnhanceModal({
     
     toast({
       title: "Resume enhanced!",
-      description: `Applied ${presetId.replace('-', ' ')} strategy to your resume.`,
+      description: `Applied ${presetId.replace('-', ' ')} strategy${step ? ` to ${step}` : ''}.`,
     });
   };
 
@@ -150,6 +235,11 @@ export default function AIEnhanceModal({
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
             AI Resume Enhancement
+            {step && (
+              <span className="text-sm text-muted-foreground font-normal">
+                - {step === 'summary' ? 'Professional Summary' : step === 'experience' ? 'Work Experience' : 'Skills'}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 

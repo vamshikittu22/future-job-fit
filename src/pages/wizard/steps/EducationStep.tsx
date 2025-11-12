@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { GraduationCap, Save, Trash2, Edit, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { AnimatedAccordion } from '@/components/resume-wizard/AnimatedAccordion';
 
 interface EducationFormData {
   id?: string;
@@ -226,43 +228,51 @@ export const EducationStep: React.FC = () => {
 
         <div className="space-y-4">
           {resumeData.education.length > 0 ? (
-            resumeData.education.map((edu, index) => (
-              <Card key={index} className="group relative">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{edu.degree} in {edu.fieldOfStudy}</h3>
-                      <p className="text-muted-foreground">{edu.institution}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {edu.startDate && format(new Date(edu.startDate), 'MMM yyyy')}
-                        {edu.endDate ? ` - ${format(new Date(edu.endDate), 'MMM yyyy')}` : ' - Present'}
-                        {edu.gpa && ` • GPA: ${edu.gpa}`}
-                      </p>
+            <AnimatedAccordion
+              items={resumeData.education.map((edu, index) => ({
+                id: edu.id || `edu-${index}`,
+                title: `${edu.degree} in ${edu.fieldOfStudy}`,
+                badge: edu.gpa ? `GPA: ${edu.gpa}` : undefined,
+                icon: <GraduationCap className="h-4 w-4 text-muted-foreground" />,
+                content: (
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{edu.institution}</span>
+                        <span>•</span>
+                        <span>
+                          {edu.startDate && format(new Date(edu.startDate), 'MMM yyyy')}
+                          {edu.endDate ? ` - ${format(new Date(edu.endDate), 'MMM yyyy')}` : ' - Present'}
+                        </span>
+                      </div>
                       {edu.description && (
-                        <p className="mt-2 text-sm whitespace-pre-line">{edu.description}</p>
+                        <p className="text-sm whitespace-pre-line bg-muted/50 p-4 rounded-md">{edu.description}</p>
                       )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(index)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(index)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(index)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(index)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                ),
+              }))}
+              type="single"
+              defaultValue={resumeData.education[0]?.id || `edu-0`}
+            />
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">

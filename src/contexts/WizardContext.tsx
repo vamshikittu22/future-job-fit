@@ -4,7 +4,7 @@ import { ResumeData } from '@/lib/initialData';
 import { useResume } from './ResumeContext';
 import { BASE_WIZARD_STEPS, getWizardSteps, validateStep, calculateStepCompletion, getStepStatus, type WizardStep } from '@/config/wizardSteps';
 import { Folder } from 'lucide-react';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 // Wizard-specific state
 export interface WizardState {
@@ -117,15 +117,23 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [wizardState, resumeData]);
   
-  // Debounced auto-save
-  const debouncedAutoSave = useCallback(
-    debounce(performAutoSave, 2000),
-    [performAutoSave]
+  // Debounced auto-save with useRef to maintain the same debounced function
+  const debouncedAutoSave = React.useRef(
+    debounce((data: any) => {
+      performAutoSave();
+    }, 2000)
   );
   
-  const triggerAutoSave = useCallback(() => {
-    debouncedAutoSave();
-  }, [debouncedAutoSave]);
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      debouncedAutoSave.current.cancel();
+    };
+  }, []);
+  
+  const triggerAutoSave = React.useCallback(() => {
+    debouncedAutoSave.current(resumeData);
+  }, [resumeData]);
   
   // Trigger auto-save when resume data changes
   useEffect(() => {
@@ -136,42 +144,59 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   
   // Calculate step completion and update state
   const updateStepStatus = useCallback(() => {
-    const completed: string[] = [];
-    const partial: string[] = [];
+    // Only update if the component is still mounted
+    let isMounted = true;
     
-    steps.forEach(step => {
-      const completion = calculateStepCompletion(step.id, { 
-        ...resumeData, 
-        selectedTemplate: wizardState.selectedTemplate 
-      });
-      const status = getStepStatus(completion);
+    // Run the calculation in a timeout to prevent blocking the main thread
+    const timer = window.setTimeout(() => {
+      if (!isMounted) return;
       
-      if (status === 'complete') {
-        completed.push(step.id);
-      } else if (status === 'partial') {
-        partial.push(step.id);
+      const completed: string[] = [];
+      const partial: string[] = [];
+      
+      steps.forEach(step => {
+        const completion = calculateStepCompletion(step.id, { 
+          ...resumeData, 
+          selectedTemplate: wizardState.selectedTemplate 
+        });
+        const status = getStepStatus(completion);
+        
+        if (status === 'complete') {
+          completed.push(step.id);
+        } else if (status === 'partial') {
+          partial.push(step.id);
+        }
+      });
+      
+      // Only update if there are changes to prevent unnecessary re-renders
+      if (isMounted) {
+        setWizardState(prevState => {
+          const newCompleted = [...new Set(completed)];
+          const newPartial = [...new Set(partial)];
+          
+          // Only update if the values have actually changed
+          if (
+            newCompleted.length !== prevState.completedSteps.length ||
+            !newCompleted.every((val, idx) => val === prevState.completedSteps[idx]) ||
+            newPartial.length !== prevState.partialSteps.length ||
+            !newPartial.every((val, idx) => val === prevState.partialSteps[idx])
+          ) {
+            return {
+              ...prevState,
+              completedSteps: newCompleted,
+              partialSteps: newPartial,
+            };
+          }
+          return prevState;
+        });
       }
-      
-      console.log(`Step ${step.id} completion:`, { completion, status });
-    });
-
-    // Always update the state to ensure progress is reflected
-    setWizardState(prev => {
-      console.log('Updating step status:', { 
-        current: currentStep.id,
-        completed, 
-        previousCompleted: prev.completedSteps,
-        partial,
-        previousPartial: prev.partialSteps
-      });
-      
-      return {
-        ...prev,
-        completedSteps: [...new Set(completed)], // Ensure unique values
-        partialSteps: [...new Set(partial)],     // Ensure unique values
-      };
-    });
-  }, [resumeData, wizardState.selectedTemplate, steps, currentStep.id]);
+    }, 0); // Use a small timeout to prevent blocking the main thread
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [resumeData, wizardState.selectedTemplate, steps]);
   
   // Add a debug effect to log state changes
   useEffect(() => {
@@ -378,10 +403,13 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 };
 
-export const useWizard = () => {
+// Create a custom hook to use the wizard context
+export const useWizard = (): WizardContextType => {
   const context = useContext(WizardContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useWizard must be used within a WizardProvider');
   }
   return context;
 };
+
+export default WizardProvider;

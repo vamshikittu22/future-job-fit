@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ChevronLeft, ChevronRight, SkipForward, Save, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface WizardStepContainerProps {
   children: React.ReactNode;
@@ -34,9 +35,17 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
     saveCurrentProgress,
   } = useWizard();
   const { toast } = useToast();
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
   const errorRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [lastChildren, setLastChildren] = React.useState<React.ReactNode>(children);
+  React.useEffect(() => {
+    if (children) {
+      setLastChildren(children);
+    }
+  }, [children]);
 
   const isFirstStep = wizardState.currentStepIndex === 0;
   const canSkip = !currentStep.isRequired;
@@ -45,6 +54,28 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
     // Clear validation errors when step changes
     setValidationErrors([]);
   }, [currentStep.id]);
+
+  // Auto-collapse sidebar on mobile when form inputs are focused
+  useEffect(() => {
+    if (!isMobile || !contentRef.current) return;
+
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+      ) {
+        // Dispatch custom event to collapse sidebar
+        window.dispatchEvent(new CustomEvent('collapse-sidebar'));
+      }
+    };
+
+    const content = contentRef.current;
+    content.addEventListener('focusin', handleFocus);
+    return () => content.removeEventListener('focusin', handleFocus);
+  }, [isMobile]);
 
   const handleNext = async () => {
     setIsProcessing(true);
@@ -138,13 +169,16 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
       )}
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 bg-background">
+      <div 
+        ref={contentRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 bg-background"
+      >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          {children}
+          {children || lastChildren || <div className="text-muted-foreground text-center py-8">Loading section...</div>}
         </motion.div>
       </div>
 
