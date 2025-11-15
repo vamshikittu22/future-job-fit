@@ -4,13 +4,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ResumeData } from '@/lib/initialData';
 
-type Skills = ResumeData['skills'];
+type SkillsObject = {
+  languages: string[];
+  frameworks: string[];
+  tools: string[];
+};
 
 interface SkillsSectionProps {
-  skills: Skills;
+  skills: SkillsObject;
   onAddSkill: (e: React.FormEvent) => void;
-  onRemoveSkill: (category: keyof Skills, index: number) => void;
-  newSkill: { name: string; type: keyof Skills };
+  onRemoveSkill: (category: keyof SkillsObject, index: number) => void;
+  newSkill: { name: string; type: keyof SkillsObject };
   onSkillChange: (field: 'name' | 'type', value: string) => void;
 }
 
@@ -35,7 +39,7 @@ export const SkillsSection = ({
           <div className="w-full sm:w-auto">
             <select
               value={newSkill.type}
-              onChange={(e) => onSkillChange('type', e.target.value as keyof Skills)}
+              onChange={(e) => onSkillChange('type', e.target.value as keyof SkillsObject)}
               className="border rounded-md px-3 py-2 text-sm w-full"
             >
               <option value="languages">Languages</option>
@@ -50,12 +54,13 @@ export const SkillsSection = ({
       </form>
 
       <div className="space-y-6">
-        {(['languages', 'frameworks', 'tools'] as const).map((category) => (
-          skills[category]?.length > 0 && (
+        {(['languages', 'frameworks', 'tools'] as const).map((category) => {
+          const categorySkills = skills[category];
+          return categorySkills && categorySkills.length > 0 ? (
             <div key={category} className="space-y-2">
               <h3 className="font-medium capitalize">{category}</h3>
               <div className="flex flex-wrap gap-2">
-                {skills[category]?.map((skill, index) => (
+                {categorySkills.map((skill, index) => (
                   <Badge key={index} variant="secondary" className="flex items-center gap-1">
                     {skill}
                     <button
@@ -69,8 +74,8 @@ export const SkillsSection = ({
                 ))}
               </div>
             </div>
-          )
-        ))}
+          ) : null;
+        })}
       </div>
     </div>
   );

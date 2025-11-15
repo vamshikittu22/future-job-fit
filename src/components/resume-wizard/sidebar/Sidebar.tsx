@@ -41,17 +41,26 @@ export const Sidebar = ({
 
           {/* Section list */}
           <div className="space-y-1">
-            {sections.map((section) => (
-              <Button
-                key={section.id}
-                variant={activeTab === section.value ? 'secondary' : 'ghost'}
-                className={`w-full justify-start ${activeTab === section.value ? 'font-medium' : ''}`}
-                onClick={() => onTabChange(section.value)}
-              >
-                <span className="mr-2">{section.icon}</span>
-                {section.title}
-              </Button>
-            ))}
+            {sections.map((section) => {
+              const IconComponent = typeof section.icon === 'function' ? section.icon : section.icon;
+              return (
+                <Button
+                  key={section.id}
+                  variant={activeTab === section.value ? 'secondary' : 'ghost'}
+                  className={`w-full justify-start ${activeTab === section.value ? 'font-medium' : ''}`}
+                  onClick={() => onTabChange(section.value)}
+                >
+                  <span className="mr-2">
+                    {typeof IconComponent === 'function' && IconComponent.prototype?.render ? (
+                      <IconComponent className="h-4 w-4" />
+                    ) : typeof IconComponent === 'function' ? (
+                      <IconComponent />
+                    ) : null}
+                  </span>
+                  {section.title}
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
