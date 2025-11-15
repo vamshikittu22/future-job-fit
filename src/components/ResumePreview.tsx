@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
 import { Button } from "@/components/ui/button";
-import type { ResumeData, ResumePreviewProps, CustomSection } from "@/types/resume";
+import type { ResumeData, CustomSection } from "@/types/resume";
 
-// A4 dimensions in mm and pixels (moved to the top)
+// Remove duplicate local declaration
+// Using imported ResumePreviewProps from types/resume
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
 const MM_TO_PX = 3.78; // Approximate conversion
@@ -505,7 +506,7 @@ export default function ResumePreview({
                     rel="noopener noreferrer"
                     className={cn("hover:underline", styles.link)}
                   >
-                    {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
+                    {item.prefix ? item.value?.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
                   </a>
                 ) : (
                   <span>{item.value}</span>
@@ -537,6 +538,7 @@ export default function ResumePreview({
   };
 
   const renderSkills = () => {
+    if (!resumeData) return null;
     const skills = resumeData.skills || [];
 
     // Handle both old object format and new array format
@@ -580,6 +582,7 @@ export default function ResumePreview({
   };
 
   const renderExperience = () => {
+    if (!resumeData) return null;
     const experiences = resumeData.experience || [];
     if (experiences.length === 0) return null;
     
@@ -630,6 +633,7 @@ export default function ResumePreview({
   };
 
   const renderEducation = () => {
+    if (!resumeData) return null;
     const education = resumeData.education || [];
     if (education.length === 0) return null;
     
@@ -671,6 +675,7 @@ export default function ResumePreview({
   };
 
   const renderProjects = () => {
+    if (!resumeData) return null;
     const projects = resumeData.projects || [];
     if (projects.length === 0) return null;
     
@@ -728,6 +733,7 @@ export default function ResumePreview({
   };
 
   const renderAchievements = () => {
+    if (!resumeData) return null;
     const achievements = resumeData.achievements || [];
     if (!achievements || achievements.length === 0) return null;
 
@@ -757,6 +763,7 @@ export default function ResumePreview({
   };
 
   const renderCertifications = () => {
+    if (!resumeData) return null;
     const certifications = resumeData.certifications || [];
     if (certifications.length === 0) return null;
     

@@ -1473,7 +1473,7 @@ const ResumeSection = ({
               {...provided.dragHandleProps}
               className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => {
-                onActivate();
+                onActivate?.();
                 setIsExpanded(!isExpanded);
               }}
             >
