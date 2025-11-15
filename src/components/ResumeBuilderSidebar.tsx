@@ -174,7 +174,7 @@ export default function ResumeBuilderSidebar({
     };
     
     // Call the parent's onAddCustomSection with the new section
-    onAddCustomSection(newSection);
+    onAddCustomSection?.(newSection);
     
     // Set the new section as active
     onSectionChange(newSection.id);
@@ -191,7 +191,7 @@ export default function ResumeBuilderSidebar({
     const section = customSections.find(s => s.id === id);
     if (section && window.confirm(`Are you sure you want to delete the "${section.title}" section?`)) {
       // Use the provided callback to remove the section
-      onRemoveCustomSection(id);
+      onRemoveCustomSection?.(id);
       
       // If the removed section was active, switch to the first available section
       if (activeSection === id) {
@@ -428,7 +428,7 @@ export default function ResumeBuilderSidebar({
                     variant={selectedTemplate === template ? 'default' : 'outline'}
                     size="sm" 
                     className="h-16 flex flex-col gap-1 capitalize"
-                    onClick={() => onSelectTemplate(template)}
+                    onClick={() => onSelectTemplate?.(template)}
                   >
                     <div className={`w-full h-8 rounded bg-gray-200`}></div>
                     {template}
