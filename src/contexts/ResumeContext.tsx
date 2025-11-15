@@ -384,7 +384,8 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           sec.id === sectionId ? { ...sec, entries: (sec.entries || []).filter(e => e.id !== entryId) } : sec
         )
       };
-    }
+    default:
+      return state;
   }
 };
 

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
 import { Button } from "@/components/ui/button";
-import type { ResumeData, ResumePreviewProps, CustomSection } from "@/types/resume";
+import type { ResumeData, CustomSection } from "@/types/resume";
 
 // A4 dimensions in mm and pixels (moved to the top)
 const A4_WIDTH_MM = 210;
@@ -337,8 +337,8 @@ const getTemplateStyles = (templateName: string) => {
   return baseStyles;
 };
 
-interface ResumePreviewProps {
-  resumeData: ResumeData | null;
+interface LocalResumePreviewProps {
+  resumeData: ResumeData;
   template: string;
   currentPage: number;
   sectionOrder: string[];
@@ -353,7 +353,7 @@ export default function ResumePreview({
   sectionOrder,
   onTotalPagesChange,
   onPageChange
-}: ResumePreviewProps) {
+}: LocalResumePreviewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   
   
@@ -505,10 +505,10 @@ export default function ResumePreview({
                     rel="noopener noreferrer"
                     className={cn("hover:underline", styles.link)}
                   >
-                    {item.prefix ? item.value.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
+                    {item.prefix ? (item.value ?? '').replace(/^https?:\/\//, '').replace(item.prefix, '') : (item.value ?? '')}
                   </a>
                 ) : (
-                  <span>{item.value}</span>
+                  <span>{item.value ?? ''}</span>
                 )}
               </div>
             ))

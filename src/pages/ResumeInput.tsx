@@ -400,7 +400,7 @@ PREFERRED:
       <CustomizeAIModal
         open={customizeModalOpen}
         onOpenChange={setCustomizeModalOpen}
-        onSave={setCustomInstructions}
+        onSave={(instructions) => setCustomInstructions(instructions as any)}
       />
       
       <ConfirmationModal

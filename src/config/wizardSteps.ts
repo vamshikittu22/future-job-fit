@@ -22,6 +22,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'template',
     title: 'Template Selection',
+    label: 'Template',
     path: '/resume-wizard/template',
     icon: Layout,
     isRequired: true,
@@ -32,6 +33,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'personal',
     title: 'Personal Information',
+    label: 'Personal',
     path: '/resume-wizard/personal',
     icon: User,
     isRequired: true,
@@ -42,6 +44,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'summary',
     title: 'Professional Summary',
+    label: 'Summary',
     path: '/resume-wizard/summary',
     icon: FileText,
     isRequired: true,
@@ -52,6 +55,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'experience',
     title: 'Work Experience',
+    label: 'Experience',
     path: '/resume-wizard/experience',
     icon: Briefcase,
     isRequired: true,
@@ -62,6 +66,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'education',
     title: 'Education',
+    label: 'Education',
     path: '/resume-wizard/education',
     icon: GraduationCap,
     isRequired: false,
@@ -72,6 +77,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'skills',
     title: 'Skills',
+    label: 'Skills',
     path: '/resume-wizard/skills',
     icon: Code,
     isRequired: true,
@@ -82,6 +88,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
   {
     id: 'projects',
     title: 'Projects',
+    label: 'Projects',
     path: '/resume-wizard/projects',
     icon: Folder,
     isRequired: false,

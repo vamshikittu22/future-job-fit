@@ -1,5 +1,3 @@
-// Re-export types from the main types file for compatibility
-export * from '@/types/resume';
-
-// Also export types from the wizard types for components that use them
+// Centralized type exports
+export type { ResumeData, CustomSection, CustomField, CustomSectionEntry } from '@/lib/initialData';
 export * from '@/components/resume-wizard/types/resume.types';

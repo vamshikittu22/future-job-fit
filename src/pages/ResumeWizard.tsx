@@ -5,7 +5,7 @@ import { ResumeData } from '@/lib/initialData';
 import { ExportResumeModal } from '@/components/resume-wizard/ExportResumeModal';
 import { ImportResumeModal } from '@/components/resume-wizard/ImportResumeModal';
 import { Header } from '@/components/resume-wizard/header';
-import { Sidebar } from '@/components/resume-wizard/sidebar';
+// Removed conflicting import of Sidebar to avoid name clash
 
 // Types
 type Experience = ResumeData['experience'][0];
