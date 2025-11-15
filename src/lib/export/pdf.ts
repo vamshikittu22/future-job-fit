@@ -11,7 +11,7 @@ export const generatePdf = async (resumeData: ResumeData, template: string = 'mi
   
   // Add title
   doc.setFontSize(24);
-  doc.text(`${resumeData.personal?.firstName || ''} ${resumeData.personal?.lastName || ''}`, 20, 20);
+  doc.text(resumeData.personal?.name || 'Resume', 20, 20);
   
   // Add contact information
   doc.setFontSize(12);
