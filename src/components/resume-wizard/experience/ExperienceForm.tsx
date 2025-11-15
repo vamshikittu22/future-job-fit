@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { AIEnhanceButton } from '../AIEnhanceButton';
+import { BulletEnhanceModal } from '../BulletEnhanceModal';
 import type { ResumeData } from "@/lib/initialData";
 
 type Experience = ResumeData['experience'][number];
@@ -22,6 +25,8 @@ export const ExperienceForm = ({
   isEditing,
   onCancel,
 }: ExperienceFormProps) => {
+  const [showAIModal, setShowAIModal] = useState(false);
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -89,7 +94,15 @@ export const ExperienceForm = ({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="description">Description</Label>
+          <AIEnhanceButton 
+            onClick={() => setShowAIModal(true)}
+            size="sm"
+          >
+            Enhance Bullets
+          </AIEnhanceButton>
+        </div>
         <Textarea
           id="description"
           value={experience.description || ''}
@@ -98,6 +111,14 @@ export const ExperienceForm = ({
           rows={4}
         />
       </div>
+
+      <BulletEnhanceModal
+        open={showAIModal}
+        onOpenChange={setShowAIModal}
+        currentBullet={experience.description || ''}
+        jobTitle={experience.title || ''}
+        onSelect={(enhanced) => onChange('description', enhanced)}
+      />
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
