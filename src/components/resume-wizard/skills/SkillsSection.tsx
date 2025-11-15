@@ -1,4 +1,7 @@
 import { Plus, X } from 'lucide-react';
+import { useState } from 'react';
+import { AIEnhanceButton } from '../AIEnhanceButton';
+import { SkillsOrganizeModal } from '../SkillsOrganizeModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

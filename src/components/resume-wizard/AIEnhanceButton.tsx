@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 interface AIEnhanceButtonProps {
   onClick: () => void;
   isLoading?: boolean;
+  disabled?: boolean;
   size?: 'sm' | 'default' | 'lg';
   variant?: 'default' | 'outline' | 'ghost';
   children?: React.ReactNode;
@@ -12,6 +13,7 @@ interface AIEnhanceButtonProps {
 export const AIEnhanceButton = ({
   onClick,
   isLoading = false,
+  disabled = false,
   size = 'sm',
   variant = 'outline',
   children = 'AI Enhance',
@@ -19,7 +21,7 @@ export const AIEnhanceButton = ({
   return (
     <Button
       onClick={onClick}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
       size={size}
       variant={variant}
       className="gap-2"

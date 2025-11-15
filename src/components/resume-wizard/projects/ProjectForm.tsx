@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { AIEnhanceButton } from '../AIEnhanceButton';
+import { ProjectImpactModal } from '../ProjectImpactModal';
 import { ResumeData } from "@/lib/initialData";
 
 type Project = ResumeData['projects'][0];
@@ -21,6 +24,8 @@ export const ProjectForm = ({
   onCancel,
   isEditing,
 }: ProjectFormProps) => {
+  const [showAIModal, setShowAIModal] = useState(false);
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -46,7 +51,16 @@ export const ProjectForm = ({
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="description">Description *</Label>
+          <div className="flex justify-between items-center">
+            <Label htmlFor="description">Description *</Label>
+            <AIEnhanceButton 
+              onClick={() => setShowAIModal(true)}
+              size="sm"
+              disabled={!project.name || !project.technologies?.length}
+            >
+              Get AI Impact Suggestions
+            </AIEnhanceButton>
+          </div>
           <Textarea
             id="description"
             name="description"
@@ -57,6 +71,15 @@ export const ProjectForm = ({
             required
           />
         </div>
+
+        <ProjectImpactModal
+          open={showAIModal}
+          onOpenChange={setShowAIModal}
+          projectName={project.name || ''}
+          description={project.description || ''}
+          technologies={project.technologies || []}
+          onSelect={(bullet) => onChange('description', (project.description || '') + '\n' + bullet)}
+        />
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="technologies">Technologies Used</Label>
           <Input
