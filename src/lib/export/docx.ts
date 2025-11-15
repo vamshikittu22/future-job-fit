@@ -3,24 +3,24 @@ import { ResumeData } from '../../lib/initialData';
 
 export const generateDocx = async (resumeData: ResumeData, template: string = 'minimal'): Promise<Blob> => {
   const { 
-    personal = {}, 
+    personal, 
     summary = '', 
     experience = [], 
     education = [],
-    skills = { languages: [], frameworks: [], tools: [] },
+    skills,
     projects = [],
     achievements = [],
     certifications = []
   } = resumeData;
 
-  const sections = [];
+  const sections: Paragraph[] = [];
 
   // Add header with name and contact info
   const header = new Paragraph({
     heading: HeadingLevel.HEADING_1,
     children: [
       new TextRun({
-        text: `${personal.firstName || ''} ${personal.lastName || ''}`.trim(),
+        text: personal?.name || 'Resume',
         bold: true,
         size: 32,
       }),
@@ -28,12 +28,12 @@ export const generateDocx = async (resumeData: ResumeData, template: string = 'm
   });
 
   const contactInfo = [
-    personal.email,
-    personal.phone,
-    personal.location,
-    personal.website,
-    personal.linkedin ? `LinkedIn: ${personal.linkedin}` : '',
-    personal.github ? `GitHub: ${personal.github}` : '',
+    personal?.email,
+    personal?.phone,
+    personal?.location,
+    personal?.website,
+    personal?.linkedin ? `LinkedIn: ${personal.linkedin}` : '',
+    personal?.github ? `GitHub: ${personal.github}` : '',
   ].filter(Boolean);
 
   const contactParagraph = new Paragraph({
@@ -74,8 +74,8 @@ export const generateDocx = async (resumeData: ResumeData, template: string = 'm
     );
 
     experience.forEach((exp) => {
-      const titleCompany = [exp.jobTitle, exp.company].filter(Boolean).join(', ');
-      const dateRange = [exp.startDate, exp.endDate].filter(Boolean).join(' - ');
+      const titleCompany = [exp.title, exp.company].filter(Boolean).join(', ');
+      const dateRange = [exp.startDate, exp.current ? 'Present' : exp.endDate].filter(Boolean).join(' - ');
       
       sections.push(
         new Paragraph({
@@ -141,11 +141,17 @@ export const generateDocx = async (resumeData: ResumeData, template: string = 'm
   }
 
   // Add skills
-  const skillsContent = [
-    skills.languages.length > 0 ? `Languages: ${skills.languages.join(', ')}` : '',
-    skills.frameworks.length > 0 ? `Frameworks: ${skills.frameworks.join(', ')}` : '',
-    skills.tools.length > 0 ? `Tools: ${skills.tools.join(', ')}` : '',
-  ].filter(Boolean).join(' • ');
+  let skillsContent = '';
+  if (Array.isArray(skills)) {
+    skillsContent = skills.map(cat => `${cat.category}: ${cat.items.join(', ')}`).join(' • ');
+  } else if (skills) {
+    const parts = [
+      skills.languages?.length > 0 ? `Languages: ${skills.languages.join(', ')}` : '',
+      skills.frameworks?.length > 0 ? `Frameworks: ${skills.frameworks.join(', ')}` : '',
+      skills.tools?.length > 0 ? `Tools: ${skills.tools.join(', ')}` : '',
+    ].filter(Boolean);
+    skillsContent = parts.join(' • ');
+  }
 
   if (skillsContent) {
     sections.push(
@@ -173,5 +179,5 @@ export const generateDocx = async (resumeData: ResumeData, template: string = 'm
 
   // Generate the document as a blob
   const buffer = await Packer.toBuffer(doc);
-  return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  return new Blob([buffer as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 };

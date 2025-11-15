@@ -46,7 +46,11 @@ export const exportFormats = {
 };
 
 export const generateHTML = (resumeData: ResumeData): string => {
-  const { personal, summary, experience = [], education = [], skills = [], projects = [] } = resumeData;
+  const { personal, summary, experience = [], education = [], skills, projects = [] } = resumeData;
+  
+  const allSkills = Array.isArray(skills) 
+    ? skills.flatMap(cat => cat.items)
+    : [...(skills?.languages || []), ...(skills?.frameworks || []), ...(skills?.tools || [])];
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -100,11 +104,11 @@ export const generateHTML = (resumeData: ResumeData): string => {
     </section>
   ` : ''}
   
-  ${Array.isArray(skills) && skills.length ? `
+  ${allSkills.length ? `
     <section>
       <h2>Skills</h2>
       <div class="skills">
-        ${skills.map(skill => `<span class="skill-badge">${typeof skill === 'string' ? skill : skill.name}</span>`).join('')}
+        ${allSkills.map(skill => `<span class="skill-badge">${skill}</span>`).join('')}
       </div>
     </section>
   ` : ''}
@@ -113,7 +117,7 @@ export const generateHTML = (resumeData: ResumeData): string => {
 };
 
 export const generateMarkdown = (resumeData: ResumeData): string => {
-  const { personal, summary, experience = [], education = [], skills = [], projects = [] } = resumeData;
+  const { personal, summary, experience = [], education = [], skills, projects = [] } = resumeData;
   
   let md = `# ${personal?.name || 'Resume'}\n\n`;
   md += `${[personal?.email, personal?.phone, personal?.location].filter(Boolean).join(' | ')}\n\n`;
@@ -139,9 +143,13 @@ export const generateMarkdown = (resumeData: ResumeData): string => {
     });
   }
   
-  if (Array.isArray(skills) && skills.length) {
+  const allSkills = Array.isArray(skills) 
+    ? skills.flatMap(cat => cat.items)
+    : [...(skills?.languages || []), ...(skills?.frameworks || []), ...(skills?.tools || [])];
+    
+  if (allSkills.length) {
     md += `## Skills\n\n`;
-    md += skills.map(skill => typeof skill === 'string' ? skill : skill.name).join(' • ');
+    md += allSkills.join(' • ');
     md += '\n\n';
   }
   
@@ -149,7 +157,7 @@ export const generateMarkdown = (resumeData: ResumeData): string => {
 };
 
 export const generatePlainText = (resumeData: ResumeData): string => {
-  const { personal, summary, experience = [], education = [], skills = [] } = resumeData;
+  const { personal, summary, experience = [], education = [], skills } = resumeData;
   
   let txt = `${personal?.name || 'Resume'}\n`;
   txt += `${[personal?.email, personal?.phone, personal?.location].filter(Boolean).join(' | ')}\n\n`;
@@ -177,9 +185,13 @@ export const generatePlainText = (resumeData: ResumeData): string => {
     });
   }
   
-  if (Array.isArray(skills) && skills.length) {
+  const allSkills = Array.isArray(skills) 
+    ? skills.flatMap(cat => cat.items)
+    : [...(skills?.languages || []), ...(skills?.frameworks || []), ...(skills?.tools || [])];
+    
+  if (allSkills.length) {
     txt += `SKILLS\n${'-'.repeat(80)}\n`;
-    txt += skills.map(skill => typeof skill === 'string' ? skill : skill.name).join(', ');
+    txt += allSkills.join(', ');
     txt += '\n';
   }
   
@@ -187,7 +199,7 @@ export const generatePlainText = (resumeData: ResumeData): string => {
 };
 
 export const generateLaTeX = (resumeData: ResumeData): string => {
-  const { personal, summary, experience = [], education = [], skills = [] } = resumeData;
+  const { personal, summary, experience = [], education = [], skills } = resumeData;
   
   return `\\documentclass[11pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
@@ -222,10 +234,15 @@ ${education.map(edu => `
 `).join('\n')}
 ` : ''}
 
-${Array.isArray(skills) && skills.length ? `
+${(() => {
+  const allSkills = Array.isArray(skills) 
+    ? skills.flatMap(cat => cat.items)
+    : [...(skills?.languages || []), ...(skills?.frameworks || []), ...(skills?.tools || [])];
+  return allSkills.length ? `
 \\section*{Skills}
-${skills.map(skill => typeof skill === 'string' ? skill : skill.name).join(', ')}
-` : ''}
+${allSkills.join(', ')}
+` : '';
+})()}
 
 \\end{document}`;
 };
