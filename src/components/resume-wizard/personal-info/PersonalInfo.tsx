@@ -1,9 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PersonalInfoData } from "@/lib/initialData";
+import { ResumeData } from "@/lib/types";
 
 interface PersonalInfoProps {
-  data: PersonalInfoData;
+  data: ResumeData['personal'];
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 

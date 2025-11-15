@@ -3,7 +3,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Experience } from "@/lib/initialData";
+import type { ResumeData } from "@/lib/initialData";
+
+type Experience = ResumeData['experience'][number];
 
 interface ExperienceFormProps {
   experience: Partial<Experience>;

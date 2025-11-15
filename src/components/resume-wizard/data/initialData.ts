@@ -1,14 +1,15 @@
-import { ResumeData } from '../types';
+import { ResumeData, PersonalInfo as WizardPersonalInfo } from '../types';
 
 export const initialResumeData: ResumeData = {
   personal: {
+    id: '',
     name: '',
     email: '',
     phone: '',
     location: '',
-    linkedin: '',
-    github: '',
-    website: '',
+    linkedinUrl: '',
+    githubUrl: '',
+    portfolioUrl: '',
     summary: ''
   },
   experience: [],
@@ -16,6 +17,7 @@ export const initialResumeData: ResumeData = {
   skills: [],
   projects: [],
   certifications: [],
+  achievements: [],
   languages: [],
   atsScore: undefined
 };

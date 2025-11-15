@@ -8,10 +8,6 @@ import { saveAs } from 'file-saver';
 import { generatePdf } from '../lib/export/pdf';
 import { generateDocx } from '../lib/export/docx';
 
-declare module 'file-saver' {
-  export function saveAs(blob: Blob | string, filename?: string): void;
-}
-
 type ExportResumeModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
