@@ -1,6 +1,6 @@
 import { FileText } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Progress } from "@/shared/ui/progress";
+import { Button } from "@/shared/ui/button";
 
 interface ResumeHeaderProps {
   completionPercentage: number;

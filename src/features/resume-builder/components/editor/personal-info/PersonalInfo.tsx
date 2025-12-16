@@ -1,6 +1,6 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ResumeData } from "@/lib/types";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { ResumeData } from "@/shared/lib/types";
 
 interface PersonalInfoProps {
   data: ResumeData['personal'];

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Textarea } from "@/components/ui/textarea";
-import { AIEnhanceButton } from '../AIEnhanceButton';
-import { SummaryEnhanceModal } from '../SummaryEnhanceModal';
+import { Textarea } from "@/shared/ui/textarea";
+import { AIEnhanceButton } from '@/features/resume-builder/components/editor/AIEnhanceButton';
+import { SummaryEnhanceModal } from '@/features/resume-builder/components/editor/SummaryEnhanceModal';
 
 interface SummaryProps {
   value: string;

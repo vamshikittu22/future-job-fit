@@ -1,2 +1,2 @@
-export * from './Header';
-export * from './Header.types';
+export * from '@/features/resume-builder/components/editor/header/Header';
+export * from '@/features/resume-builder/components/editor/header/Header.types';

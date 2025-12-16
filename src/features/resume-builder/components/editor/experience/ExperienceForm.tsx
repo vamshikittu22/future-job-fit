@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { AIEnhanceButton } from '../AIEnhanceButton';
-import { BulletEnhanceModal } from '../BulletEnhanceModal';
-import type { ResumeData } from "@/lib/initialData";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Button } from "@/shared/ui/button";
+import { AIEnhanceButton } from '@/features/resume-builder/components/editor/AIEnhanceButton';
+import { BulletEnhanceModal } from '@/features/resume-builder/components/editor/BulletEnhanceModal';
+import type { ResumeData } from "@/shared/lib/initialData";
 
 type Experience = ResumeData['experience'][number];
 

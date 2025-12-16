@@ -1,7 +1,7 @@
 import { Folder, Pencil, Trash2, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ResumeData } from "@/lib/initialData";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { ResumeData } from "@/shared/lib/initialData";
 
 type Project = ResumeData['projects'][0];
 

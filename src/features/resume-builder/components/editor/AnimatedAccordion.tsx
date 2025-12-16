@@ -5,9 +5,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+} from '@/shared/ui/accordion';
+import { cn } from '@/shared/lib/utils';
+import { Badge } from '@/shared/ui/badge';
 
 interface AnimatedAccordionProps {
   items: Array<{

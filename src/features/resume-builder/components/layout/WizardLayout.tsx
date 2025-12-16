@@ -4,18 +4,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, Eye, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { cn } from '@/lib/utils';
-import { WizardProvider, useWizard } from '@/contexts/WizardContext';
-import { useResume } from '@/contexts/ResumeContext';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { WizardSidebar } from '@/components/wizard/WizardSidebar';
-import WizardPreview from '@/components/wizard/WizardPreview';
-import QuickActionsBar from '@/components/resume-wizard/QuickActionsBar';
-import SampleDataLoader from '@/components/resume-wizard/SampleDataLoader';
-import AIEnhanceModal from '@/components/AIEnhanceModal';
-import { ExportResumeModal } from '@/components/resume-wizard/ExportResumeModal';
+import { cn } from '@/shared/lib/utils';
+import { WizardProvider, useWizard } from '@/shared/contexts/WizardContext';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { useMediaQuery } from '@/shared/hooks/use-media-query';
+import { useToast } from '@/shared/ui/use-toast';
+import { Button } from '@/shared/ui/button';
+import { WizardSidebar } from '@/features/resume-builder/components/layout/WizardSidebar';
+import WizardPreview from '@/features/resume-builder/components/layout/WizardPreview';
+import QuickActionsBar from '@/features/resume-builder/components/editor/QuickActionsBar';
+import SampleDataLoader from '@/features/resume-builder/components/editor/SampleDataLoader';
+import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { ExportResumeModal } from '@/features/resume-builder/components/editor/ExportResumeModal';
 
 const WizardLayoutContent: React.FC = () => {
   const { currentStep } = useWizard();

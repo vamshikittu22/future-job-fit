@@ -1,11 +1,11 @@
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
-import { AIEnhanceButton } from '../AIEnhanceButton';
-import { SkillsOrganizeModal } from '../SkillsOrganizeModal';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ResumeData } from '@/lib/initialData';
+import { AIEnhanceButton } from '@/features/resume-builder/components/editor/AIEnhanceButton';
+import { SkillsOrganizeModal } from '@/features/resume-builder/components/editor/SkillsOrganizeModal';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Badge } from '@/shared/ui/badge';
+import { ResumeData } from '@/shared/lib/initialData';
 
 type SkillsObject = {
   languages: string[];

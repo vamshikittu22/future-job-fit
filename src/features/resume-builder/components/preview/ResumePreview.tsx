@@ -1,1255 +1,551 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
-import { SECTION_NAMES, type SectionKey } from "@/constants/sectionNames";
-import { Button } from "@/components/ui/button";
-import type { ResumeData, CustomSection } from "@/types/resume";
+import React, { useRef, useState, useEffect, useMemo } from "react";
+import { cn } from "@/shared/lib/utils";
+import { SECTION_NAMES } from "@/shared/constants/sectionNames";
+import type { ResumeData } from "@/shared/types/resume";
 
-// Remove duplicate local declaration
-// Using imported ResumePreviewProps from types/resume
+// ============================================================================
+// CONSTANTS & CONFIGURATION
+// ============================================================================
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const MM_TO_PX = 3.78; // Approximate conversion
-const PAGE_MARGIN_MM = 15;
+const PAGE_MARGIN_MM = 20;
+
+// Conversion factor (approximate for screen display, adjustable)
+const MM_TO_PX = 3.78;
 const A4_WIDTH_PX = A4_WIDTH_MM * MM_TO_PX;
 const A4_HEIGHT_PX = A4_HEIGHT_MM * MM_TO_PX;
-const CONTENT_HEIGHT_PX = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
+const PAGE_MARGIN_PX = PAGE_MARGIN_MM * MM_TO_PX;
 
-// Reusing the CustomSection type from our types file
-type CustomSectionData = CustomSection & {
-  // Add any additional properties specific to the preview if needed
-  items?: Array<{
-    id: string;
-    title: string;
-    subtitle?: string;
-    date?: string;
-    description?: string;
-    link?: string;
-  }>;
-}
+// Vertical buffer to avoid overcrowding the bottom
+const CONTENT_HEIGHT_PX = A4_HEIGHT_PX - (PAGE_MARGIN_PX * 2);
 
-// Using imported ResumePreviewProps from types/resume
+// ============================================================================
+// STYLES & THEMES
+// ============================================================================
 
-const CustomSectionPreview = ({ section }: { section: CustomSectionData }) => {
-  if (!section.items || section.items.length === 0) return null;
+// ============================================================================
+// STYLES & THEMES
+// ============================================================================
 
-  return (
-    <div className="mb-8">
-      {section.description && (
-        <p className="text-gray-800 mb-4">{section.description}</p>
-      )}
-      
-      <div className="space-y-4">
-        {section.items.map((item) => (
-          <div key={item.id} className="pb-4">
-            <div className="flex justify-between items-start">
-              <h4 className="font-bold text-gray-900">
-                {item.title}
-              </h4>
-              {item.date && (
-                <span className="text-sm text-gray-700 whitespace-nowrap ml-4">
-                  {item.date}
-                </span>
-              )}
-            </div>
-            {item.subtitle && (
-              <p className="text-sm text-gray-700 mt-1">
-                {item.subtitle}
-              </p>
-            )}
-            {item.description && (
-              <p className="text-sm text-gray-800 mt-2 whitespace-pre-line">
-                {item.description}
-              </p>
-            )}
-            {item.link && (
-              <a 
-                href={item.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline text-sm mt-1 inline-flex items-center"
-              >
-                {item.link}
-                <ExternalLink className="ml-1 h-3 w-3" />
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+const getThemeStyles = (template: string) => {
+    const t = template.toLowerCase();
 
-// Simple page break component
-const PageBreak = () => <div style={{ pageBreakAfter: 'always' }} />;
+    // RxResume Inspired "Onyx/Modern" Base
+    const base = {
+        // Layout: Crisp, clean, paper-like
+        page: "bg-white shadow-xl mb-8 mx-auto relative overflow-hidden font-sans text-gray-800 subpixel-antialiased",
 
-const PrintStyles = () => {
-  return (
-    <style>
-      {`@media print {
-        @page {
-          size: A4;
-          margin: 15mm 15mm 15mm 15mm;
-        }
-        
-        body, html {
-          margin: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-          -webkit-print-color-adjust: exact !important;
-        }
+        // Header: distinct & clean. We'll handle layout in the block, but here are utilities.
+        headerWrapper: "pb-6 mb-2 border-b border-gray-100 text-center",
+        headerTitle: "text-4xl font-extrabold tracking-tight text-gray-900 mb-1",
+        headerSubtitle: "text-lg font-medium text-gray-500 tracking-wide mb-3",
+        headerContact: "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium text-gray-500",
 
-        .page-number {
-          position: absolute;
-          bottom: 10mm;
-          right: 15mm;
-          font-size: 10pt;
-          color: #666;
-        }
-        
-        .page {
-          page-break-after: always;
-        }
-        
-        .page:last-child {
-          page-break-after: auto;
-        }
-      }
-      
-      @media (max-width: 768px) {
-        .a4-container {
-          max-width: 95vw;
-          max-height: calc(100vh - 150px);
-        }
-      }
-      
-      @media (max-width: 480px) {
-        .a4-container {
-          max-width: 98vw;
-          max-height: calc(100vh - 120px);
-        }
-      }`}
-    </style>
-  );
-};
+        // Sections
+        sectionTitle: "flex items-center gap-4 text-xs font-bold uppercase tracking-[0.15em] text-gray-900 mb-4 mt-6",
+        sectionLine: "h-px flex-grow bg-gray-200", // The line to the right of title
 
-// Base styles with high contrast defaults
-const baseStyles = {
-  // Text colors - all high contrast
-  primary: 'text-gray-900 font-semibold',
-  secondary: 'text-gray-900',
-  text: 'text-gray-900',
-  muted: 'text-gray-800',
-  
-  // Background and borders - no light colors
-  accent: 'bg-white',
-  border: 'border-gray-300',
-  highlight: 'bg-white',
-  card: 'bg-white',
-  
-  // Links with good contrast
-  link: 'text-blue-700 hover:text-blue-900 font-medium border-b border-blue-700 hover:border-blue-900',
-  
-  // Section styling with clear hierarchy
-  sectionTitle: 'text-gray-900 border-b-2 border-gray-900 font-bold uppercase tracking-wide mb-4 pb-2',
-  
-  // Custom section styles
-  customSection: 'mb-8',
-  customSectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
-  customItem: 'mb-6 pb-6 border-b border-gray-300 last:border-0 last:pb-0',
-  
-  // Personal info section
-  personalInfo: 'mb-10',
-  
-  // Standard section styling
-  section: 'mb-10',
-  item: 'mb-6 pb-6 border-b border-gray-300 last:border-0 last:pb-0',
-  itemTitle: 'text-gray-900 font-semibold',
-  itemSubtitle: 'text-gray-900 text-sm font-medium',
-  date: 'text-sm text-gray-900 font-medium',
-};
+        // Items
+        item: "mb-3 group",
+        itemHeader: "flex justify-between items-baseline mb-0.5",
+        itemTitle: "text-sm font-bold text-gray-900",
+        itemSubtitle: "text-xs font-medium text-gray-600",
+        itemDate: "text-[10px] font-semibold text-gray-500 whitespace-nowrap ml-4",
+        itemDesc: "text-[11px] leading-relaxed text-gray-600 mt-1 text-justify",
 
-// Creative template styles - high contrast with pink accents
-const creativeStyles = {
-  ...baseStyles,
-  // Text colors with pink accent
-  primary: 'text-pink-800 font-semibold',
-  secondary: 'text-gray-900',
-  text: 'text-gray-900',
-  muted: 'text-gray-900',
-  
-  // Interactive elements
-  link: 'text-pink-800 hover:text-pink-900 font-medium border-b border-pink-800 hover:border-pink-900',
-  
-  // Section styling
-  sectionTitle: 'text-pink-800 border-b-2 border-pink-800 font-bold uppercase tracking-wide mb-4 pb-2',
-  section: 'mb-10 p-6 border border-pink-200 rounded-lg',
-  item: 'mb-6 pb-6 border-b border-pink-200 last:border-0 last:pb-0',
-  
-  // Personal info with subtle pink background
-  personalInfo: 'mb-10 p-8 border border-pink-200 rounded-lg bg-pink-50',
-  
-  // Custom sections
-  customSection: 'mb-8 p-6 border border-pink-200 rounded-lg',
-  customSectionTitle: 'text-pink-800 font-semibold uppercase tracking-wider text-sm border-b-2 border-pink-800 pb-2 mb-4',
-  customItem: 'mb-6 pb-6 border-b border-pink-200 last:border-0 last:pb-0',
-  
-  // Ensure text remains high contrast
-  itemTitle: 'text-pink-800 font-semibold',
-  itemSubtitle: 'text-gray-900 text-sm font-medium',
-  date: 'text-sm text-gray-900 font-medium',
-};
-
-// Modern template - clean with blue accents and high contrast
-const modernStyles = {
-  ...baseStyles,
-  // Text colors with blue accent
-  primary: 'text-blue-800 font-semibold',
-  link: 'text-blue-800 hover:text-blue-900 font-medium border-b border-blue-800 hover:border-blue-900',
-  
-  // Section styling with blue accents
-  sectionTitle: 'text-blue-800 border-b-2 border-blue-800 font-bold uppercase tracking-wide mb-4 pb-2',
-  
-  // Personal info with subtle blue background
-  personalInfo: 'mb-10 p-8 border border-blue-200 rounded-lg bg-blue-50',
-  
-  // Custom sections
-  customSectionTitle: 'text-blue-800 font-semibold uppercase tracking-wider text-sm border-b-2 border-blue-800 pb-2 mb-4',
-  
-  // Ensure text remains high contrast
-  itemTitle: 'text-blue-800 font-semibold',
-};
-
-// Minimal template styles - clean and modern with proper contrast
-const minimalStyles = {
-  ...baseStyles,
-  // Base text colors with good contrast
-  primary: 'text-gray-900 font-semibold',
-  secondary: 'text-gray-800',
-  text: 'text-gray-900',
-  muted: 'text-gray-800',
-  
-  // Section styling with proper contrast
-  sectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
-  
-  // Layout and spacing
-  section: 'mb-10',
-  item: 'mb-8 last:mb-0 pb-8 border-b border-gray-900 last:border-0',
-  
-  // Typography with better contrast
-  itemTitle: 'text-gray-900 font-semibold',
-  itemSubtitle: 'text-gray-900 text-sm font-medium',
-  
-  // Date and meta information
-  date: 'text-sm text-gray-900 font-medium',
-  
-  // Links with good contrast
-  link: 'text-blue-700 hover:text-blue-900 font-medium border-b border-blue-700 hover:border-blue-900',
-  
-  // Personal info section
-  personalInfo: 'mb-10',
-  
-  // Custom sections
-  customSection: 'mb-8',
-  customSectionTitle: 'text-gray-900 font-semibold uppercase tracking-wider text-sm border-b-2 border-gray-900 pb-2 mb-4',
-  customItem: 'mb-6 pb-6 border-b border-gray-200 last:border-0 last:pb-0',
-  
-  // Remove unnecessary decorations
-  card: '',
-  border: 'border-gray-200',
-  highlight: 'bg-gray-50',
-  
-  // Ensure text is always dark on light background
-  '& *': 'text-gray-900'
-};
-
-// Get template colors based on the selected template
-const getTemplateColors = (templateName: string) => {
-  const template = templateName.toLowerCase();
-  
-  if (template === 'creative') {
-    return creativeStyles;
-  }
-  
-  if (template === 'modern') {
-    return modernStyles;
-  }
-  
-  if (template === 'minimal') {
-    return minimalStyles;
-  }
-  
-  // For classic and other templates, use the base styles
-  return baseStyles;
-};
-
-// Get template styles based on the selected template
-const getTemplateStyles = (templateName: string) => {
-  const colors = getTemplateColors(templateName);
-  const isCreative = templateName.toLowerCase() === 'creative';
-  const isModern = templateName.toLowerCase() === 'modern';
-
-  // Base styles for all templates
-  const baseStyles = {
-    sectionTitle: cn(
-      'text-lg font-bold mb-4 pb-2',
-      colors.sectionTitle
-    ),
-    card: cn(
-      'rounded-lg shadow-sm',
-      colors.card,
-      'border',
-      colors.border
-    ),
-    section: cn(colors.section),
-    item: cn(colors.item),
-    itemTitle: cn('font-semibold', colors.primary),
-    itemSubtitle: cn('text-sm', colors.muted),
-    date: cn('text-sm whitespace-nowrap', colors.muted),
-    link: colors.link,
-    personalInfo: colors.personalInfo,
-    customSection: colors.customSection,
-    customSectionTitle: colors.customSectionTitle,
-    customItem: colors.customItem
-  };
-
-  // Creative template applies custom styling to all sections
-  if (isCreative) {
-    return {
-      ...baseStyles,
-      section: cn(colors.section, 'p-6 rounded-lg border shadow-sm'),
-      item: cn(colors.item, 'p-4')
+        // Lists & Tags
+        list: "list-disc pl-3 space-y-0.5 mt-1 marker:text-gray-300",
+        link: "hover:text-blue-600 hover:underline transition-colors",
+        tag: "text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-700 rounded border border-gray-100 mr-1 mb-1 inline-block",
     };
-  }
 
-  // Modern template only styles the personal info section
-  if (isModern) {
-    return {
-      ...baseStyles,
-      personalInfo: colors.personalInfo
-    };
-  }
+    // Modern: Blue, Clean Block headers, Tabular layout hints
+    if (t === 'modern') {
+        return {
+            ...base,
+            headerWrapper: "mb-8 text-left border-b-4 border-blue-600 pb-4",
+            headerTitle: "text-5xl font-bold text-blue-900 tracking-tighter mb-0",
+            headerSubtitle: "text-xl text-blue-600 font-medium mb-4",
+            headerContact: "flex flex-wrap gap-4 text-sm font-medium text-gray-600",
 
-  // Default template (plain)
-  return baseStyles;
+            sectionTitle: "text-lg font-bold text-blue-800 border-b border-gray-200 pb-2 mb-4 mt-8 uppercase tracking-normal block",
+            sectionLine: "hidden", // Hide the side-line
+
+            itemTitle: "text-sm font-bold text-blue-900",
+            itemDate: "text-xs font-bold text-blue-600",
+            tag: "text-[10px] font-bold px-2 py-1 bg-blue-50 text-blue-700 rounded mr-1 mb-1 inline-block",
+        };
+    }
+
+    // Creative: Serif, Centered, Colorful
+    if (t === 'creative') {
+        return {
+            ...base,
+            page: cn(base.page, "bg-stone-50"), // Slight warmth
+            headerWrapper: "mb-8 text-center py-8 bg-purple-50 -mx-8 px-8", // Full bleed header background
+            headerTitle: "text-4xl font-serif font-bold text-purple-900 mb-2",
+            headerSubtitle: "text-base font-serif italic text-purple-600 mb-0",
+
+            sectionTitle: "text-center text-sm font-serif font-bold text-purple-800 mb-6 mt-8 border-b border-purple-100 pb-2 mx-12",
+            sectionLine: "hidden",
+
+            itemHeader: "flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1",
+            itemTitle: "text-sm font-bold text-gray-900 font-serif",
+            itemDate: "text-[10px] italic text-purple-500",
+            tag: "text-[10px] px-3 py-0.5 border border-purple-200 text-purple-800 rounded-full mr-1 mb-1 inline-block bg-white",
+        };
+    }
+
+    // Classic: Traditional, Serif, Black & White
+    if (t === 'classic') {
+        return {
+            ...base,
+            page: cn(base.page, "font-serif text-gray-900"),
+
+            headerWrapper: "mb-6 text-center border-b-2 border-gray-900 pb-4",
+            headerTitle: "text-3xl font-serif font-bold uppercase tracking-widest text-gray-900 mb-2",
+            headerSubtitle: "text-base font-serif italic text-gray-700 mb-2",
+
+            sectionTitle: "text-center text-sm font-serif font-bold uppercase border-b border-gray-900 pb-1 mb-3 mt-6 tracking-wider text-black block",
+            sectionLine: "hidden",
+
+            itemTitle: "text-sm font-bold font-serif text-gray-900",
+            itemSubtitle: "text-xs font-serif italic text-gray-700",
+            itemDate: "text-xs font-serif italic text-gray-900",
+
+            list: "list-disc pl-4 space-y-0.5 mt-1 marker:text-black",
+            tag: "text-[10px] font-serif border border-gray-300 px-2 py-0.5 rounded-none mr-2 bg-transparent text-gray-900 italic",
+        };
+    }
+
+    return base;
 };
+
+// ============================================================================
+// COMPONENT: ResumePreview
+// ============================================================================
 
 interface ResumePreviewProps {
-  resumeData: ResumeData | null;
-  template: string;
-  currentPage: number;
-  sectionOrder: string[];
-  onTotalPagesChange?: (pages: number) => void;
-  onPageChange?: (page: number) => void;
+    resumeData: ResumeData | null;
+    template: string;
+    sectionOrder: string[];
 }
 
-export default function ResumePreview({ 
-  resumeData, 
-  template, 
-  currentPage,
-  sectionOrder,
-  onTotalPagesChange,
-  onPageChange
-}: ResumePreviewProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-  
-  
-  // Calculate total pages and notify parent
-  const totalPages = useMemo(() => {
-    if (!resumeData) return 1;
-    
-    // For now, return 1 as the default number of pages
-    // We'll update this once renderContent is properly defined
-    return 1;
-    
-    // The following code is commented out because it depends on renderContent
-    // which is causing initialization issues
-    /*
-    let count = 1;
-    const content = renderContent();
-    if (content?.props?.children) {
-      count += React.Children.toArray(content.props.children).filter((child: any) => 
-        React.isValidElement(child) && child.type === PageBreak
-      ).length;
-    }
-    return count;
-    */
-  }, [resumeData]);
-  
-  // Notify parent when total pages change
-  useEffect(() => {
-    if (onTotalPagesChange) {
-      onTotalPagesChange(totalPages);
-    }
-  }, [totalPages, onTotalPagesChange]);
+// Data structure for a "Render Block"
+type RenderBlock = {
+    id: string;
+    type: string;
+    content: React.ReactNode;
+};
 
-  const colors = useMemo(() => getTemplateColors(template), [template]);
-  const styles = useMemo(() => getTemplateStyles(template), [template]);
-  
-  // Light mode styles
-  const lightModeStyles = {
-    '--text-primary': '#1f2937',    // text-gray-800
-    '--bg-primary': '#ffffff',      // bg-white
-    '--border-primary': '#e5e7eb',  // border-gray-200
-    '--text-secondary': '#4b5563',  // text-gray-600
-    '--text-heading': '#111827',    // text-gray-900
-    '--link': '#2563eb',            // text-blue-600
-    '--link-hover': '#1d4ed8'       // text-blue-700
-  } as React.CSSProperties;
+export default function ResumePreview({ resumeData, template, sectionOrder }: ResumePreviewProps) {
+    const styles = getThemeStyles(template);
 
-  // Handle scroll events to update current page
-  const handleScroll = useCallback(() => {
-    if (contentRef.current && onPageChange) {
-      const scrollPosition = contentRef.current.scrollTop;
-      const scrollPage = Math.floor(scrollPosition / (297 * 3.78)) + 1; // 297mm in pixels
-      if (scrollPage >= 1 && scrollPage <= totalPages) {
-        onPageChange(scrollPage);
-      }
-    }
-  }, [totalPages, onPageChange]);
+    // --------------------------------------------------------------------------
+    // 1. FLATTEN DATA INTO BLOCKS
+    // --------------------------------------------------------------------------
+    const resumeDataString = JSON.stringify(resumeData);
 
-  // Handle page change with scroll
-  const scrollToPage = useCallback((page: number) => {
-    if (contentRef.current) {
-      const pageHeight = 297 * 3.78; // A4 height in pixels
-      contentRef.current.scrollTo({
-        top: (page - 1) * pageHeight,
-        behavior: 'smooth'
-      });
-      
-      // Update the current page
-      if (onPageChange) {
-        onPageChange(page);
-      }
-    }
-  }, [onPageChange]);
+    const blocks = useMemo<RenderBlock[]>(() => {
+        if (!resumeData) return [];
+        const b: RenderBlock[] = [];
 
-// Force light mode colors for all elements
-  const previewClasses = cn(
-    // Base layout and sizing
-    'w-full p-0 m-0',
-    'shadow-lg my-8',
-    'transition-none',
-    'h-[calc(100vh-200px)] overflow-auto',
-    'resume-container font-sans',
-    'relative',
-    'mx-[14.17px] my-[14.17px] p-8',
-    'aspect-[210/297]', // A4 aspect ratio (210mm x 297mm)
-    'text-base leading-relaxed',
-    // Force light colors
-    'bg-white text-gray-800',
-    // Force all text to be dark
-    '[&]:text-gray-800',
-    // Force all backgrounds to be white
-    '[&]:bg-white',
-    // Force all borders to be light
-    '[&]:border-gray-200',
-    // Force specific element colors
-    '[&_.text-muted-foreground]:text-gray-600',
-    '[&_.text-muted]:text-gray-600',
-    '[&_h1]:text-gray-900',
-    '[&_h2]:text-gray-800',
-    '[&_h3]:text-gray-700',
-    // Force links
-    '[&_a]:text-blue-600',
-    '[&_a:hover]:text-blue-800',
-    // Force section titles
-    '[&_.section-title]:text-gray-900',
-    // Apply theme colors (light mode only)
-    colors.text
-  );
+        // --- Personal Info (Dynamic Style per Template) ---
+        if (resumeData.personal) {
+            const { name, title, email, phone, location, linkedin, website } = resumeData.personal;
+            b.push({
+                id: 'personal',
+                type: 'header',
+                content: (
+                    <div className={styles.headerWrapper}>
+                        <h1 className={styles.headerTitle}>{name}</h1>
+                        {title && <p className={styles.headerSubtitle}>{title}</p>}
 
-  const renderPersonalInfo = () => {
-    const { personal } = resumeData || {};
-    if (!personal) {
-      console.log('No personal data found in resumeData:', resumeData);
-      return (
-        <div className={cn("p-6 rounded-lg border shadow-sm", styles.personalInfo)}>
-          <p className="text-center text-gray-600">No personal information available. Please check your resume data.</p>
-        </div>
-      );
-    }
+                        <div className={styles.headerContact}>
+                            {[email, phone, location].filter(Boolean).map((v, i) => (
+                                <div key={i} className="flex items-center opacity-80 hover:opacity-100 transition-opacity">
+                                    <span>{v}</span>
+                                </div>
+                            ))}
+                        </div>
 
-    const contactItems = [
-      { icon: '✉️', value: personal.email },
-      { icon: '📱', value: personal.phone },
-      { icon: '📍', value: personal.location },
-      { icon: '🔗', value: personal.website, isLink: true },
-      { icon: '💼', value: personal.linkedin, isLink: true, prefix: 'linkedin.com/in/' },
-      { icon: '🐙', value: personal.github, isLink: true, prefix: 'github.com/' },
-    ].filter(item => item.value);
-
-    return (
-      <div className={styles.personalInfo}>
-        <div className="text-center mb-4">
-          <h2 className={cn("text-3xl font-bold mb-2", styles.itemTitle)}>
-            {personal.name || 'Your Name'}
-          </h2>
-          {personal.title && (
-            <h3 className={cn("text-xl", styles.itemSubtitle)}>{personal.title}</h3>
-          )}
-        </div>
-        
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-          {contactItems.length > 0 ? (
-            contactItems.map((item, index) => (
-              <div key={index} className="flex items-center gap-1.5">
-                <span className="opacity-80">{item.icon}</span>
-                {item.isLink ? (
-                  <a 
-                    href={`https://${item.prefix ? item.prefix : ''}${item.value}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={cn("hover:underline", styles.link)}
-                  >
-                    {item.prefix ? item.value?.replace(/^https?:\/\//, '').replace(item.prefix, '') : item.value}
-                  </a>
-                ) : (
-                  <span>{item.value}</span>
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-sm italic text-muted-foreground">No contact information provided</p>
-          )}
-        </div>
-        <Separator className={colors.border} />
-      </div>
-    );
-  };
-
-  const renderSummary = () => {
-    if (!resumeData?.summary) return null;
-    
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.summary.toUpperCase()}
-        </h3>
-        <p className="whitespace-pre-line text-gray-800">
-          {resumeData.summary}
-        </p>
-      </div>
-    );
-  };
-
-  const renderSkills = () => {
-    if (!resumeData) return null;
-    const skills = resumeData.skills || [];
-
-    // Handle both old object format and new array format
-    let skillsArray;
-    if (Array.isArray(skills)) {
-      skillsArray = skills;
-    } else if (typeof skills === 'object' && skills !== null) {
-      // Convert object format to array format
-      skillsArray = Object.entries(skills).map(([name, items]) => ({
-        id: name,
-        name,
-        items: Array.isArray(items) ? items : []
-      }));
-    } else {
-      skillsArray = [];
-    }
-
-    const skillsWithItems = skillsArray.filter(
-      (category: any) => category && Array.isArray(category.items) && category.items.length > 0
-    );
-
-    if (skillsWithItems.length === 0) return null;
-
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.skills.toUpperCase()}
-        </h3>
-        <div className="space-y-2">
-          {skillsWithItems.map((category: any) => (
-            <div key={category.id || category.name} className="flex flex-wrap items-baseline gap-2">
-              <span className="font-bold">{category.name}:</span>
-              <span className="text-gray-800">
-                {category.items.join(', ')}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderExperience = () => {
-    if (!resumeData) return null;
-    const experiences = resumeData.experience || [];
-    if (experiences.length === 0) return null;
-    
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.experience.toUpperCase()}
-        </h3>
-        <div className="space-y-6">
-          {experiences.map((exp: any, index: number) => {
-            const title = exp.title || exp.position || 'Position';
-            const when = exp.duration || ((exp.startDate || exp.endDate) ? `${exp.startDate || ''}${exp.startDate || exp.endDate ? ' - ' : ''}${exp.endDate || 'Present'}` : '');
-            const bullets = Array.isArray(exp.bullets) ? exp.bullets.filter((b: string) => b && b.trim().length > 0) : [];
-            return (
-              <div key={exp.id || index}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold">{title}</h4>
-                    <div className="font-medium">
-                      {exp.company}
-                      {exp.location && ` • ${exp.location}`}
+                        {(linkedin || website) && (
+                            <div className={cn(styles.headerContact, "mt-1")}>
+                                {website && <a href={website} className={styles.link} target="_blank" rel="noreferrer">Portfolio</a>}
+                                {linkedin && <a href={linkedin} className={styles.link} target="_blank" rel="noreferrer">LinkedIn</a>}
+                            </div>
+                        )}
                     </div>
-                  </div>
-                  {when && (
-                    <div className="text-sm font-medium whitespace-nowrap">
-                      {when}
-                    </div>
-                  )}
+                )
+            });
+        }
+
+        // --- Ordered Sections ---
+        const activeSectionOrder = sectionOrder || Object.keys(SECTION_NAMES);
+
+        activeSectionOrder.forEach(sectionKey => {
+
+            // Helper for Section Titles (RxResume style: Text + Line)
+            const renderTitle = (title: string) => (
+                <div className={styles.sectionTitle}>
+                    <span>{title}</span>
+                    <div className={styles.sectionLine} />
                 </div>
-                {exp.description && (
-                  <div className="mt-2 text-sm text-gray-800">
-                    {exp.description}
-                  </div>
-                )}
-                {bullets.length > 0 && (
-                  <ul className="mt-2 pl-5 list-disc space-y-1">
-                    {bullets.map((bullet: string, i: number) => (
-                      <li key={i} className="text-sm text-gray-800">{bullet}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
             );
-          })}
-        </div>
-      </div>
-    );
-  };
 
-  const renderEducation = () => {
-    if (!resumeData) return null;
-    const education = resumeData.education || [];
-    if (education.length === 0) return null;
-    
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.education.toUpperCase()}
-        </h3>
-        <div className="space-y-4">
-          {education.map((edu: any, index: number) => (
-            <div key={edu.id || index}>
-              <div className="flex justify-between">
-                <h4 className="font-bold">{edu.degree}</h4>
-                <span className="text-sm font-medium">
-                  {edu.year || ((edu.startDate || edu.endDate) ? `${edu.startDate || ''}${edu.startDate || edu.endDate ? ' - ' : ''}${edu.endDate || 'Present'}` : '')}
-                </span>
-              </div>
-              <div className="font-medium">
-                {edu.school}
-                {edu.location && `, ${edu.location}`}
-              </div>
-              {edu.gpa && (
-                <div className="text-sm text-gray-800">
-                  GPA: {edu.gpa}
-                </div>
-              )}
-              {Array.isArray(edu.bullets) && edu.bullets.length > 0 && (
-                <ul className="mt-2 pl-5 list-disc space-y-1">
-                  {edu.bullets.map((b: string, i: number) => (
-                    <li key={i} className="text-sm text-gray-800">{b}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderProjects = () => {
-    if (!resumeData) return null;
-    const projects = resumeData.projects || [];
-    if (projects.length === 0) return null;
-    
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.projects.toUpperCase()}
-        </h3>
-        <div className="space-y-6">
-          {projects.map((project: any, index: number) => {
-            const when = project.duration || ((project.startDate || project.endDate) ? `${project.startDate || ''}${project.startDate || project.endDate ? ' - ' : ''}${project.endDate || 'Present'}` : '');
-            const bullets = Array.isArray(project.bullets) ? project.bullets.filter((b: string) => b && b.trim().length > 0) : [];
-            
-            return (
-              <div key={project.id || index}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold">{project.name}</h4>
-                    {when && (
-                      <div className="text-sm font-medium text-gray-800">{when}</div>
-                    )}
-                  </div>
-                  {project.link && (
-                    <a 
-                      href={project.link.startsWith('http') ? project.link : `https://${project.link}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`text-sm ${styles.link} whitespace-nowrap`}
-                    >
-                      View Project
-                    </a>
-                  )}
-                </div>
-                {project.tech && (
-                  <div className="text-sm mt-1 text-gray-800">
-                    <span className="font-bold">Technologies:</span> {project.tech}
-                  </div>
-                )}
-                {project.description && (
-                  <p className="text-sm mt-2 text-gray-800">{project.description}</p>
-                )}
-                {bullets.length > 0 && (
-                  <ul className="mt-2 pl-5 list-disc space-y-1">
-                    {bullets.map((b: string, i: number) => (
-                      <li key={i} className="text-sm text-gray-800">{b}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const renderAchievements = () => {
-    if (!resumeData) return null;
-    const achievements = resumeData.achievements || [];
-    if (!achievements || achievements.length === 0) return null;
-
-    // Support legacy string[] and new object format { id, title, date }
-    return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.achievements.toUpperCase()}
-        </h3>
-        <ul className="space-y-2 list-disc pl-5">
-          {achievements.map((ach: any, idx: number) => {
-            if (typeof ach === 'string') {
-              return <li key={idx} className="text-sm text-gray-800">{ach}</li>;
+            // Summary
+            if (sectionKey === 'summary' && resumeData.summary) {
+                b.push({ id: 'summary-title', type: 'title', content: renderTitle(SECTION_NAMES.summary) });
+                b.push({
+                    id: 'summary-content',
+                    type: 'content',
+                    content: <p className={styles.itemDesc}>{resumeData.summary}</p>
+                });
             }
-            const text = ach.title || ach.text || '';
-            const date = ach.date ? ` • ${ach.date}` : '';
-            return (
-              <li key={ach.id || idx} className="text-sm text-gray-800">
-                {text}
-                {date}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  };
 
-  const renderCertifications = () => {
-    if (!resumeData) return null;
-    const certifications = resumeData.certifications || [];
-    if (certifications.length === 0) return null;
-    
+            // Experience
+            if (sectionKey === 'experience' && resumeData.experience?.length) {
+                b.push({ id: 'exp-title', type: 'title', content: renderTitle(SECTION_NAMES.experience) });
+                resumeData.experience.forEach((exp, idx) => {
+                    b.push({
+                        id: `exp-${idx}`,
+                        type: 'item',
+                        content: (
+                            <div className={styles.item}>
+                                <div className={styles.itemHeader}>
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1">
+                                        <h4 className={styles.itemTitle}>{exp.title}</h4>
+                                        <span className="hidden sm:inline text-gray-300 text-xs">|</span>
+                                        <div className={styles.itemSubtitle}>{exp.company} {exp.location ? `, ${exp.location}` : ''}</div>
+                                    </div>
+                                    <div className={styles.itemDate}>
+                                        {exp.startDate} — {exp.endDate || 'Present'}
+                                    </div>
+                                </div>
+                                {exp.description && <p className={styles.itemDesc}>{exp.description}</p>}
+                                {exp.bullets && exp.bullets.length > 0 && (
+                                    <ul className={styles.list}>
+                                        {exp.bullets.filter(Boolean).map((bulb, bi) => (
+                                            <li key={bi} className="text-[11px] text-gray-600 pl-1">{bulb}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )
+                    });
+                });
+            }
+
+            // Education
+            if (sectionKey === 'education' && resumeData.education?.length) {
+                b.push({ id: 'edu-title', type: 'title', content: renderTitle(SECTION_NAMES.education) });
+                resumeData.education.forEach((edu, idx) => {
+                    b.push({
+                        id: `edu-${idx}`,
+                        type: 'item',
+                        content: (
+                            <div className={styles.item}>
+                                <div className={styles.itemHeader}>
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1">
+                                        <h4 className={styles.itemTitle}>{edu.school}</h4>
+                                        <span className="hidden sm:inline text-gray-300 text-xs">|</span>
+                                        <div className={styles.itemSubtitle}>{edu.degree}</div>
+                                    </div>
+                                    <div className={styles.itemDate}>
+                                        {edu.startDate} — {edu.endDate || 'Present'}
+                                    </div>
+                                </div>
+                                {edu.gpa && <p className="text-[11px] text-gray-500 mt-0.5">GPA: {edu.gpa}</p>}
+                                {edu.bullets && (
+                                    <ul className={styles.list}>
+                                        {edu.bullets.map((b, i) => <li key={i} className="text-[11px] text-gray-600">{b}</li>)}
+                                    </ul>
+                                )}
+                            </div>
+                        )
+                    });
+                });
+            }
+
+            // Skills (Pills Style)
+            if (sectionKey === 'skills') {
+                const skillsList = Array.isArray(resumeData.skills) ? resumeData.skills : [];
+                if (skillsList.length > 0) {
+                    b.push({ id: 'skills-title', type: 'title', content: renderTitle(SECTION_NAMES.skills) });
+                    b.push({
+                        id: 'skills-content',
+                        type: 'item',
+                        content: (
+                            <div className="grid grid-cols-1 gap-y-2">
+                                {skillsList.map((cat, idx) => (
+                                    <div key={idx} className="flex items-baseline">
+                                        <span className="text-[11px] font-bold text-gray-900 w-32 shrink-0">{cat.name}</span>
+                                        <div className="flex flex-wrap gap-1">
+                                            {cat.items.map((skill, si) => (
+                                                <span key={si} className={styles.tag}>{skill}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    });
+                }
+            }
+
+            // Projects
+            if (sectionKey === 'projects' && resumeData.projects?.length) {
+                b.push({
+                    id: 'proj-title',
+                    type: 'title',
+                    content: <h3 className={styles.sectionTitle}>{SECTION_NAMES.projects}</h3>
+                });
+                resumeData.projects.forEach((proj, idx) => {
+                    b.push({
+                        id: `proj-${idx}`,
+                        type: 'item',
+                        content: (
+                            <div className={styles.item}>
+                                <div className={styles.itemHeader}>
+                                    <h4 className={styles.itemTitle}>{proj.name}</h4>
+                                    {(proj.startDate || proj.endDate) && (
+                                        <div className={styles.itemDate}>{proj.startDate} - {proj.endDate || 'Present'}</div>
+                                    )}
+                                </div>
+                                <p className={styles.itemDesc}>{proj.description}</p>
+                                {proj.technologies && (
+                                    <p className="text-sm text-gray-600 mt-1"><strong>Tech:</strong> {proj.technologies}</p>
+                                )}
+                                {proj.bullets && proj.bullets.length > 0 && (
+                                    <ul className={styles.list}>
+                                        {proj.bullets.map((b, i) => <li key={i} className="text-sm text-gray-700">{b}</li>)}
+                                    </ul>
+                                )}
+                            </div>
+                        )
+                    });
+                });
+                b.push({ id: 'proj-spacer', type: 'spacer', content: <div className="h-4" /> });
+            }
+
+            // Achievements
+            if (sectionKey === 'achievements' && resumeData.achievements?.length) {
+                b.push({
+                    id: 'ach-title',
+                    type: 'title',
+                    content: <h3 className={styles.sectionTitle}>{SECTION_NAMES.achievements}</h3>
+                });
+                b.push({
+                    id: 'ach-content',
+                    type: 'item',
+                    content: (
+                        <ul className={styles.list}>
+                            {resumeData.achievements.map((ach, idx) => (
+                                <li key={idx} className="text-sm text-gray-700">
+                                    {typeof ach === 'string' ? ach : (
+                                        <>
+                                            <strong className="font-medium">{ach.title}</strong>
+                                            {ach.date && <span className="text-gray-500 text-xs ml-2">({ach.date})</span>}
+                                            {ach.description && <div className="mt-1">{ach.description}</div>}
+                                        </>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )
+                });
+                b.push({ id: 'ach-spacer', type: 'spacer', content: <div className="h-4" /> });
+            }
+
+            // Certifications
+            if (sectionKey === 'certifications' && resumeData.certifications?.length) {
+                b.push({
+                    id: 'cert-title',
+                    type: 'title',
+                    content: <h3 className={styles.sectionTitle}>{SECTION_NAMES.certifications}</h3>
+                });
+                resumeData.certifications.forEach((cert, idx) => {
+                    b.push({
+                        id: `cert-${idx}`,
+                        type: 'item',
+                        content: (
+                            <div className={styles.item}>
+                                <div className="flex justify-between">
+                                    <span className="font-semibold text-sm">{cert.name}</span>
+                                    {cert.date && <span className="text-xs text-gray-500">{cert.date}</span>}
+                                </div>
+                                <div className="text-xs text-gray-600">{cert.issuer}</div>
+                            </div>
+                        )
+                    });
+                });
+                b.push({ id: 'cert-spacer', type: 'spacer', content: <div className="h-4" /> });
+            }
+
+        });
+
+        // Remove last spacer to avoid trailing empty gap
+        if (b.length > 0 && b[b.length - 1].type === 'spacer') {
+            b.pop();
+        }
+
+        return b;
+    }, [resumeDataString, template, sectionOrder, styles]);
+
+
+    // --------------------------------------------------------------------------
+    // 2. MEASUREMENT & PAGINATION LOGIC
+    // --------------------------------------------------------------------------
+    const MeasureContainerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [pages, setPages] = useState<RenderBlock[][]>([[]]);
+    const [scale, setScale] = useState(1);
+
+    useEffect(() => {
+        const calculateLayout = () => {
+            if (!MeasureContainerRef.current || !contentRef.current) return;
+
+            // 1. Calculate Scale directly from parent container width
+            // We want the A4 Page (A4_WIDTH_PX) to fit into the parent width
+            // minus some padding (e.g., 32px for p-4)
+            const parentWidth = MeasureContainerRef.current.offsetWidth;
+            const availableWidth = parentWidth - 32; // deduction for padding
+
+            // Determine scale to fit width
+            // Default A4 pixel width is approx 794px
+            // Clamp scale between 0.3 and 2.5 to avoid breaking layout
+            const newScale = Math.max(0.3, Math.min(availableWidth / A4_WIDTH_PX, 2.5));
+            setScale(newScale);
+
+            // 2. Measure & Paginate Content (Strict A4 Logic)
+            const itemNodes = Array.from(contentRef.current.children) as HTMLElement[];
+
+            const newPages: RenderBlock[][] = [];
+            let currentPageBlocks: RenderBlock[] = [];
+            let currentHeight = 0;
+
+            // Strict A4 content height limit
+            const HEIGHT_LIMIT = CONTENT_HEIGHT_PX;
+
+            if (itemNodes.length === 0) {
+                setPages([[]]);
+                return;
+            }
+
+            itemNodes.forEach((node, index) => {
+                const block = blocks[index];
+                if (!block) return;
+
+                // We measure the Natural Height at A4 width (because contentRef is fixed width)
+                const height = node.offsetHeight;
+                const style = window.getComputedStyle(node);
+                const marginTop = parseInt(style.marginTop || '0', 10);
+                const marginBottom = parseInt(style.marginBottom || '0', 10);
+
+                const totalItemHeight = height + marginTop + marginBottom;
+
+                if (currentHeight + totalItemHeight > HEIGHT_LIMIT) {
+                    if (currentPageBlocks.length > 0) {
+                        newPages.push(currentPageBlocks);
+                    }
+                    currentPageBlocks = [block];
+                    currentHeight = totalItemHeight;
+                } else {
+                    currentPageBlocks.push(block);
+                    currentHeight += totalItemHeight;
+                }
+            });
+
+            if (currentPageBlocks.length > 0) {
+                newPages.push(currentPageBlocks);
+            }
+
+            setPages(newPages);
+        };
+
+        // Run initially and on resize
+        const timeoutId = setTimeout(calculateLayout, 50);
+        window.addEventListener('resize', calculateLayout);
+
+        return () => {
+            window.removeEventListener('resize', calculateLayout);
+            clearTimeout(timeoutId);
+        };
+
+    }, [blocks, template]);
+
+
+    // --------------------------------------------------------------------------
+    // 3. RENDER
+    // --------------------------------------------------------------------------
     return (
-      <div className="mb-6">
-        <h3 className={styles.sectionTitle}>
-          {SECTION_NAMES.certifications.toUpperCase()}
-        </h3>
-        <div className="space-y-3">
-          {certifications.map((cert: any, index: number) => (
-            <div key={cert.id || index}>
-              <div className="font-bold">{cert.name}</div>
-              <div>
-                {cert.issuer}
-                {cert.date && ` • ${cert.date}`}
-              </div>
-              {cert.link && (
-                <a
-                  href={cert.link.startsWith('http') ? cert.link : `https://${cert.link}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${styles.link} text-xs`}
-                >
-                  View Credential
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const sectionComponents: { [key: string]: () => JSX.Element | null } = {
-    personal: renderPersonalInfo,
-    summary: renderSummary,
-    skills: renderSkills,
-    experience: renderExperience,
-    education: renderEducation,
-    projects: renderProjects,
-    certifications: renderCertifications,
-    achievements: renderAchievements,
-    custom: () => null, // We'll handle custom sections separately
-  };
-
-  const renderSections = () => {
-    // First render regular sections
-    const regularSections = sectionOrder
-      .filter(sectionId => sectionId !== 'custom' && !sectionId.startsWith('custom-'))
-      .map((sectionId) => {
-        const Component = sectionComponents[sectionId];
-        return Component ? (
-          <div key={sectionId} className="section-container">
-            {Component()}
-          </div>
-        ) : null;
-      });
-
-    // Then render custom sections
-    const customSections = resumeData.customSections?.map((section: CustomSectionData) => (
-      <div key={section.id} className="section-container">
-        <h3 className={styles.sectionTitle}>{section.title.toUpperCase()}</h3>
-        <CustomSectionPreview section={section} />
-      </div>
-    )) || [];
-
-    return [...regularSections, ...customSections];
-  };
-
-  // Render custom section
-  const renderCustomSection = (section: any) => {
-    if (!section) return null;
-    
-    return (
-      <div key={section.id} className={cn("mb-6", colors.secondary)}>
-        <h3 className={styles.sectionTitle}>
-          {section.title?.toUpperCase() || 'CUSTOM SECTION'}
-        </h3>
-        {section.description && (
-          <p className="mb-4">{section.description}</p>
-        )}
-        {section.items?.map((item: any, index: number) => (
-          <div key={item.id || index} className="mb-4">
-            <div className="flex justify-between items-start">
-              <h4 className={cn("font-semibold", colors.primary)}>{item.title}</h4>
-              {item.date && (
-                <span className={cn("text-sm", colors.secondary)}>
-                  {item.date}
-                </span>
-              )}
-            </div>
-            {item.subtitle && (
-              <div className={cn("text-sm", colors.secondary)}>{item.subtitle}</div>
-            )}
-            {item.description && (
-              <p className="text-sm mt-1">{item.description}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Render a section with appropriate styling based on template
-  const renderSection = (sectionId: string, content: React.ReactNode) => {
-    if (!content) return null;
-    
-    const isCreative = template.toLowerCase() === 'creative';
-    const isModern = template.toLowerCase() === 'modern';
-    const isPersonalInfo = sectionId === 'personal';
-    
-    // For creative template, all sections get the creative styling
-    if (isCreative) {
-      return (
-        <div 
-          key={sectionId} 
-          className={cn(
-            'p-6 rounded-lg border shadow-sm mb-6',
-            'bg-pink-50 border-pink-100', // Full opacity for better consistency
-            isPersonalInfo && 'border-pink-200 shadow-md', // Keep special border for personal info
-            styles.section,
-            'text-gray-800' // Ensure text is readable on the pink background
-          )}
+        <div
+            ref={MeasureContainerRef}
+            className="flex flex-col items-center bg-gray-100 min-h-full w-full overflow-x-hidden p-4"
         >
-          {content}
-        </div>
-      );
-    }
-    
-    // Modern template: Only personal info gets special treatment
-    if (isModern && isPersonalInfo) {
-      return (
-        <div key={sectionId} className={styles.personalInfo}>
-          {content}
-        </div>
-      );
-    }
-    
-    // Default: Plain section with standard spacing
-    return (
-      <div key={sectionId} className="mb-6">
-        {content}
-      </div>
-    );
-  };
 
-  // Render content with proper page breaks and template-specific styling
-  const renderContent = useCallback(() => {
-    if (!resumeData) {
-      return (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          No resume data available
-        </div>
-      );
-    }
-    
-    const { customSections = [] } = resumeData || {};
-    
-    // Get all section components in order
-    const sectionComponents: { [key: string]: JSX.Element | null } = {
-      personal: renderPersonalInfo(),
-      summary: renderSummary(),
-      experience: renderExperience(),
-      education: renderEducation(),
-      skills: renderSkills(),
-      projects: renderProjects(),
-      achievements: renderAchievements(),
-      certifications: renderCertifications(),
-      // Add custom sections
-      ...customSections.reduce((acc: any, section: any) => {
-        acc[section.id] = renderCustomSection(section.id);
-        return acc;
-      }, {})
-    };
-    
-    // Get the order of sections to render
-    const sectionsToRender = sectionOrder || [
-      'personal',
-      'summary',
-      'experience',
-      'education',
-      'skills',
-      'projects',
-      'achievements',
-      'certifications',
-      ...customSections.map((s: any) => s.id)
-    ];
-    
-    // Filter out null/undefined sections and render them with appropriate styling
-    const content = (
-      <div className="space-y-6">
-        {sectionsToRender
-          .filter((sectionId: string) => sectionComponents[sectionId])
-          .map((sectionId: string) => 
-            renderSection(sectionId, sectionComponents[sectionId])
-          )}
-      </div>
-    );
-    
-    // Render the content in a page container
-    return (
-      <div className="relative print:block">
-        <div className="page">
-          <div className="space-y-8 print:space-y-6">
-            {content}
-          </div>
-          {totalPages > 1 && (
-            <div className="page-number print:hidden">Page {currentPage} of {totalPages}</div>
-          )}
-        </div>
-      </div>
-    );
-  }, [resumeData, sectionOrder, template]);
+            {/* Hidden Measurement Layer - FIXED A4 WIDTH */}
+            <div
+                ref={contentRef}
+                className="absolute top-0 left-0 invisible -z-50 pointer-events-none bg-white font-sans text-gray-800"
+                style={{ width: `${A4_WIDTH_PX}px`, padding: `${PAGE_MARGIN_PX}px` }}
+                aria-hidden="true"
+            >
+                {blocks.map((block) => (
+                    <div key={block.id} className="measure-block">
+                        {block.content}
+                    </div>
+                ))}
+            </div>
 
-  // Screen and print styles for the resume container
-  const screenStyles = `
-    /* Base styles for both screen and print */
-    @page {
-      size: A4;
-      margin: 15mm 15mm 15mm 15mm;
-    }
+            {/* Visible Content Layer (Scaled) */}
+            <div
+                style={{
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top center',
+                    width: `${A4_WIDTH_PX}px`,
+                }}
+                id="resume-preview-container"
+                className="resume-preview"
+            >
+                {pages.map((pageBlocks, pageIndex) => (
+                    <div
+                        key={pageIndex}
+                        className={cn(
+                            styles.page,
+                            "resume-page", // Marker for PDF export
+                            "print:shadow-none print:my-0 print:mx-0 print:w-full print:h-screen"
+                        )}
+                        style={{
+                            width: `${A4_WIDTH_PX}px`,
+                            minHeight: `${A4_HEIGHT_PX}px`,
+                            padding: `${PAGE_MARGIN_PX}px`,
+                        }}
+                    >
+                        {pageBlocks.map(block => (
+                            <div key={`${pageIndex}-${block.id}`}>
+                                {block.content}
+                            </div>
+                        ))}
 
-    .a4-container {
-      aspect-ratio: 210 / 297;
-      max-width: min(90vw, 1200px);
-      max-height: calc(100vh - 200px);
-      margin: 2rem auto;
-      position: relative;
-      width: 100%;
-      transform-origin: top center;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      background: white;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-    
-    .a4-container .resume-card {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
-      background: white;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .resume-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.5rem 2rem;
-      -webkit-overflow-scrolling: touch;
-      position: relative;
-    }
+                        {/* Page Number */}
+                        <div className="absolute bottom-4 right-8 text-xs text-gray-400 print:hidden">
+                            Page {pageIndex + 1} of {pages.length}
+                        </div>
+                    </div>
+                ))}
+            </div>
 
-    .page {
-      page-break-after: always;
-      break-after: page;
-      min-height: calc(100% - 3rem);
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-
-    .page:last-child {
-      page-break-after: auto;
-      break-after: auto;
-      margin-bottom: 0;
-    }
-
-    .page-number {
-      position: absolute;
-      bottom: 0;
-      right: 2rem;
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    
-    /* Scrollbar styles */
-    .resume-content::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    .resume-content::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
-    
-    .resume-content::-webkit-scrollbar-thumb {
-      background-color: #9ca3af;
-      border-radius: 4px;
-    }
-    
-    .resume-content::-webkit-scrollbar-thumb:hover {
-      background-color: #6b7280;
-    }
-    
-    /* Print styles moved to PrintStyles component */
-    
-    @media (max-width: 1024px) {
-      .a4-container {
-        width: 100% !important;
-        height: auto !important;
-        max-height: calc(100vh - 160px) !important;
-        aspect-ratio: 210/297;
-        padding: 0.5rem;
-      }
-      
-      /* Adjust for smaller screens */
-      @media (max-height: 800px) {
-        .a4-container {
-          max-height: 70vh !important;
-        }
-      }
-      
-      /* Mobile specific adjustments */
-      @media (max-width: 480px) {
-        .a4-container {
-          max-height: 60vh !important;
-          padding: 0.25rem;
-        }
-      }
-    }
-  `;
-  // Handle scroll events to update current page
-  useEffect(() => {
-    const content = contentRef.current;
-    if (!content) return;
-    
-    const handleScroll = () => {
-      const scrollPosition = content.scrollTop;
-      const newPage = Math.round(scrollPosition / CONTENT_HEIGHT_PX) + 1;
-      
-      if (newPage !== currentPage && onPageChange) {
-        onPageChange(newPage);
-      }
-    };
-    
-    content.addEventListener('scroll', handleScroll);
-    return () => content.removeEventListener('scroll', handleScroll);
-  }, [currentPage, onPageChange, CONTENT_HEIGHT_PX]);
-  
-  // Handle scroll events to update current page
-  useEffect(() => {
-    const content = contentRef.current;
-    if (!content) return;
-    
-    const handleScroll = () => {
-      const pageHeight = A4_HEIGHT_PX - (PAGE_MARGIN_MM * MM_TO_PX * 2);
-      const scrollPosition = content.scrollTop;
-      const newPage = Math.round(scrollPosition / pageHeight) + 1;
-      
-      if (newPage !== currentPage && onPageChange) {
-        onPageChange(newPage);
-      }
-    };
-    
-    content.addEventListener('scroll', handleScroll);
-    return () => content.removeEventListener('scroll', handleScroll);
-  }, [currentPage, onPageChange]);
-  
-  // Handle print
-  const handlePrint = useCallback(() => {
-    // Ensure we're on the first page before printing
-    scrollToPage(1);
-    // Small delay to ensure scroll completes
-    setTimeout(() => window.print(), 100);
-  }, [scrollToPage]);
-  
-  // Calculate content dimensions
-  const contentPadding = `${PAGE_MARGIN_MM}mm`;
-  const contentWidth = `calc(100% - ${PAGE_MARGIN_MM * 2}mm)`;
-
-  // Light mode styles are defined at the top of the component
-
-
-
-  // Render only the current page's content
-  const renderCurrentPage = () => {
-    const content = renderContent();
-    if (!content || !content.props || !content.props.children) return null;
-    
-    // If it's a single page, return as is
-    if (totalPages === 1) return content;
-
-    // Find all page breaks
-    const children = React.Children.toArray(content.props.children);
-    const pageBreaks = children.reduce<number[]>((acc, child, index) => {
-      if (React.isValidElement(child) && child.type === PageBreak) {
-        acc.push(index);
-      }
-      return acc;
-    }, []);
-
-    // Calculate start and end indices for current page
-    const startIdx = currentPage === 1 ? 0 : (pageBreaks[currentPage - 2] || 0) + 1;
-    const endIdx = pageBreaks[currentPage - 1] || children.length;
-
-    // Return only the current page's content
-    return React.cloneElement(content, {
-      children: children.slice(startIdx, endIdx).filter(child => 
-        !(React.isValidElement(child) && child.type === PageBreak)
-      )
-    });
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      <div 
-        className={cn(
-          'flex-1',
-          'print:overflow-visible',
-          template.toLowerCase() === 'creative' ? 'bg-pink-50' : 'bg-white',
-          'resume-content',
-          'print:shadow-none',
-          'relative',
-          'overflow-auto'
-        )}
-        style={{
-          ...lightModeStyles,
-          color: 'rgb(31, 41, 55)',
-          backgroundColor: template.toLowerCase() === 'creative' ? '#fdf2f8' : 'white',
-          padding: '15mm',
-          boxSizing: 'border-box',
-        }}
-        ref={contentRef}
-      >
-        {renderCurrentPage()}
-      </div>
-
-      {/* Pagination controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-4 print:hidden">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange && onPageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className="w-24"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous
-          </Button>
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange && onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            className="w-24"
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-      )}
-      
-      {/* Print styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          
-          @media print {
-            body, html {
-              margin: 0 !important;
-              padding: 0 !important;
-              background: white !important;
+            {/* Print Styles Injection */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+            @media print {
+                body { background: white; }
+                @page { size: A4; margin: 0; }
+                .print\\:hidden { display: none !important; }
             }
-            
-            .print\:hidden {
-              display: none !important;
-            }
-
-            .page-break {
-              page-break-after: always;
-              break-after: page;
-            }
-          }
-        `
-      }} />
-    </div>
-  );
+            `
+            }} />
+        </div>
+    );
 }

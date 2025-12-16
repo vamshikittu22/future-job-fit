@@ -1,8 +1,8 @@
 import { X, Menu } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { SidebarProps } from './Sidebar.types';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Progress } from '@/shared/ui/progress';
+import { SidebarProps } from '@/features/resume-builder/components/editor/sidebar/Sidebar.types';
 
 export const Sidebar = ({
   sections,

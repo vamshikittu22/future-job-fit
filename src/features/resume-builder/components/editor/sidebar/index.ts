@@ -1,2 +1,2 @@
-export * from './Sidebar';
-export * from './Sidebar.types';
+export * from '@/features/resume-builder/components/editor/sidebar/Sidebar';
+export * from '@/features/resume-builder/components/editor/sidebar/Sidebar.types';

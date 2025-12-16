@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Progress } from "@/shared/ui/progress";
 import { FileText, Plus, Briefcase, GraduationCap, Code, Award, Sparkles } from "lucide-react";
-import { useResume } from "@/contexts/ResumeContext";
-import PersonalInfo from "./personal-info/PersonalInfo";
-import Summary from "./summary/Summary";
-import { ExperienceList, ExperienceForm } from "./experience";
-import { CertificationsForm } from "./forms/CertificationsForm";
+import { useResume } from "@/shared/contexts/ResumeContext";
+import PersonalInfo from "@/features/resume-builder/components/editor/personal-info/PersonalInfo";
+import Summary from "@/features/resume-builder/components/editor/summary/Summary";
+import { ExperienceList, ExperienceForm } from "@/features/resume-builder/components/editor/experience";
+import { CertificationsForm } from "@/features/resume-builder/components/editor/forms/CertificationsForm";
 
 const ResumeWizard = () => {
   const { resumeData, updateResumeData } = useResume();

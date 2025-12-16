@@ -6,14 +6,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { loadSampleData } from '@/lib/sampleResumeData';
-import { useResume } from '@/contexts/ResumeContext';
-import { useWizard } from '@/contexts/WizardContext';
-import { useToast } from '@/hooks/use-toast';
+} from '@/shared/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Badge } from '@/shared/ui/badge';
+import { loadSampleData } from '@/shared/lib/sampleResumeData';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { useWizard } from '@/shared/contexts/WizardContext';
+import { useToast } from '@/shared/hooks/use-toast';
 import { FileText, Briefcase, GraduationCap, Code, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

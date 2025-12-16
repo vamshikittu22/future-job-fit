@@ -1,33 +1,47 @@
 import { useState, useEffect, useRef } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+import { Badge } from "@/shared/ui/badge";
 import { Plus, Trash2, Pencil, X, Check, ChevronDown, ChevronUp, GripVertical, FileText, Briefcase, GraduationCap, FolderOpen, Trophy, Award, User, Code, Sparkles } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card } from "@/shared/ui/card";
+import { Separator } from "@/shared/ui/separator";
 
-// Define the SkillCategoryType interface
-interface SkillCategoryProps {
-  category: {
-    id: string;
-    name: string;
-    items: string[];
-  };
-  onUpdate: (id: string, updates: { name?: string; items?: string[] }) => void;
-  onRemove: (id: string) => void;
-  onAddSkill: (categoryId: string, skill: string) => void;
-  onRemoveSkill: (categoryId: string, skillIndex: number) => void;
+import { SkillCategory } from "@/features/resume-builder/components/editor/skills/SkillCategory";
+import { SkillPreview } from "@/features/resume-builder/components/editor/skills/SkillPreview";
+import { CustomSectionEditor } from "@/features/resume-builder/components/editor/custom/CustomSectionEditor";
+import { SkillCategoryType } from "@/shared/types/resume";
+
+import { ExperienceSection } from "@/features/resume-builder/components/editor/sections/ExperienceSection";
+import { EducationSection } from "@/features/resume-builder/components/editor/sections/EducationSection";
+import { ProjectSection } from "@/features/resume-builder/components/editor/sections/ProjectSection";
+import { AchievementSection } from "@/features/resume-builder/components/editor/sections/AchievementSection";
+import { CertificationSection } from "@/features/resume-builder/components/editor/sections/CertificationSection";
+
+interface ResumeSectionProps {
+  sectionId: string;
+  index: number;
+  resumeData: any;
+  updateResumeData: (section: string, data: any) => void;
+  isActive?: boolean;
+  onActivate?: () => void;
+  addCustomSection?: () => void;
+  updateCustomSection?: (index: number, section: any) => void;
+  removeCustomSection?: (index: number) => void;
 }
 
-// Define the SkillCategoryType interface
-interface SkillCategoryType {
-  id: string;
-  name: string;
-  items: string[];
-}
+const sectionIcons = {
+  personal: User,
+  summary: FileText,
+  experience: Briefcase,
+  education: GraduationCap,
+  projects: FolderOpen,
+  skills: Code,
+  achievements: Trophy,
+  certifications: Award,
+};
 
 const PREDEFINED_CATEGORIES: SkillCategoryType[] = [
   { id: 'frontend', name: 'Frontend', items: [] },
@@ -41,290 +55,6 @@ const PREDEFINED_CATEGORIES: SkillCategoryType[] = [
   { id: 'languages', name: 'Languages', items: [] },
   { id: 'tools', name: 'Tools', items: [] }
 ];
-
-const SkillCategory = ({ 
-  category, 
-  onUpdate, 
-  onRemove,
-  onAddSkill,
-  onRemoveSkill 
-}: SkillCategoryProps) => {
-  const [newSkill, setNewSkill] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [categoryName, setCategoryName] = useState(category.name);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditingName && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isEditingName]);
-
-  const handleAdd = () => {
-    if (newSkill.trim()) {
-      onAddSkill(category.id, newSkill);
-      setNewSkill('');
-    }
-  };
-
-  const handleUpdateName = () => {
-    if (categoryName.trim()) {
-      onUpdate(category.id, { name: categoryName });
-    } else {
-      setCategoryName(category.name);
-    }
-    setIsEditingName(false);
-  };
-
-  return (
-    <div className="mb-6 p-4 border rounded-lg bg-card">
-      <div className="flex items-center justify-between mb-3">
-        {isEditingName ? (
-          <div className="flex items-center gap-2">
-            <Input
-              ref={inputRef}
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              onBlur={handleUpdateName}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleUpdateName();
-                if (e.key === 'Escape') {
-                  setCategoryName(category.name);
-                  setIsEditingName(false);
-                }
-              }}
-              className="h-8 w-48"
-            />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-foreground">{category.name}</h3>
-            <button 
-              onClick={() => {
-                setCategoryName(category.name);
-                setIsEditingName(true);
-              }}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              type="button"
-              aria-label="Edit category name"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => onRemove(category.id)}
-          aria-label={`Remove ${category.name} category`}
-        >
-          <Trash2 className="w-3.5 h-3.5 mr-1" />
-          Remove
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-3 min-h-8">
-        {category.items.length > 0 ? (
-          category.items.map((skill, index) => (
-            <Badge 
-              key={`${category.id}-${index}`} 
-              variant="secondary" 
-              className="flex items-center gap-1.5 px-2.5 py-1 text-foreground/90 bg-muted hover:bg-muted/80"
-            >
-              {skill}
-              <button 
-                onClick={() => onRemoveSkill(category.id, index)}
-                className="text-muted-foreground hover:text-destructive transition-colors rounded-full p-0.5 -mr-1.5"
-                type="button"
-                aria-label={`Remove ${skill} from ${category.name}`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))
-        ) : (
-          <p className="text-sm text-muted-foreground italic">
-            No skills added yet. Start typing below to add skills.
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-2 mt-3">
-        <Input
-          placeholder={`Add ${category.name} skill...`}
-          value={newSkill}
-          onChange={(e) => setNewSkill(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleAdd();
-            } else if (e.key === 'Escape') {
-              setNewSkill('');
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="flex-1"
-          aria-label={`Add skill to ${category.name}`}
-        />
-        <Button 
-          type="button" 
-          onClick={handleAdd}
-          disabled={!newSkill.trim()}
-          variant="outline"
-          className="shrink-0"
-        >
-          Add
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const SkillPreview = ({ categories }: { categories: SkillCategoryType[] }) => (
-  <div className="space-y-3">
-    {categories.map((category) => (
-      <div key={category.id} className="mb-3">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <h4 className="text-sm font-semibold text-foreground leading-7">
-            {category.name}:
-          </h4>
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {category.items.length > 0 ? (
-              category.items.map((skill, index) => (
-                <span 
-                  key={`${category.id}-${index}`}
-                  className="text-sm font-normal text-foreground/90"
-                >
-                  {skill}
-                  {index < category.items.length - 1 ? ',' : ''}
-                </span>
-              ))
-            ) : (
-              <span className="text-sm text-muted-foreground italic">
-                No skills added
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const sectionIcons = {
-  personal: User,
-  summary: FileText,
-  skills: Code,
-  experience: Briefcase,
-  education: GraduationCap,
-  projects: FolderOpen,
-  achievements: Trophy,
-  certifications: Award,
-};
-
-interface ResumeSectionProps {
-  sectionId: string;
-  index: number;
-  resumeData: any;
-  updateResumeData: (section: string, data: any) => void;
-  isActive?: boolean;
-  onActivate?: () => void;
-  addCustomSection?: (section: any) => void;
-  updateCustomSection?: (index: number, data: any) => void;
-  removeCustomSection?: (id: string) => void;
-}
-
-const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (section: any) => void }) => {
-  const updateItem = (itemId: string, field: string, value: string) => {
-    onUpdate({
-      ...section,
-      items: section.items.map(item => 
-        item.id === itemId ? { ...item, [field]: value } : item
-      )
-    });
-  };
-
-  const addItem = () => {
-    onUpdate({
-      ...section,
-      items: [
-        ...section.items,
-        { id: Date.now().toString(), title: '', description: '' }
-      ]
-    });
-  };
-
-  const removeItem = (itemId: string) => {
-    if (section.items.length > 1) {
-      onUpdate({
-        ...section,
-        items: section.items.filter(item => item.id !== itemId)
-      });
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">{section.title}</h3>
-      </div>
-      
-      {section.description && (
-        <p className="text-sm text-muted-foreground">{section.description}</p>
-      )}
-
-      <div className="space-y-4">
-        {section.items.map((item: any) => (
-          <div key={item.id} className="space-y-2 border rounded-lg p-4 relative">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Title</Label>
-                <Input
-                  value={item.title}
-                  onChange={(e) => updateItem(item.id, 'title', e.target.value)}
-                  placeholder="Item title"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Description</Label>
-                <Textarea
-                  value={item.description || ''}
-                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                  placeholder="Item description"
-                  rows={2}
-                />
-              </div>
-            </div>
-            
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-6 w-6 p-0"
-              onClick={() => removeItem(item.id)}
-              disabled={section.items.length <= 1}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={addItem}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 const ResumeSection = ({
   sectionId,
@@ -342,15 +72,15 @@ const ResumeSection = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [skillsData, setSkillsData] = useState<SkillCategoryType[]>([]);
   const [localCustomSections, setLocalCustomSections] = useState<any[]>(resumeData?.customSections || []);
-  
+
   // Update local state when resumeData changes
   useEffect(() => {
     setLocalCustomSections(resumeData?.customSections || []);
   }, [resumeData?.customSections]);
-  
+
   // Get the appropriate icon for the section
   const Icon = sectionIcons[sectionId as keyof typeof sectionIcons] || FileText;
-  
+
   // If this is a custom section, ensure we have the section data
   if (sectionId.startsWith('custom-') && !customSection) {
     return (
@@ -370,11 +100,11 @@ const ResumeSection = ({
     if (resumeData.skills && typeof resumeData.skills === 'object' && !Array.isArray(resumeData.skills)) {
       // New structure: { languages: [], frameworks: [], tools: [] }
       const allSkills = [
-        ...resumeData.skills.languages.map(skill => ({ id: 'languages', name: 'Languages', items: resumeData.skills.languages })),
-        ...resumeData.skills.frameworks.map(skill => ({ id: 'frameworks', name: 'Frameworks', items: resumeData.skills.frameworks })),
-        ...resumeData.skills.tools.map(skill => ({ id: 'tools', name: 'Tools', items: resumeData.skills.tools }))
+        ...resumeData.skills.languages.map((skill: any) => ({ id: 'languages', name: 'Languages', items: resumeData.skills.languages })),
+        ...resumeData.skills.frameworks.map((skill: any) => ({ id: 'frameworks', name: 'Frameworks', items: resumeData.skills.frameworks })),
+        ...resumeData.skills.tools.map((skill: any) => ({ id: 'tools', name: 'Tools', items: resumeData.skills.tools }))
       ];
-      
+
       if (allSkills.length > 0) {
         setSkillsData(allSkills);
       } else {
@@ -408,122 +138,10 @@ const ResumeSection = ({
     });
   };
 
-  const addExperience = () => {
-    const newExp = {
-      id: Date.now().toString(),
-      title: "",
-      company: "",
-      location: "",
-      startDate: "",
-      endDate: "",
-      bullets: [""]
-    };
-    updateResumeData('experience', [...(resumeData.experience || []), newExp]);
-  };
-
-  const updateExperience = (id: string, field: string, value: any) => {
-    const updated = (resumeData.experience || []).map((exp: any) =>
-      exp.id === id ? { ...exp, [field]: value } : exp
-    );
-    updateResumeData('experience', updated);
-  };
-
-  const removeExperience = (id: string) => {
-    updateResumeData('experience', (resumeData.experience || []).filter((exp: any) => exp.id !== id));
-  };
-
-  const addProject = () => {
-    const newProject = {
-      id: Date.now().toString(),
-      name: "",
-      tech: "",
-      startDate: "",
-      endDate: "",
-      bullets: [""]
-    };
-    updateResumeData('projects', [...(resumeData.projects || []), newProject]);
-  };
-
-  const updateProject = (id: string, field: string, value: any) => {
-    const updated = (resumeData.projects || []).map((proj: any) =>
-      proj.id === id ? { ...proj, [field]: value } : proj
-    );
-    updateResumeData('projects', updated);
-  };
-
-  const removeProject = (id: string) => {
-    updateResumeData('projects', (resumeData.projects || []).filter((proj: any) => proj.id !== id));
-  };
-
-  const addEducation = () => {
-    const newEdu = {
-      id: Date.now().toString(),
-      degree: "",
-      school: "",
-      startDate: "",
-      endDate: "",
-      gpa: ""
-    };
-    updateResumeData('education', [...(resumeData.education || []), newEdu]);
-  };
-
-  const updateEducation = (id: string, field: string, value: string) => {
-    const updated = (resumeData.education || []).map((edu: any) =>
-      edu.id === id ? { ...edu, [field]: value } : edu
-    );
-    updateResumeData('education', updated);
-  };
-
-  const removeEducation = (id: string) => {
-    updateResumeData('education', (resumeData.education || []).filter((edu: any) => edu.id !== id));
-  };
-
-  const addAchievement = () => {
-    const newAchievement = {
-      id: Date.now().toString(),
-      title: "",
-      date: "",
-    };
-    updateResumeData('achievements', [...(resumeData.achievements || []), newAchievement]);
-  };
-
-  const updateAchievement = (id: string, field: string, value: string) => {
-    const updated = (resumeData.achievements || []).map((achievement: any) =>
-      achievement.id === id ? { ...achievement, [field]: value } : achievement
-    );
-    updateResumeData('achievements', updated);
-  };
-
-  const removeAchievement = (id: string) => {
-    updateResumeData('achievements', (resumeData.achievements || []).filter((achievement: any) => achievement.id !== id));
-  };
-
-  const addCertification = () => {
-    const newCert = {
-      id: Date.now().toString(),
-      name: "",
-      issuer: "",
-      date: "",
-      link: ""
-    };
-    updateResumeData('certifications', [...(resumeData.certifications || []), newCert]);
-  };
-
-  const updateCertification = (id: string, field: string, value: string) => {
-    const updated = (resumeData.certifications || []).map((cert: any) =>
-      cert.id === id ? { ...cert, [field]: value } : cert
-    );
-    updateResumeData('certifications', updated);
-  };
-
-  const removeCertification = (id: string) => {
-    updateResumeData('certifications', (resumeData.certifications || []).filter((cert: any) => cert.id !== id));
-  };
-
   const handleAddSkill = (categoryId: string, skill: string) => {
-    const newSkills = skillsData.map(cat => 
-      cat.id === categoryId 
-        ? { ...cat, items: [...cat.items, skill] } 
+    const newSkills = skillsData.map(cat =>
+      cat.id === categoryId
+        ? { ...cat, items: [...cat.items, skill] }
         : cat
     );
     setSkillsData(newSkills);
@@ -531,12 +149,12 @@ const ResumeSection = ({
   };
 
   const handleRemoveSkill = (categoryId: string, skillIndex: number) => {
-    const newSkills = skillsData.map(cat => 
+    const newSkills = skillsData.map(cat =>
       cat.id === categoryId
-        ? { 
-            ...cat, 
-            items: cat.items.filter((_, idx) => idx !== skillIndex) 
-          }
+        ? {
+          ...cat,
+          items: cat.items.filter((_, idx) => idx !== skillIndex)
+        }
         : cat
     );
     setSkillsData(newSkills);
@@ -544,7 +162,7 @@ const ResumeSection = ({
   };
 
   const handleUpdateCategory = (id: string, updates: { name?: string; items?: string[] }) => {
-    const newSkills = skillsData.map(cat => 
+    const newSkills = skillsData.map(cat =>
       cat.id === id ? { ...cat, ...updates } : cat
     );
     setSkillsData(newSkills);
@@ -582,7 +200,7 @@ const ResumeSection = ({
             />
           ))}
         </div>
-        
+
         <Button
           type="button"
           variant="outline"
@@ -710,454 +328,38 @@ const ResumeSection = ({
   );
 
   const renderExperience = () => (
-    <div className="space-y-6">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addExperience}
-        className="w-full"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Experience
-      </Button>
-      
-      {(resumeData.experience || []).map((exp: any, index: number) => (
-        <Card key={exp.id} className="p-4">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <h4 className="font-medium">Experience {index + 1}</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeExperience(exp.id)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor={`exp-title-${exp.id}`}>Job Title *</Label>
-                <Input
-                  id={`exp-title-${exp.id}`}
-                  placeholder="Software Engineer"
-                  value={exp.title || ''}
-                  onChange={(e) => updateExperience(exp.id, 'title', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`exp-company-${exp.id}`}>Company *</Label>
-                <Input
-                  id={`exp-company-${exp.id}`}
-                  placeholder="Tech Corp"
-                  value={exp.company || ''}
-                  onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`exp-location-${exp.id}`}>Location</Label>
-                <Input
-                  id={`exp-location-${exp.id}`}
-                  placeholder="San Francisco, CA"
-                  value={exp.location || ''}
-                  onChange={(e) => updateExperience(exp.id, 'location', e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor={`exp-start-${exp.id}`}>Start</Label>
-                  <Input
-                    id={`exp-start-${exp.id}`}
-                    placeholder="Jan 2020"
-                    value={exp.startDate || ''}
-                    onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`exp-end-${exp.id}`}>End</Label>
-                  <Input
-                    id={`exp-end-${exp.id}`}
-                    placeholder="Present"
-                    value={exp.endDate || ''}
-                    onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <Label>Key Achievements</Label>
-              <div className="space-y-2 mt-2">
-                {(exp.bullets || []).map((bullet: string, bulletIndex: number) => (
-                  <div key={bulletIndex} className="flex gap-2">
-                    <Input
-                      placeholder="Describe your achievement..."
-                      value={bullet}
-                      onChange={(e) => updateExperience(exp.id, 'bullets', [...exp.bullets.slice(0, bulletIndex), e.target.value, ...exp.bullets.slice(bulletIndex + 1)])}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => updateExperience(exp.id, 'bullets', exp.bullets.filter((_: any, i: number) => i !== bulletIndex))}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateExperience(exp.id, 'bullets', [...(exp.bullets || []), ""])}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Achievement
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
+    <ExperienceSection
+      experience={resumeData.experience}
+      updateResumeData={updateResumeData}
+    />
   );
 
   const renderEducation = () => (
-    <div className="space-y-6">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addEducation}
-        className="w-full"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Education
-      </Button>
-      
-      {(resumeData.education || []).map((edu: any, index: number) => (
-        <Card key={edu.id} className="p-4">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <h4 className="font-medium">Education {index + 1}</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeEducation(edu.id)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor={`edu-degree-${edu.id}`}>Degree *</Label>
-                <Input
-                  id={`edu-degree-${edu.id}`}
-                  placeholder="Bachelor of Science"
-                  value={edu.degree || ''}
-                  onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`edu-school-${edu.id}`}>School *</Label>
-                <Input
-                  id={`edu-school-${edu.id}`}
-                  placeholder="University Name"
-                  value={edu.school || ''}
-                  onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor={`edu-start-${edu.id}`}>Start</Label>
-                  <Input
-                    id={`edu-start-${edu.id}`}
-                    placeholder="2018"
-                    value={edu.startDate || ''}
-                    onChange={(e) => updateEducation(edu.id, 'startDate', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`edu-end-${edu.id}`}>End</Label>
-                  <Input
-                    id={`edu-end-${edu.id}`}
-                    placeholder="2022"
-                    value={edu.endDate || ''}
-                    onChange={(e) => updateEducation(edu.id, 'endDate', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor={`edu-year-${edu.id}`}>Year</Label>
-                <Input
-                  id={`edu-year-${edu.id}`}
-                  placeholder="2020"
-                  value={edu.year || ''}
-                  onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`edu-gpa-${edu.id}`}>GPA (Optional)</Label>
-                <Input
-                  id={`edu-gpa-${edu.id}`}
-                  placeholder="3.8"
-                  value={edu.gpa || ''}
-                  onChange={(e) => updateEducation(edu.id, 'gpa', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
+    <EducationSection
+      education={resumeData.education}
+      updateResumeData={updateResumeData}
+    />
   );
 
   const renderProjects = () => (
-    <div className="space-y-6">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addProject}
-        className="w-full"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Project
-      </Button>
-      
-      {(resumeData.projects || []).map((project: any, index: number) => (
-        <Card key={project.id} className="p-4">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <h4 className="font-medium">Project {index + 1}</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeProject(project.id)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor={`proj-name-${project.id}`}>Project Name *</Label>
-                <Input
-                  id={`proj-name-${project.id}`}
-                  placeholder="My Awesome Project"
-                  value={project.name || ''}
-                  onChange={(e) => updateProject(project.id, 'name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`proj-tech-${project.id}`}>Technologies</Label>
-                <Input
-                  id={`proj-tech-${project.id}`}
-                  placeholder="React, Node.js, MongoDB"
-                  value={project.tech || ''}
-                  onChange={(e) => updateProject(project.id, 'tech', e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor={`proj-start-${project.id}`}>Start</Label>
-                  <Input
-                    id={`proj-start-${project.id}`}
-                    placeholder="Jan 2023"
-                    value={project.startDate || ''}
-                    onChange={(e) => updateProject(project.id, 'startDate', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`proj-end-${project.id}`}>End</Label>
-                  <Input
-                    id={`proj-end-${project.id}`}
-                    placeholder="Mar 2023"
-                    value={project.endDate || ''}
-                    onChange={(e) => updateProject(project.id, 'endDate', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor={`proj-duration-${project.id}`}>Duration</Label>
-                <Input
-                  id={`proj-duration-${project.id}`}
-                  placeholder="3 months"
-                  value={project.duration || ''}
-                  onChange={(e) => updateProject(project.id, 'duration', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`proj-link-${project.id}`}>Link (Optional)</Label>
-                <Input
-                  id={`proj-link-${project.id}`}
-                  placeholder="https://github.com/user/project"
-                  value={project.link || ''}
-                  onChange={(e) => updateProject(project.id, 'link', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label>Project Details</Label>
-              <div className="space-y-2 mt-2">
-                {(project.bullets || []).map((bullet: string, bulletIndex: number) => (
-                  <div key={bulletIndex} className="flex gap-2">
-                    <Input
-                      placeholder="Describe project feature or achievement..."
-                      value={bullet}
-                      onChange={(e) => updateProject(project.id, 'bullets', [...project.bullets.slice(0, bulletIndex), e.target.value, ...project.bullets.slice(bulletIndex + 1)])}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => updateProject(project.id, 'bullets', project.bullets.filter((_: any, i: number) => i !== bulletIndex))}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateProject(project.id, 'bullets', [...(project.bullets || []), ""])}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Detail
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
+    <ProjectSection
+      projects={resumeData.projects}
+      updateResumeData={updateResumeData}
+    />
   );
 
   const renderAchievements = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        {(resumeData.achievements || []).map((achievement: any, index: number) => (
-          <div key={achievement.id || index} className="grid grid-cols-3 gap-2 items-center">
-            <Input
-              placeholder="Achievement title..."
-              value={typeof achievement === 'string' ? achievement : (achievement.title || '')}
-              onChange={(e) => {
-                const list = (resumeData.achievements || []).map((a: any, i: number) => {
-                  if (i !== index) return a;
-                  if (typeof a === 'string') return { id: `ach-${Date.now()}`, title: e.target.value, date: '' };
-                  return { ...a, title: e.target.value };
-                });
-                updateResumeData('achievements', list);
-              }}
-            />
-            <Input
-              placeholder="Date (e.g., 2024)"
-              value={typeof achievement === 'string' ? '' : (achievement.date || '')}
-              onChange={(e) => {
-                const list = (resumeData.achievements || []).map((a: any, i: number) => i === index ? (typeof a === 'string' ? { id: `ach-${Date.now()}`, title: a, date: e.target.value } : { ...a, date: e.target.value }) : a);
-                updateResumeData('achievements', list);
-              }}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => updateResumeData('achievements', (resumeData.achievements || []).filter((_: any, i: number) => i !== index))}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => updateResumeData('achievements', [...(resumeData.achievements || []), { id: `ach-${Date.now()}`, title: '', date: '' }])}
-          className="w-full"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Achievement
-        </Button>
-      </div>
-    </div>
+    <AchievementSection
+      achievements={resumeData.achievements}
+      updateResumeData={updateResumeData}
+    />
   );
 
   const renderCertifications = () => (
-    <div className="space-y-6">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addCertification}
-        className="w-full"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Certification
-      </Button>
-      
-      {(resumeData.certifications || []).map((cert: any, index: number) => (
-        <Card key={cert.id} className="p-4">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <h4 className="font-medium">Certification {index + 1}</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeCertification(cert.id)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor={`cert-name-${cert.id}`}>Certification Name *</Label>
-                <Input
-                  id={`cert-name-${cert.id}`}
-                  placeholder="AWS Certified Developer"
-                  value={cert.name || ''}
-                  onChange={(e) => updateCertification(cert.id, 'name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`cert-issuer-${cert.id}`}>Issuing Organization *</Label>
-                <Input
-                  id={`cert-issuer-${cert.id}`}
-                  placeholder="Amazon Web Services"
-                  value={cert.issuer || ''}
-                  onChange={(e) => updateCertification(cert.id, 'issuer', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`cert-date-${cert.id}`}>Date Obtained</Label>
-                <Input
-                  id={`cert-date-${cert.id}`}
-                  placeholder="March 2023"
-                  value={cert.date || ''}
-                  onChange={(e) => updateCertification(cert.id, 'date', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`cert-link-${cert.id}`}>Credential Link (Optional)</Label>
-                <Input
-                  id={`cert-link-${cert.id}`}
-                  placeholder="https://credential-url.com"
-                  value={cert.link || ''}
-                  onChange={(e) => updateCertification(cert.id, 'link', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
+    <CertificationSection
+      certifications={resumeData.certifications}
+      updateResumeData={updateResumeData}
+    />
   );
 
   const getSectionTitle = (id: string) => {
@@ -1182,13 +384,47 @@ const ResumeSection = ({
     return titles[id] || id.charAt(0).toUpperCase() + id.slice(1);
   };
 
+  const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
+    if (!resumeData?.customSections) return;
+
+    const sectionIndex = resumeData.customSections.findIndex((s: any) => s.id === sectionId);
+    if (sectionIndex === -1) return;
+
+    const section = resumeData.customSections[sectionIndex];
+    const updatedItems = [...(section.items || [])];
+
+    // Ensure the item exists
+    if (!updatedItems[itemIndex]) {
+      updatedItems[itemIndex] = { id: `item-${Date.now()}` };
+    }
+
+    updatedItems[itemIndex] = {
+      ...updatedItems[itemIndex],
+      [field]: value
+    };
+
+    const updatedSection = {
+      ...section,
+      items: updatedItems
+    };
+
+    // Use the context method if available, otherwise fall back to updateResumeData
+    if (updateCustomSection) {
+      updateCustomSection(sectionIndex, updatedSection);
+    } else if (updateResumeData) {
+      const updatedSections = [...resumeData.customSections];
+      updatedSections[sectionIndex] = updatedSection;
+      updateResumeData('customSections', updatedSections);
+    }
+  };
+
   const renderCustomSectionContent = () => {
     if (!customSection) return (
       <div className="p-4 text-center text-muted-foreground">
         Custom section not found. Please refresh the page or try again.
       </div>
     );
-    
+
     // Ensure items array exists
     const sectionItems = customSection.items || [];
 
@@ -1272,7 +508,7 @@ const ResumeSection = ({
                   link: '',
                   description: ''
                 };
-                
+
                 if (updateCustomSection) {
                   const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
                   if (sectionIndex !== -1) {
@@ -1388,40 +624,6 @@ const ResumeSection = ({
     );
   };
 
-  const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
-    if (!resumeData?.customSections) return;
-    
-    const sectionIndex = resumeData.customSections.findIndex((s: any) => s.id === sectionId);
-    if (sectionIndex === -1) return;
-    
-    const section = resumeData.customSections[sectionIndex];
-    const updatedItems = [...(section.items || [])];
-    
-    // Ensure the item exists
-    if (!updatedItems[itemIndex]) {
-      updatedItems[itemIndex] = { id: `item-${Date.now()}` };
-    }
-    
-    updatedItems[itemIndex] = {
-      ...updatedItems[itemIndex],
-      [field]: value
-    };
-    
-    const updatedSection = {
-      ...section,
-      items: updatedItems
-    };
-    
-    // Use the context method if available, otherwise fall back to updateResumeData
-    if (updateCustomSection) {
-      updateCustomSection(sectionIndex, updatedSection);
-    } else if (updateResumeData) {
-      const updatedSections = [...resumeData.customSections];
-      updatedSections[sectionIndex] = updatedSection;
-      updateResumeData('customSections', updatedSections);
-    }
-  };
-
   const renderSectionContent = () => {
     if (!sectionId) {
       return (
@@ -1512,6 +714,6 @@ const ResumeSection = ({
       )}
     </Draggable>
   );
-}
+};
 
 export default ResumeSection;

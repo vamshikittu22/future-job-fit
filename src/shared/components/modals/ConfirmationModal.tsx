@@ -1,10 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Separator } from "./ui/separator";
-import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Separator } from "@/shared/ui/separator";
+import { Badge } from "@/shared/ui/badge";
 import { FileCheck, FileText, Briefcase, Settings, Sparkles } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 
 interface ConfirmationModalProps {
   open: boolean;

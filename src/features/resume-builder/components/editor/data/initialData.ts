@@ -1,4 +1,4 @@
-import { ResumeData, PersonalInfo as WizardPersonalInfo } from '../types';
+import { ResumeData, PersonalInfo as WizardPersonalInfo } from '@/features/resume-builder/components/editor/types';
 
 export const initialResumeData: ResumeData = {
   personal: {

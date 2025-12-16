@@ -1,1 +1,1 @@
-export * from './resume.types';
+export * from '@/features/resume-builder/components/editor/types/resume.types';

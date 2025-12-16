@@ -1,26 +1,26 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/shared/ui/toaster";
+import { Toaster as Sonner } from "@/shared/ui/sonner";
+import { TooltipProvider } from "@/shared/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ResumeProvider } from "@/contexts/ResumeContext";
-import Home from "./pages/Home";
-import ResumeInput from "./pages/ResumeInput";
-import Results from "./pages/Results";
-import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "@/shared/providers/theme-provider";
+import { ResumeProvider } from "@/shared/contexts/ResumeContext";
+import Home from "@/features/home/pages/HomePage";
+import ResumeInput from "@/features/job-optimizer/pages/JobInputPage";
+import Results from "@/features/job-optimizer/pages/AnalysisResultPage";
+import NotFound from "@/features/home/pages/NotFoundPage";
 
 // New Wizard Routes
-import { WizardLayout } from "./pages/wizard/WizardLayout";
-import { TemplateStep } from "./pages/wizard/steps/TemplateStep";
-import { PersonalInfoStep } from "./pages/wizard/steps/PersonalInfoStep";
-import { SummaryStep } from "./pages/wizard/steps/SummaryStep";
-import { ExperienceStep } from "./pages/wizard/steps/ExperienceStep";
-import { EducationStep } from "./pages/wizard/steps/EducationStep";
-import { SkillsStep } from "./pages/wizard/steps/SkillsStep";
-import { ProjectsStep } from "./pages/wizard/steps/ProjectsStep";
-import { ReviewStep } from "./pages/wizard/steps/ReviewStep";
-import CustomSectionStep from "./pages/wizard/steps/CustomSectionStep";
+import { WizardLayout } from "@/features/resume-builder/components/layout/WizardLayout";
+import { TemplateStep } from "@/features/resume-builder/components/editor/steps/TemplateStep";
+import { PersonalInfoStep } from "@/features/resume-builder/components/editor/steps/PersonalInfoStep";
+import { SummaryStep } from "@/features/resume-builder/components/editor/steps/SummaryStep";
+import { ExperienceStep } from "@/features/resume-builder/components/editor/steps/ExperienceStep";
+import { EducationStep } from "@/features/resume-builder/components/editor/steps/EducationStep";
+import { SkillsStep } from "@/features/resume-builder/components/editor/steps/SkillsStep";
+import { ProjectsStep } from "@/features/resume-builder/components/editor/steps/ProjectsStep";
+import { ReviewStep } from "@/features/resume-builder/components/editor/steps/ReviewStep";
+import CustomSectionStep from "@/features/resume-builder/components/editor/steps/CustomSectionStep";
 
 const queryClient = new QueryClient();
 

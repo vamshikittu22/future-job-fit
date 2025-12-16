@@ -1,7 +1,7 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
 import { Download, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
-import { ResumeData } from '../types';
+import { ResumeData } from '@/features/resume-builder/components/editor/types';
 import { format } from 'date-fns';
 
 interface ResumePreviewProps {

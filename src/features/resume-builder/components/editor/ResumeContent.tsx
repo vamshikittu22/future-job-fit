@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Section } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
+import { Tabs, TabsContent } from "@/shared/ui/tabs";
+import { Section } from "@/shared/lib/types";
 import { ReactNode } from "react";
 
 interface ResumeContentProps {

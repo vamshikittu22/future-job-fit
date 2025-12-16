@@ -1,10 +1,10 @@
 import { useState, useRef, ChangeEvent } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
-import { useResume } from '@/contexts/ResumeContext';
-import { useToast } from '@/components/ui/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { useToast } from '@/shared/ui/use-toast';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 
 interface ImportResumeModalProps {
   open: boolean;

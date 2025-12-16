@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { Textarea } from "@/shared/ui/textarea";
+import { Label } from "@/shared/ui/label";
+import { Badge } from "@/shared/ui/badge";
+import { Switch } from "@/shared/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { FileText, Briefcase, Settings, Eye, Zap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
-import AppNavigation from "@/components/AppNavigation";
-import Footer from "@/components/Footer";
-import ModelSelector from "@/components/ModelSelector";
-import CustomizeAIButton from "@/components/CustomizeAIButton";
-import CustomizeAIModal from "@/components/CustomizeAIModal";
-import ConfirmationModal from "@/components/ConfirmationModal";
-import PreviewPanel from "@/components/PreviewPanel";
-import ImportExportPanel from "../components/ImportExportPanel";
+import AppNavigation from "@/shared/components/layout/AppNavigation";
+import Footer from "@/shared/components/layout/Footer";
+import ModelSelector from "@/shared/components/common/ModelSelector";
+import CustomizeAIButton from "@/shared/components/common/CustomizeAIButton";
+import CustomizeAIModal from "@/features/job-optimizer/components/CustomizeAIModal";
+import ConfirmationModal from "@/shared/components/modals/ConfirmationModal";
+import PreviewPanel from "@/features/resume-builder/components/preview/PreviewPanel";
+import ImportExportPanel from "@/shared/components/common/ImportExportPanel";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
@@ -26,7 +26,7 @@ export default function ResumeInput() {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [customInstructions, setCustomInstructions] = useState(null);
   const [showPreview, setShowPreview] = useState(true);
-  
+
   // AI Options State
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -37,7 +37,7 @@ export default function ResumeInput() {
     experience: true
   });
   const [bulletMode, setBulletMode] = useState<'expand' | 'shorten' | 'normal'>('normal');
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,7 +47,7 @@ export default function ResumeInput() {
     const savedJD = localStorage.getItem("jobDescription");
     const savedTags = localStorage.getItem("selectedTags");
     const savedTemplate = localStorage.getItem("selectedTemplate");
-    
+
     if (savedResume) setResumeText(savedResume);
     if (savedJD) setJobDescription(savedJD);
     if (savedTags) setSelectedTags(JSON.parse(savedTags));
@@ -63,7 +63,7 @@ export default function ResumeInput() {
       });
       return;
     }
-    
+
     // Show confirmation modal instead of directly navigating
     setConfirmModalOpen(true);
   };
@@ -73,12 +73,12 @@ export default function ResumeInput() {
     localStorage.setItem("resumeText", resumeText);
     localStorage.setItem("jobDescription", jobDescription);
     localStorage.setItem("selectedModel", selectedModel);
-    
+
     // Store custom instructions if available
     if (customInstructions) {
       localStorage.setItem("customInstructions", JSON.stringify(customInstructions));
     }
-    
+
     setConfirmModalOpen(false);
     navigate("/results");
   };
@@ -88,7 +88,7 @@ export default function ResumeInput() {
   const templates = ["Optimize for ATS", "Highlight Cloud Skills", "Concise & Impactful"];
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
+    setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
@@ -158,14 +158,14 @@ PREFERRED:
   return (
     <div className="min-h-screen bg-background">
       <AppNavigation />
-      <motion.div 
+      <motion.div
         className="container mx-auto px-6 py-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,15 +178,15 @@ PREFERRED:
         </motion.div>
 
         {/* Model Selection & Controls */}
-        <motion.div 
+        <motion.div
           className="flex flex-wrap justify-center items-center gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <ModelSelector 
-            value={selectedModel} 
-            onValueChange={setSelectedModel} 
+          <ModelSelector
+            value={selectedModel}
+            onValueChange={setSelectedModel}
           />
           <CustomizeAIButton onClick={() => setCustomizeModalOpen(true)} />
           <Button
@@ -293,7 +293,7 @@ PREFERRED:
         </motion.div>
 
         {/* Main Content Grid */}
-        <motion.div 
+        <motion.div
           className={`grid gap-8 max-w-7xl mx-auto ${showPreview ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -314,7 +314,7 @@ PREFERRED:
                 </p>
               </div>
             </div>
-            
+
             <Textarea
               id="resume"
               placeholder="Paste your resume here (copy from Word/PDF)&#10;&#10;Include your contact info, experience, education, and skills..."
@@ -339,7 +339,7 @@ PREFERRED:
                 </p>
               </div>
             </div>
-            
+
             <Textarea
               id="job-description"
               placeholder="Paste the target job description here&#10;&#10;Include requirements, responsibilities, and preferred qualifications..."
@@ -351,7 +351,7 @@ PREFERRED:
 
           {/* Import/Export Panel - Contextual */}
           <div className="space-y-4">
-            <ImportExportPanel 
+            <ImportExportPanel
               resumeText={resumeText}
               onResumeImport={handleResumeImport}
               hasContent={!!resumeText || !!jobDescription}
@@ -361,7 +361,7 @@ PREFERRED:
           {/* Preview Panel */}
           {showPreview && (
             <div className="lg:col-span-1">
-              <PreviewPanel 
+              <PreviewPanel
                 resumeText={resumeText}
                 jobDescription={jobDescription}
                 customInstructions={customInstructions}
@@ -371,24 +371,24 @@ PREFERRED:
         </motion.div>
 
         {/* Action Buttons */}
-        <motion.div 
+        <motion.div
           className="flex flex-wrap gap-4 justify-center mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <Button 
-            variant="hero" 
-            size="lg" 
+          <Button
+            variant="hero"
+            size="lg"
             onClick={handleGenerate}
             disabled={!resumeText.trim()}
             className="px-8 hover:shadow-accent transition-all duration-300"
           >
             Generate Resume
           </Button>
-          <Button 
-            variant="secondary" 
-            size="lg" 
+          <Button
+            variant="secondary"
+            size="lg"
             onClick={loadExample}
             className="px-8 hover:shadow-swiss transition-all duration-300"
           >
@@ -396,13 +396,13 @@ PREFERRED:
           </Button>
         </motion.div>
       </motion.div>
-      
+
       <CustomizeAIModal
         open={customizeModalOpen}
         onOpenChange={setCustomizeModalOpen}
         onSave={setCustomInstructions}
       />
-      
+
       <ConfirmationModal
         open={confirmModalOpen}
         onOpenChange={setConfirmModalOpen}
@@ -412,7 +412,7 @@ PREFERRED:
         customInstructions={customInstructions}
         selectedModel={selectedModel}
       />
-      
+
       <Footer />
     </div>
   );

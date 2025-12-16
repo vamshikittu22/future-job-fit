@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Textarea } from '@/shared/ui/textarea';
 import { X, Plus, Trash2, GraduationCap } from 'lucide-react';
-import { Education } from '../types';
+import { Education } from '@/features/resume-builder/components/editor/types';
 
 interface EducationFormProps {
   education: Education[];

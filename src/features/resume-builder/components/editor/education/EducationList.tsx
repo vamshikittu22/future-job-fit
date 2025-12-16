@@ -1,6 +1,6 @@
 import { GraduationCap, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ResumeData } from "@/lib/initialData";
+import { Button } from "@/shared/ui/button";
+import { ResumeData } from "@/shared/lib/initialData";
 
 type Education = ResumeData['education'][0];
 

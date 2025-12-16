@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { TEMPLATE_REGISTRY, TemplateMeta } from '@/templates/registry';
+import { TEMPLATE_REGISTRY, TemplateMeta } from '@/shared/templates/registry';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TemplateChooserProps {

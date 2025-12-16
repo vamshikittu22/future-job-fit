@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Badge } from '@/shared/ui/badge';
+import { Card } from '@/shared/ui/card';
 import { Loader2, Check } from 'lucide-react';
-import { useResumeAI, SummaryVersion } from '@/hooks/useResumeAI';
+import { useResumeAI, SummaryVersion } from '@/shared/hooks/useResumeAI';
 
 interface SummaryEnhanceModalProps {
   open: boolean;

@@ -1,4 +1,4 @@
-import { CustomSection } from '@/types/resume';
+import { CustomSection } from '@/shared/types/resume';
 
 interface CustomSectionsPreviewProps {
   customSections: CustomSection[];

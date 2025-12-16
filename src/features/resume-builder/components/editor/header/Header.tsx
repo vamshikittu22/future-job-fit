@@ -1,8 +1,8 @@
 import { RotateCcw, RotateCw, Save, Moon, Sun, Eye, EyeOff, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { HeaderProps, HeaderButtonProps } from './Header.types';
+import { Button } from '@/shared/ui/button';
+import { Separator } from '@/shared/ui/separator';
+import { Progress } from '@/shared/ui/progress';
+import { HeaderProps, HeaderButtonProps } from '@/features/resume-builder/components/editor/header/Header.types';
 
 const HeaderButton = ({
   icon,

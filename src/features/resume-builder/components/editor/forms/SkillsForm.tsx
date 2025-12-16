@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { X, Plus, Trash2, Star, StarOff, Eye, EyeOff } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Skill, SkillCategory } from '../types';
+import { Switch } from '@/shared/ui/switch';
+import { Skill, SkillCategory } from '@/features/resume-builder/components/editor/types';
 
 interface SkillsFormProps {
   skills: Skill[];

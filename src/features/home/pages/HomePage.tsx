@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
 import { CheckCircle, Target, Zap, FileText, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import Footer from "@/components/Footer";
-import AppNavigation from "@/components/AppNavigation";
+import Footer from "@/shared/components/layout/Footer";
+import AppNavigation from "@/shared/components/layout/AppNavigation";
 
 export default function Home() {
   const [showJDModal, setShowJDModal] = useState(false);

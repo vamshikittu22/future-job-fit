@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { Separator } from "@/shared/ui/separator";
+import { Progress } from "@/shared/ui/progress";
 import { ArrowLeft, Download, Copy, RefreshCw, Target, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import AppNavigation from "@/components/AppNavigation";
-import Footer from "@/components/Footer";
-import { resumeAI } from "@/services/resumeAI";
+import LoadingSpinner from "@/shared/components/common/LoadingSpinner";
+import AppNavigation from "@/shared/components/layout/AppNavigation";
+import Footer from "@/shared/components/layout/Footer";
+import { resumeAI } from "@/shared/api/resumeAI";
 
 interface EvaluationResult {
   atsScore: number;
@@ -119,14 +119,14 @@ export default function Results() {
   return (
     <div className="min-h-screen bg-background">
       <AppNavigation />
-      <motion.div 
+      <motion.div
         className="container mx-auto px-6 py-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -149,10 +149,9 @@ export default function Results() {
             >
               <Card className="p-6 shadow-swiss bg-gradient-card">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    evaluation.atsScore >= 80 ? 'bg-green-100 text-green-600' :
-                    evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${evaluation.atsScore >= 80 ? 'bg-green-100 text-green-600' :
+                      evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                    }`}>
                     <Target className="w-5 h-5" />
                   </div>
                   <div>
@@ -163,7 +162,7 @@ export default function Results() {
                 <Progress value={evaluation.atsScore} className="mb-2" />
                 <p className="text-xs text-muted-foreground">
                   {evaluation.atsScore >= 80 ? "Excellent compatibility" :
-                   evaluation.atsScore >= 60 ? "Good, needs improvement" : "Requires optimization"}
+                    evaluation.atsScore >= 60 ? "Good, needs improvement" : "Requires optimization"}
                 </p>
               </Card>
             </motion.div>
@@ -300,10 +299,10 @@ export default function Results() {
                     </div>
                     <h2 className="text-xl font-semibold">Optimized Resume</h2>
                   </div>
-                  
+
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard(evaluation.rewrittenResume)}
                       className="hover:shadow-swiss transition-all duration-300"
@@ -311,8 +310,8 @@ export default function Results() {
                       <Copy className="w-4 h-4 mr-2" />
                       Copy
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => downloadAsText(evaluation.rewrittenResume, "optimized-resume.txt")}
                       className="hover:shadow-swiss transition-all duration-300"
@@ -323,7 +322,7 @@ export default function Results() {
                   </div>
                 </div>
 
-                <motion.div 
+                <motion.div
                   className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -339,7 +338,7 @@ export default function Results() {
 
           {/* Additional Insights */}
           {(evaluation.improvements || evaluation.nextSteps) && (
-            <motion.div 
+            <motion.div
               className="grid md:grid-cols-2 gap-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -385,7 +384,7 @@ export default function Results() {
         </div>
 
         {/* Action Buttons */}
-        <motion.div 
+        <motion.div
           className="flex justify-center mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Card } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import { Label } from "@/shared/ui/label";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Palette, Type, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Template {

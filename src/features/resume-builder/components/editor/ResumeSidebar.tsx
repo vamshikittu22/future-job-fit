@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FileText, Share2 } from "lucide-react";
-import { Section } from "@/lib/types";
+import { Section } from "@/shared/lib/types";
 
 interface ResumeSidebarProps {
   sections: Section[];

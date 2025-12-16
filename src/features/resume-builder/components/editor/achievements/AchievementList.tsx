@@ -1,6 +1,6 @@
 import { Award, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ResumeData } from "@/lib/initialData";
+import { Button } from "@/shared/ui/button";
+import { ResumeData } from "@/shared/lib/initialData";
 
 type Achievement = ResumeData['achievements'][0];
 

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ATSScoreForm } from '../forms/ATSScoreForm';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
+import { ATSScoreForm } from '@/features/resume-builder/components/editor/forms/ATSScoreForm';
 
 export interface ATSSectionProps {
   atsScore?: {

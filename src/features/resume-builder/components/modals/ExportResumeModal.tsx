@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/shared/ui/dialog';
 import { Download, X, FileText, FileCode, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { ResumeData } from '../lib/initialData';
+import { useToast } from '@/shared/hooks/use-toast';
+import { ResumeData } from '@/shared/lib/initialData';
 import { saveAs } from 'file-saver';
-import { generatePdf } from '../lib/export/pdf';
-import { generateDocx } from '../lib/export/docx';
+import { generatePdf, generatePdfFromElement } from '@/shared/lib/export/pdf';
+import { generateDocx } from '@/shared/lib/export/docx';
 
 type ExportResumeModalProps = {
   open: boolean;
@@ -16,7 +16,7 @@ type ExportResumeModalProps = {
   children?: React.ReactNode;
 };
 
-const ExportResumeModal = ({ 
+const ExportResumeModal = ({
   open,
   onOpenChange,
   resumeData,
@@ -37,10 +37,16 @@ const ExportResumeModal = ({
     try {
       let file: Blob;
       let filename = `resume_${new Date().toISOString().split('T')[0]}`;
-      
+
       switch (format) {
         case 'pdf':
-          file = await generatePdf(resumeData, template);
+          const resumeElement = document.querySelector('.resume-preview') as HTMLElement;
+          if (resumeElement) {
+            file = await generatePdfFromElement(resumeElement);
+          } else {
+            console.warn('Resume preview element not found, falling back to basic PDF generation');
+            file = await generatePdf(resumeData, template);
+          }
           filename += '.pdf';
           break;
         case 'docx':
@@ -90,9 +96,9 @@ const ExportResumeModal = ({
                 Download your resume in your preferred format
               </DialogDescription>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => onOpenChange(false)}
               className="h-8 w-8 p-0"
               disabled={isExporting}
@@ -105,7 +111,7 @@ const ExportResumeModal = ({
         <div className="grid gap-4 py-4">
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
-              <Button 
+              <Button
                 variant="outline"
                 className="h-16 justify-start px-4 py-3 text-left"
                 onClick={() => handleExport('pdf')}
@@ -122,7 +128,7 @@ const ExportResumeModal = ({
                 </div>
               </Button>
 
-              <Button 
+              <Button
                 variant="outline"
                 className="h-16 justify-start px-4 py-3 text-left"
                 onClick={() => handleExport('docx')}
@@ -139,7 +145,7 @@ const ExportResumeModal = ({
                 </div>
               </Button>
 
-              <Button 
+              <Button
                 variant="outline"
                 className="h-16 justify-start px-4 py-3 text-left"
                 onClick={() => handleExport('json')}
@@ -165,11 +171,10 @@ const ExportResumeModal = ({
             )}
 
             {exportStatus.type && (
-              <div className={`flex items-start gap-2 rounded-md p-3 text-sm ${
-                exportStatus.type === 'success' 
-                  ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                  : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-              }`}>
+              <div className={`flex items-start gap-2 rounded-md p-3 text-sm ${exportStatus.type === 'success'
+                ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                }`}>
                 {exportStatus.type === 'success' ? (
                   <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 ) : (

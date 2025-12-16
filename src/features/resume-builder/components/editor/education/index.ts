@@ -1,3 +1,3 @@
-export { default as EducationList } from './EducationList';
-export { default as EducationForm } from './EducationForm';
-export * from './EducationForm';
+export { default as EducationList } from '@/features/resume-builder/components/editor/education/EducationList';
+export { default as EducationForm } from '@/features/resume-builder/components/editor/education/EducationForm';
+export * from '@/features/resume-builder/components/editor/education/EducationForm';

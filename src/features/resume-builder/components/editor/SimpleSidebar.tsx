@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { FileText, Briefcase, GraduationCap, Code2, FolderOpen, Award, Sparkles } from 'lucide-react';
 
 interface SimpleSidebarProps {

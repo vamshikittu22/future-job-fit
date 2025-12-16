@@ -1,7 +1,7 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { PersonalInfo } from '../types';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Textarea } from '@/shared/ui/textarea';
+import { PersonalInfo } from '@/features/resume-builder/components/editor/types';
 
 interface PersonalInfoFormProps {
   data: PersonalInfo;

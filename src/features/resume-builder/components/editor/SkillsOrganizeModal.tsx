@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
 import { Loader2, Check, X, AlertTriangle } from 'lucide-react';
-import { useResumeAI } from '@/hooks/useResumeAI';
-import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useResumeAI } from '@/shared/hooks/useResumeAI';
+import { useToast } from '@/shared/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 
 interface SkillsOrganizeModalProps {
   open: boolean;

@@ -1,11 +1,11 @@
 import React, { useEffect, useCallback, memo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useResume } from '@/contexts/ResumeContext';
-import { useWizard } from '@/contexts/WizardContext';
-import { useTheme } from '@/hooks/useTheme';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/shared/ui/button';
+import { Separator } from '@/shared/ui/separator';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { useWizard } from '@/shared/contexts/WizardContext';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { useMediaQuery } from '@/shared/hooks/use-media-query';
+import { useToast } from '@/shared/hooks/use-toast';
 import {
   Undo2,
   Redo2,
@@ -19,13 +19,13 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/ui/tooltip';
 
 interface QuickActionsBarProps {
   onLoadSample: () => void;

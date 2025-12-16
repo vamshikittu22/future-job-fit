@@ -1,15 +1,15 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ArrowLeft, Save, Eye, Download, Upload, Sparkles, Target, RotateCcw, RotateCw, Trash2, History, MoreHorizontal } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "@/shared/components/common/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 
 // Error boundary wrapper for Navigation
 class NavigationErrorBoundary extends React.Component<

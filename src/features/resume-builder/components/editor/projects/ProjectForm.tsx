@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { AIEnhanceButton } from '../AIEnhanceButton';
-import { ProjectImpactModal } from '../ProjectImpactModal';
-import { ResumeData } from "@/lib/initialData";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+import { Button } from "@/shared/ui/button";
+import { AIEnhanceButton } from '@/features/resume-builder/components/editor/AIEnhanceButton';
+import { ProjectImpactModal } from '@/features/resume-builder/components/editor/ProjectImpactModal';
+import { ResumeData } from "@/shared/lib/initialData";
 
 type Project = ResumeData['projects'][0];
 

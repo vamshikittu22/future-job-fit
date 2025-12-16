@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { 
-  User, 
-  FileText, 
-  Code, 
-  Briefcase, 
-  GraduationCap, 
-  FolderOpen, 
-  Award, 
+Briefcase,
+  GraduationCap,
+  FolderOpen,
+  Award,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -24,9 +17,9 @@ import {
   Trash2,
   X
 } from 'lucide-react';
-import { useATS } from '@/hooks/use-ats';
-import { ResumeData } from '@/lib/initialData';
-import { SECTION_NAMES, SECTION_ORDER, type SectionKey } from '@/constants/sectionNames';
+import { useATS } from '@/shared/hooks/use-ats';
+import { ResumeData } from '@/shared/lib/initialData';
+import { SECTION_NAMES, SECTION_ORDER, type SectionKey } from '@/shared/constants/sectionNames';
 
 interface CustomSectionData {
   id: string;
@@ -46,7 +39,7 @@ interface ResumeBuilderSidebarProps {
   activeSection: string;
   onSectionChange: (sectionId: string) => void;
   sectionOrder: string[];
-  resumeData: any; 
+  resumeData: any;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onToggleTemplateCarousel?: () => void;
@@ -71,7 +64,7 @@ const sectionIcons = {
   education: GraduationCap,
   projects: FolderOpen,
   achievements: Award,
-  certifications: Award, 
+  certifications: Award,
 };
 
 // The main sidebar component
@@ -99,7 +92,7 @@ export default function ResumeBuilderSidebar({
     if (onExpandedChange) onExpandedChange(val);
     setExpandedUncontrolled(val);
   };
-  
+
   // Use the new ATS hook with live resume data
   const { atsScore, analysis } = useATS(resumeData);
 
@@ -118,7 +111,7 @@ export default function ResumeBuilderSidebar({
         let hasSkills = false;
         if (Array.isArray(skills)) {
           // New format: Array of categories with items
-          hasSkills = skills.some(category => 
+          hasSkills = skills.some(category =>
             category?.items && Array.isArray(category.items) && category.items.length > 0
           );
         } else if (typeof skills === 'object' && skills !== null) {
@@ -157,7 +150,7 @@ export default function ResumeBuilderSidebar({
   const handleAddCustomSection = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const newSection: CustomSectionData = {
       id: `custom-${Date.now()}`,
       title: 'Custom Section',
@@ -172,13 +165,13 @@ export default function ResumeBuilderSidebar({
         }
       ]
     };
-    
+
     // Call the parent's onAddCustomSection with the new section
     onAddCustomSection?.(newSection);
-    
+
     // Set the new section as active
     onSectionChange(newSection.id);
-    
+
     // Ensure the resume section is expanded when adding a new section
     if (onExpandedChange) {
       onExpandedChange('resume');
@@ -192,7 +185,7 @@ export default function ResumeBuilderSidebar({
     if (section && window.confirm(`Are you sure you want to delete the "${section.title}" section?`)) {
       // Use the provided callback to remove the section
       onRemoveCustomSection?.(id);
-      
+
       // If the removed section was active, switch to the first available section
       if (activeSection === id) {
         onSectionChange(sectionOrder[0]);
@@ -201,9 +194,8 @@ export default function ResumeBuilderSidebar({
   };
 
   return (
-    <aside className={`fixed top-16 left-0 bottom-0 w-80 bg-background border-r flex flex-col transition-all duration-300 ${
-      isCollapsed ? '-translate-x-full' : 'translate-x-0'
-    }`}>
+    <aside className={`fixed top-16 left-0 bottom-0 w-80 bg-background border-r flex flex-col transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'
+      }`}>
       {/* Sidebar Header - Resume Builder Title */}
       <div className="p-4 border-b bg-primary/5">
         <div className="flex items-center gap-3">
@@ -221,7 +213,7 @@ export default function ResumeBuilderSidebar({
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* --- Resume Sections --- */}
         <div className="border-b">
-          <div 
+          <div
             className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={() => !isCollapsed && handleSectionToggle('resume')}
           >
@@ -245,30 +237,26 @@ export default function ResumeBuilderSidebar({
                   return (
                     <div
                       key={sectionId}
-                      className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${
-                        activeSection === sectionId ? 'bg-primary/10' : ''
-                      }`}
+                      className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${activeSection === sectionId ? 'bg-primary/10' : ''
+                        }`}
                       onClick={() => onSectionChange(sectionId)}
                     >
                       {Icon ? (
-                        <Icon className={`h-5 w-5 ${
-                          activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'
-                        }`} />
+                        <Icon className={`h-5 w-5 ${activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'
+                          }`} />
                       ) : (
-                        <FileText className={`h-5 w-5 ${
-                          activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'
-                        }`} />
+                        <FileText className={`h-5 w-5 ${activeSection === sectionId ? 'text-primary' : 'text-muted-foreground'
+                          }`} />
                       )}
-                      <span className={`flex-1 text-sm ${
-                        activeSection === sectionId ? 'text-primary font-medium' : ''
-                      }`}>
+                      <span className={`flex-1 text-sm ${activeSection === sectionId ? 'text-primary font-medium' : ''
+                        }`}>
                         {SECTION_NAMES[sectionId as SectionKey] || sectionId}
                       </span>
                       <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
                     </div>
                   );
                 })}
-              
+
               {/* Custom sections */}
               <div className="space-y-1">
                 {Array.isArray(customSections) && customSections.length > 0 && (
@@ -281,17 +269,15 @@ export default function ResumeBuilderSidebar({
                         return (
                           <div
                             key={section.id}
-                            className={`group flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${
-                              activeSection === section.id ? 'bg-primary/10' : ''
-                            }`}
+                            className={`group flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-muted/80 ${activeSection === section.id ? 'bg-primary/10' : ''
+                              }`}
                             onClick={() => onSectionChange(section.id)}
                           >
                             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                               <Plus className="w-3 h-3 text-primary" />
                             </div>
-                            <span className={`flex-1 text-sm truncate ${
-                              activeSection === section.id ? 'text-primary font-medium' : ''
-                            }`}>
+                            <span className={`flex-1 text-sm truncate ${activeSection === section.id ? 'text-primary font-medium' : ''
+                              }`}>
                               {section.title || 'Custom Section'}
                             </span>
                             <div className="flex items-center gap-2">
@@ -333,7 +319,7 @@ export default function ResumeBuilderSidebar({
 
         {/* --- ATS Score Section (Live Data) --- */}
         <div className="border-b">
-          <div 
+          <div
             className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={() => !isCollapsed && handleSectionToggle('ats')}
           >
@@ -406,7 +392,7 @@ export default function ResumeBuilderSidebar({
 
         {/* --- Templates Section --- */}
         <div className="border-b">
-          <div 
+          <div
             className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={() => !isCollapsed && handleSectionToggle('templates')}
           >
@@ -423,10 +409,10 @@ export default function ResumeBuilderSidebar({
             <div className="p-4 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 {['modern', 'classic', 'creative', 'minimal'].map((template) => (
-                  <Button 
+                  <Button
                     key={template}
                     variant={selectedTemplate === template ? 'default' : 'outline'}
-                    size="sm" 
+                    size="sm"
                     className="h-16 flex flex-col gap-1 capitalize"
                     onClick={() => onSelectTemplate?.(template)}
                   >

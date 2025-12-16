@@ -1,4 +1,4 @@
-import { Section } from '../types';
+import { Section } from '@/features/resume-builder/components/editor/types';
 
 export interface SidebarProps {
   sections: Section[];

@@ -1,6 +1,6 @@
 import { Briefcase, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { ResumeData } from "@/lib/initialData";
+import { Button } from "@/shared/ui/button";
+import type { ResumeData } from "@/shared/lib/initialData";
 
 type Experience = ResumeData['experience'][number];
 
