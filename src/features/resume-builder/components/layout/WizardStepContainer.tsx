@@ -7,6 +7,9 @@ import { ChevronLeft, ChevronRight, SkipForward, Save, AlertCircle } from 'lucid
 import { cn } from '@/shared/lib/utils';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
+import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
+import { useSectionAnalysis } from '@/shared/hooks/useSectionAnalysis';
+import { useResume } from '@/shared/contexts/ResumeContext';
 
 interface WizardStepContainerProps {
   children: React.ReactNode;
@@ -34,6 +37,27 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
     wizardState,
     saveCurrentProgress,
   } = useWizard();
+  const { resumeData } = useResume();
+
+  // Determine if we should show AI analysis for this step
+  const analysisEnabledSteps = ['summary', 'experience', 'projects', 'achievements', 'education', 'skills'];
+  const showAnalysis = analysisEnabledSteps.includes(currentStep.id) || currentStep.id.startsWith('custom:');
+
+  // Get data for the current section
+  const getSectionData = () => {
+    switch (currentStep.id) {
+      case 'summary': return resumeData.summary;
+      case 'experience': return resumeData.experience;
+      case 'projects': return resumeData.projects;
+      case 'achievements': return resumeData.achievements;
+      case 'education': return resumeData.education;
+      case 'skills': return resumeData.skills;
+      default: return null;
+    }
+  };
+
+  const sectionData = getSectionData();
+  const { analysis, isAnalyzing, triggerAnalysis } = useSectionAnalysis(currentStep.id, sectionData);
   const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -154,22 +178,22 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
         <div ref={errorRef} className="px-6 pt-4 flex-shrink-0 bg-background">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="font-medium">Please fix the following errors:</div>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
-                  {validationErrors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="font-medium">Please fix the following errors:</div>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
           </Alert>
         </div>
       )}
 
       {/* Content Area - Scrollable */}
-      <div 
+      <div
         ref={contentRef}
         className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 bg-background"
       >
@@ -177,8 +201,26 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
+          className="flex gap-6 h-full"
         >
-          {children || lastChildren || <div className="text-muted-foreground text-center py-8">Loading section...</div>}
+          {/* Main Form Content */}
+          <div className={cn("flex-1 transition-all duration-300", showAnalysis && analysis && !isMobile ? "max-w-[70%]" : "max-w-full")}>
+            {children || lastChildren || <div className="text-muted-foreground text-center py-8">Loading section...</div>}
+          </div>
+
+          {/* AI Analysis Side Panel (Desktop) */}
+          {showAnalysis && !isMobile && (
+            <div className="w-[30%] min-w-[300px] shrink-0 sticky top-0 self-start animate-in slide-in-from-right-10 fade-in duration-500">
+              <SectionAIAnalysis
+                score={analysis?.score || 0}
+                strengths={analysis?.strengths || []}
+                weaknesses={analysis?.weaknesses || []}
+                suggestions={analysis?.suggestions || []}
+                isAnalyzing={isAnalyzing}
+                onRefresh={triggerAnalysis}
+              />
+            </div>
+          )}
         </motion.div>
       </div>
 

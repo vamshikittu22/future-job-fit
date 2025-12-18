@@ -28,7 +28,7 @@ const WizardLayoutContent: React.FC = () => {
   const [isSampleDataModalOpen, setIsSampleDataModalOpen] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [lastStepId, setLastStepId] = useState<string|undefined>(currentStep?.id);
+  const [lastStepId, setLastStepId] = useState<string | undefined>(currentStep?.id);
 
   useEffect(() => {
     if (currentStep?.id) {
@@ -115,9 +115,9 @@ const WizardLayoutContent: React.FC = () => {
                       <Menu className="h-5 w-5" />
                     </Button>
                   )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="hidden md:flex items-center gap-2 font-semibold text-lg"
                     onClick={() => navigate('/')}
                   >
@@ -125,13 +125,13 @@ const WizardLayoutContent: React.FC = () => {
                     <span>AI</span>
                   </Button>
                 </div>
-                
+
                 <h1 className="text-lg font-semibold">Resume Wizard</h1>
-                
+
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => navigate('/')}
                     title="Go to Home"
                   >
@@ -162,7 +162,7 @@ const WizardLayoutContent: React.FC = () => {
                     key={`${location.pathname}-${currentStep?.id || lastStepId || 'default'}`}
                     initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ 
+                    transition={{
                       duration: prefersReducedMotion ? 0 : 0.15,
                       ease: 'easeOut'
                     }}

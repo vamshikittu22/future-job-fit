@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, Sparkles, Zap, Target, Shield } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Badge } from "@/shared/ui/badge";
 import { Textarea } from "@/shared/ui/textarea";
 import { Label } from "@/shared/ui/label";
-import { Sparkles, Zap, Target, Shield } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
+import { resumeAI } from "@/shared/api/resumeAI";
 
 interface AIEnhanceModalProps {
   open: boolean;
@@ -54,10 +54,10 @@ const strategyPresets = [
   }
 ];
 
-export default function AIEnhanceModal({ 
-  open, 
-  onOpenChange, 
-  resumeData, 
+export default function AIEnhanceModal({
+  open,
+  onOpenChange,
+  resumeData,
   onEnhance,
   step = null
 }: AIEnhanceModalProps) {
@@ -69,8 +69,8 @@ export default function AIEnhanceModal({
   const { toast } = useToast();
 
   const handleFocusToggle = (focusId: string) => {
-    setSelectedFocus(prev => 
-      prev.includes(focusId) 
+    setSelectedFocus(prev =>
+      prev.includes(focusId)
         ? prev.filter(id => id !== focusId)
         : [...prev, focusId]
     );
@@ -78,154 +78,91 @@ export default function AIEnhanceModal({
 
   const handlePresetApply = async (presetId: string) => {
     setIsEnhancing(true);
-    
-    // Simulate AI enhancement
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock enhancement based on preset and step
-    const enhanced = { ...resumeData };
-    
-    if (step === 'summary') {
-      switch (presetId) {
-        case 'ats-optimized':
-          if (enhanced.summary) {
-            enhanced.summary = enhanced.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
-          }
-          break;
-        case 'concise':
-          if (enhanced.summary && enhanced.summary.length > 200) {
-            enhanced.summary = enhanced.summary.substring(0, 197) + "...";
-          }
-          break;
-        case 'impactful':
-          if (enhanced.summary) {
-            enhanced.summary = enhanced.summary.replace(/^[a-z]/, (match: string) => 
-              match.toUpperCase()
-            );
-          }
-          break;
-      }
-    } else if (step === 'experience') {
-      switch (presetId) {
-        case 'ats-optimized':
-          if (enhanced.experience) {
-            enhanced.experience = enhanced.experience.map((exp: any) => ({
-              ...exp,
-              description: exp.description + "\n• Utilized industry best practices and modern development methodologies"
-            }));
-          }
-          break;
-        case 'concise':
-          if (enhanced.experience) {
-            enhanced.experience = enhanced.experience.map((exp: any) => ({
-              ...exp,
-              description: exp.description && exp.description.length > 200 
-                ? exp.description.substring(0, 197) + "..."
-                : exp.description
-            }));
-          }
-          break;
-        case 'impactful':
-          if (enhanced.experience) {
-            enhanced.experience = enhanced.experience.map((exp: any) => ({
-              ...exp,
-              description: exp.description?.replace(/^•\s*[a-z]/, (match: string) => 
-                '• ' + ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
-              )
-            }));
-          }
-          break;
-      }
-    } else if (step === 'skills') {
-      switch (presetId) {
-        case 'ats-optimized':
-          if (enhanced.skills) {
-            const additionalSkills = ['Agile', 'Scrum', 'DevOps', 'CI/CD'];
-            enhanced.skills = {
-              ...enhanced.skills,
-              tools: [...(enhanced.skills.tools || []), ...additionalSkills.filter(s => !enhanced.skills.tools?.includes(s))]
-            };
-          }
-          break;
-        case 'concise':
-          // Keep only top skills
-          if (enhanced.skills) {
-            enhanced.skills = {
-              languages: enhanced.skills.languages?.slice(0, 5) || [],
-              frameworks: enhanced.skills.frameworks?.slice(0, 5) || [],
-              tools: enhanced.skills.tools?.slice(0, 5) || []
-            };
-          }
-          break;
-        case 'impactful':
-          // Add modern equivalents
-          if (enhanced.skills) {
-            const modernSkills = ['TypeScript', 'React', 'Node.js', 'Docker', 'Kubernetes'];
-            enhanced.skills = {
-              ...enhanced.skills,
-              frameworks: [...(enhanced.skills.frameworks || []), ...modernSkills.filter(s => !enhanced.skills.frameworks?.includes(s))]
-            };
-          }
-          break;
-      }
-    } else {
-      // Global enhancement (no step specified)
-      switch (presetId) {
-        case 'ats-optimized':
-          if (enhanced.summary) {
-            enhanced.summary = enhanced.summary + " Experienced in agile methodologies, cross-functional collaboration, and project management.";
-          }
-          break;
-        case 'concise':
-          if (enhanced.experience) {
-            enhanced.experience = enhanced.experience.map((exp: any) => ({
-              ...exp,
-              description: exp.description && exp.description.length > 200 
-                ? exp.description.substring(0, 197) + "..."
-                : exp.description
-            }));
-          }
-          break;
-        case 'impactful':
-          if (enhanced.experience) {
-            enhanced.experience = enhanced.experience.map((exp: any) => ({
-              ...exp,
-              description: exp.description?.replace(/^•\s*[a-z]/, (match: string) => 
-                '• ' + ['Achieved', 'Delivered', 'Optimized', 'Implemented'][Math.floor(Math.random() * 4)]
-              )
-            }));
-          }
-          break;
-      }
+
+    try {
+      let contentToEnhance: any;
+      if (step === 'summary') contentToEnhance = resumeData.summary;
+      else if (step === 'experience') contentToEnhance = resumeData.experience;
+      else if (step === 'skills') contentToEnhance = resumeData.skills;
+      else contentToEnhance = resumeData; // Global fallback
+
+      // Map formatted preset ID to a tone string Gemini understands
+      const toneMap: Record<string, string> = {
+        'ats-optimized': 'ATS-friendly and keyword-rich',
+        'concise': 'concise and direct',
+        'impactful': 'results-oriented and impactful'
+      };
+
+      const tone = toneMap[presetId] || 'professional';
+      const enhancedContent = await resumeAI.improveContent(step || 'Resume', contentToEnhance, tone);
+
+      // reconstruct the full data object
+      const newData = { ...resumeData };
+      if (step === 'summary') newData.summary = enhancedContent;
+      else if (step === 'experience') newData.experience = enhancedContent;
+      else if (step === 'skills') newData.skills = enhancedContent;
+
+      onEnhance(newData);
+      onOpenChange(false);
+
+      toast({
+        title: "Resume enhanced!",
+        description: `Applied ${presetId.replace('-', ' ')} strategy${step ? ` to ${step}` : ''}.`,
+      });
+    } catch (error) {
+      console.error("Enhancement failed:", error);
+      toast({
+        title: "Enhancement Failed",
+        description: "AI service could not process your request.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEnhancing(false);
     }
-    
-    setIsEnhancing(false);
-    onEnhance(enhanced);
-    onOpenChange(false);
-    
-    toast({
-      title: "Resume enhanced!",
-      description: `Applied ${presetId.replace('-', ' ')} strategy${step ? ` to ${step}` : ''}.`,
-    });
   };
 
   const handleCustomEnhance = async () => {
     setIsEnhancing(true);
-    
-    // Simulate custom AI enhancement
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const enhanced = { ...resumeData };
-    // Apply custom enhancements based on selections
-    
-    setIsEnhancing(false);
-    onEnhance(enhanced);
-    onOpenChange(false);
-    
-    toast({
-      title: "Custom enhancement applied!",
-      description: "Your resume has been enhanced with your custom preferences.",
-    });
+
+    try {
+      let contentToEnhance: any;
+      if (step === 'summary') contentToEnhance = resumeData.summary;
+      else if (step === 'experience') contentToEnhance = resumeData.experience;
+      else if (step === 'skills') contentToEnhance = resumeData.skills;
+      else contentToEnhance = resumeData;
+
+      // Construct a detailed tone description
+      const toneParams = [
+        `Tone: ${tonePresets.find(t => t.id === selectedTone)?.label || 'Professional'}`,
+        `Focus Areas: ${selectedFocus.map(id => focusAreas.find(f => f.id === id)?.label).join(', ')}`,
+        keywords ? `Keywords: ${keywords}` : '',
+        restrictions ? `Restrictions: ${restrictions}` : ''
+      ].filter(Boolean).join('. ');
+
+      const enhancedContent = await resumeAI.improveContent(step || 'Resume', contentToEnhance, toneParams);
+
+      const newData = { ...resumeData };
+      if (step === 'summary') newData.summary = enhancedContent;
+      else if (step === 'experience') newData.experience = enhancedContent;
+      else if (step === 'skills') newData.skills = enhancedContent;
+
+      onEnhance(newData);
+      onOpenChange(false);
+
+      toast({
+        title: "Custom enhancement applied!",
+        description: "Your resume has been enhanced with your custom preferences.",
+      });
+    } catch (error) {
+      console.error("Custom enhancement failed:", error);
+      toast({
+        title: "Enhancement Failed",
+        description: "AI service could not process your request.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   return (
@@ -290,11 +227,10 @@ export default function AIEnhanceModal({
                   {tonePresets.map((tone) => (
                     <Card
                       key={tone.id}
-                      className={`p-3 cursor-pointer transition-all ${
-                        selectedTone === tone.id 
-                          ? 'border-primary shadow-accent' 
+                      className={`p-3 cursor-pointer transition-all ${selectedTone === tone.id
+                          ? 'border-primary shadow-accent'
                           : 'hover:border-primary/50'
-                      }`}
+                        }`}
                       onClick={() => setSelectedTone(tone.id)}
                     >
                       <h4 className="font-medium mb-1">{tone.label}</h4>
@@ -313,11 +249,10 @@ export default function AIEnhanceModal({
                     return (
                       <Card
                         key={area.id}
-                        className={`p-3 cursor-pointer transition-all ${
-                          selectedFocus.includes(area.id)
+                        className={`p-3 cursor-pointer transition-all ${selectedFocus.includes(area.id)
                             ? 'border-primary shadow-accent bg-primary/5'
                             : 'hover:border-primary/50'
-                        }`}
+                          }`}
                         onClick={() => handleFocusToggle(area.id)}
                       >
                         <div className="flex flex-col items-center gap-2 text-center">
@@ -362,7 +297,7 @@ export default function AIEnhanceModal({
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleCustomEnhance}
                   disabled={isEnhancing}
                   className="flex items-center gap-2"

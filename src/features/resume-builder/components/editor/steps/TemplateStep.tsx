@@ -110,21 +110,6 @@ export const TemplateStep: React.FC = () => {
         })}
       </div>
 
-      {/* Selection Info */}
-      {wizardState.selectedTemplate && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 p-4 bg-accent/10 border border-accent rounded-lg"
-        >
-          <p className="text-sm text-center">
-            <strong>
-              {TEMPLATE_OPTIONS.find((t) => t.id === wizardState.selectedTemplate)?.name}
-            </strong>{' '}
-            template selected. Click "Next" to continue.
-          </p>
-        </motion.div>
-      )}
     </WizardStepContainer>
   );
 };

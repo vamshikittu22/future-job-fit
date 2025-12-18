@@ -23,13 +23,26 @@ export const SummaryStep: React.FC = () => {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
+  const [isEnhanced, setIsEnhanced] = useState(false);
 
   useEffect(() => {
+    // Sync word/char counts
     const words = summary.trim().split(/\s+/).filter(Boolean).length;
     const chars = summary.length;
     setWordCount(words);
     setCharCount(chars);
   }, [summary]);
+
+  // Sync with global state when it changes externally (e.g. loading sample data)
+  useEffect(() => {
+    if (resumeData.summary && resumeData.summary !== summary) {
+      setSummary(resumeData.summary);
+      // We don't reset isEnhanced here to allow "Load Sample" to potentially show enhancement if we wanted, 
+      // but typically loading external data resets local edit state. 
+      // For now, let's keep it simple: if external data loads, it's not "just enhanced" by this user session's button.
+      setIsEnhanced(false);
+    }
+  }, [resumeData.summary]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -75,9 +88,9 @@ export const SummaryStep: React.FC = () => {
                   Aim for 100-150 words that capture your experience, skills, and career goals
                 </CardDescription>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="gap-2"
                 onClick={() => setIsAIEnhanceModalOpen(true)}
               >
@@ -89,7 +102,10 @@ export const SummaryStep: React.FC = () => {
           <CardContent className="space-y-4">
             <Textarea
               value={summary}
-              onChange={(e) => setSummary(e.target.value)}
+              onChange={(e) => {
+                setSummary(e.target.value);
+                setIsEnhanced(false);
+              }}
               placeholder={examplePlaceholders[placeholderIndex]}
               className="min-h-[200px] resize-none"
               maxLength={800}
@@ -127,6 +143,13 @@ export const SummaryStep: React.FC = () => {
                   Your summary is quite short. Consider expanding it to 100-150 words for better impact.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {isEnhanced && (
+              <div className="flex items-center gap-2 text-xs text-purple-600 font-medium animate-in fade-in slide-in-from-top-1">
+                <Sparkles className="w-3 h-3" />
+                Enhanced with AI
+              </div>
             )}
           </CardContent>
         </Card>
@@ -196,6 +219,7 @@ export const SummaryStep: React.FC = () => {
           setResumeData(enhancedData);
           if (enhancedData.summary) {
             setSummary(enhancedData.summary);
+            setIsEnhanced(true);
           }
         }}
         step="summary"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { WizardStepContainer } from '@/features/resume-builder/components/layout/WizardStepContainer';
 import { ProgressStepper } from '@/features/resume-builder/components/layout/ProgressStepper';
@@ -37,7 +37,12 @@ export const ExperienceStep: React.FC = () => {
     description: '',
   });
 
+  const [isEnhanced, setIsEnhanced] = useState(false);
+
+  // Removed useEffect that was auto-resetting isEnhanced
+
   const handleOpenDialog = (index?: number) => {
+    setIsEnhanced(false);
     if (index !== undefined) {
       const exp = resumeData.experience[index];
       setFormData({
@@ -88,6 +93,14 @@ export const ExperienceStep: React.FC = () => {
 
   const handleAIEnhance = (enhancedData: any) => {
     setResumeData(enhancedData);
+    // Also update the form data if we are editing
+    if (editingIndex !== null && enhancedData.experience && enhancedData.experience[editingIndex]) {
+      setFormData(prev => ({
+        ...prev,
+        description: enhancedData.experience[editingIndex].description
+      }));
+      setIsEnhanced(true);
+    }
   };
 
   const experienceItems = resumeData.experience?.map((exp, index) => ({
@@ -138,17 +151,6 @@ export const ExperienceStep: React.FC = () => {
       <ProgressStepper />
 
       <div className="space-y-4">
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAIEnhanceModalOpen(true)}
-            className="gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            Enhance with AI
-          </Button>
-        </div>
 
         {resumeData.experience && resumeData.experience.length > 0 ? (
           <AnimatedAccordion
@@ -258,7 +260,10 @@ export const ExperienceStep: React.FC = () => {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, description: e.target.value });
+                  setIsEnhanced(false);
+                }}
                 placeholder="• Managed team of 5 developers&#10;• Increased efficiency by 30%&#10;• Led migration to microservices architecture"
                 className="min-h-[150px]"
                 maxLength={1000}
@@ -266,6 +271,12 @@ export const ExperienceStep: React.FC = () => {
               <p className="text-xs text-muted-foreground">
                 Use bullet points (•) to list your responsibilities and achievements. Include metrics where possible.
               </p>
+              {isEnhanced && (
+                <div className="flex items-center gap-2 text-xs text-purple-600 font-medium animate-in fade-in slide-in-from-top-1 mt-2">
+                  <Sparkles className="w-3 h-3" />
+                  Enhanced with AI
+                </div>
+              )}
             </div>
           </div>
 

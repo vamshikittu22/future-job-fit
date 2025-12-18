@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { 
-  User, FileText, Briefcase, GraduationCap, Code, 
-  Folder, CheckCircle, Layout 
+import {
+  User, FileText, Briefcase, GraduationCap, Code,
+  Folder, CheckCircle, Layout
 } from 'lucide-react';
 
 // Wizard Step Configuration
@@ -112,28 +112,51 @@ const REVIEW_STEP: WizardStep = {
 };
 
 // Helper function to get all steps with custom sections in the correct order
-export const getWizardSteps = (customSections: any[] = []): WizardStep[] => {
-  const customSteps = customSections.map((sec) => ({
-    id: `custom:${sec.id}`,
-    title: sec.title || 'Custom Section',
-    label: sec.title || 'Custom',
-    path: `/resume-wizard/custom/${sec.id}`,
-    icon: Folder,
-    isRequired: false,
-    fields: [],
-    atsWeight: 0,
-  }));
+export const getWizardSteps = (customSections: any[] = [], sectionOrder: string[] = []): WizardStep[] => {
+  const steps: WizardStep[] = [];
 
-  // Add label to base steps
-  const baseStepsWithLabels = BASE_WIZARD_STEPS.map(step => ({
-    ...step,
-    label: step.title.split(' ')[0] // Use first word as label
-  }));
-  
-  return [...baseStepsWithLabels, ...customSteps, {
-    ...REVIEW_STEP,
-    label: 'Review'
-  }];
+  // 1. Template is always first
+  const templateStep = BASE_WIZARD_STEPS.find(s => s.id === 'template');
+  if (templateStep) {
+    steps.push({ ...templateStep, label: 'Template' });
+  }
+
+  // 2. Sections based on sectionOrder
+  const orderedSectionIds = sectionOrder.length > 0
+    ? sectionOrder
+    : ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications'];
+
+  orderedSectionIds.forEach(id => {
+    if (id.startsWith('custom:')) {
+      const realId = id.replace('custom:', '');
+      const sec = customSections.find(s => s.id === realId);
+      if (sec) {
+        steps.push({
+          id: `custom:${sec.id}`,
+          title: sec.title || 'Custom Section',
+          label: sec.title || 'Custom',
+          path: `/resume-wizard/custom/${sec.id}`,
+          icon: Folder,
+          isRequired: false,
+          fields: [],
+          atsWeight: 0,
+        });
+      }
+    } else {
+      const baseStep = BASE_WIZARD_STEPS.find(s => s.id === id);
+      if (baseStep && baseStep.id !== 'template') {
+        steps.push({
+          ...baseStep,
+          label: baseStep.label || baseStep.title.split(' ')[0]
+        });
+      }
+    }
+  });
+
+  // 3. Review is always last
+  steps.push({ ...REVIEW_STEP, label: 'Review' });
+
+  return steps;
 };
 
 // Template Configuration
@@ -198,6 +221,32 @@ export const TEMPLATE_OPTIONS: TemplateOption[] = [
       'Maximum whitespace',
       'Thin lines',
       'Swiss typography'
+    ],
+  },
+  {
+    id: 'executive',
+    name: 'Executive',
+    description: 'Sophisticated typography-heavy layout for senior roles',
+    bestFor: ['Executives', 'Management', 'Legal', 'Consulting'],
+    atsScore: 97,
+    features: [
+      'Premium typography',
+      'Side-column summary',
+      'Refined headers',
+      'High readability'
+    ],
+  },
+  {
+    id: 'elegant',
+    name: 'Elegant',
+    description: 'Stylish serif-mixed design with soft borders',
+    bestFor: ['Fashion', 'Arts', 'Luxury Brands', 'Hospitality'],
+    atsScore: 90,
+    features: [
+      'Serif & Sans-serif mix',
+      'Subtle borders',
+      'Soft color palette',
+      'Elegant spacing'
     ],
   },
 ];
@@ -271,7 +320,7 @@ export const ATS_SCORING_WEIGHTS = {
 // Validation helper functions
 export const validateStep = (stepId: string, data: any): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  
+
   try {
     switch (stepId) {
       case 'personal':
@@ -286,9 +335,9 @@ export const validateStep = (stepId: string, data: any): { isValid: boolean; err
         }
         break;
       case 'skills':
-        const totalSkills = (data.skills?.languages?.length || 0) + 
-                           (data.skills?.frameworks?.length || 0) + 
-                           (data.skills?.tools?.length || 0);
+        const totalSkills = (data.skills?.languages?.length || 0) +
+          (data.skills?.frameworks?.length || 0) +
+          (data.skills?.tools?.length || 0);
         if (totalSkills < 5) {
           errors.push('Add at least 5 skills total');
         }
@@ -304,7 +353,7 @@ export const validateStep = (stepId: string, data: any): { isValid: boolean; err
       errors.push(...error.errors.map(e => e.message));
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -316,113 +365,113 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
   switch (stepId) {
     case 'template':
       return data.selectedTemplate ? 100 : 0;
-      
+
     case 'personal':
       const personalFields = ['name', 'email', 'phone'];
       const optionalFields = ['location', 'website', 'linkedin', 'github', 'title'];
       const requiredFilled = personalFields.filter(f => data.personal?.[f]).length;
       const optionalFilled = optionalFields.filter(f => data.personal?.[f]).length;
       return Math.round(((requiredFilled / personalFields.length) * 70) + ((optionalFilled / optionalFields.length) * 30));
-      
+
     case 'summary':
       if (!data.summary) return 0;
       if (data.summary.length < 50) return 30;
       if (data.summary.length < 100) return 60;
       return 100;
-      
+
     case 'experience':
       if (!data.experience || data.experience.length === 0) return 0;
-      
+
       // Check if all required fields are filled for at least one experience entry
       const hasCompleteExperience = data.experience.some((exp: any) => {
-        return exp.title?.trim() && 
-               exp.company?.trim() && 
-               exp.startDate && 
-               (exp.endDate || exp.current) && 
-               exp.description?.trim()?.length > 20;
+        return exp.title?.trim() &&
+          exp.company?.trim() &&
+          exp.startDate &&
+          (exp.endDate || exp.current) &&
+          exp.description?.trim()?.length > 20;
       });
-      
+
       // If at least one complete experience entry exists, return 100%
       if (hasCompleteExperience) return 100;
-      
+
       // Otherwise, calculate partial completion
       const expCompletion = data.experience.map((exp: any) => {
         let entryScore = 0;
-        
+
         // Check for required fields
         if (exp.title?.trim()) entryScore += 20;
         if (exp.company?.trim()) entryScore += 20;
         if (exp.startDate) entryScore += 20;
         if (exp.endDate || exp.current) entryScore += 20;
         if (exp.description?.trim()?.length > 20) entryScore += 20;
-        
+
         return Math.min(entryScore, 100);
       });
-      
+
       // Return the highest completion percentage among all entries
       return Math.max(...expCompletion);
-      
+
     case 'education':
       if (!data.education || data.education.length === 0) return 0;
       return data.education.length > 0 ? 100 : 0;
-      
+
     case 'skills':
-      const total = (data.skills?.languages?.length || 0) + 
-                   (data.skills?.frameworks?.length || 0) + 
-                   (data.skills?.tools?.length || 0);
+      const total = (data.skills?.languages?.length || 0) +
+        (data.skills?.frameworks?.length || 0) +
+        (data.skills?.tools?.length || 0);
       if (total === 0) return 0;
       if (total < 5) return 40;
       if (total < 10) return 70;
       return 100;
-      
+
     case 'projects':
       if (!data.projects || data.projects.length === 0) return 0;
       return data.projects.length > 0 ? 100 : 0;
-      
+
     case 'review':
       return 100;
-      
+
     default:
       // Handle custom sections
       if (stepId.startsWith('custom:')) {
         const sectionId = stepId.replace('custom:', '');
         const section = data.customSections?.find((s: any) => s.id === sectionId);
-        
+
         if (!section) return 0;
-        
+
         // A custom section is considered complete if it has:
         // 1. A title (20%)
         // 2. At least one field (30%)
         // 3. All fields have names (20%)
         // 4. At least one entry with all required fields filled (30%)
         let completion = 0;
-        
+
         // Check for title (20%)
         if (section.title?.trim()) completion += 20;
-        
+
         // Check for at least one field (30%)
         if (section.fields?.length > 0) {
           completion += 30;
-          
+
           // Check if all fields have names (20%)
           const allFieldsHaveNames = section.fields.every((field: any) => field.name?.trim());
           if (allFieldsHaveNames) completion += 20;
-          
+
           // Check for at least one complete entry (30%)
           if (section.entries?.length > 0) {
             const hasCompleteEntry = section.entries.some((entry: any) => {
               return section.fields.every((field: any) => {
                 const value = entry.values?.[field.id];
-                return value !== undefined && 
-                       value !== null && 
-                       value !== '' && 
-                       (!Array.isArray(value) || value.length > 0);
+                return value !== undefined &&
+                  value !== null &&
+                  value !== '' &&
+                  (!Array.isArray(value) || value.length > 0);
               });
             });
             if (hasCompleteEntry) completion += 30;
           }
         }
-        
+
         return Math.min(completion, 100);
       }
       return 0;

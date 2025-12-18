@@ -18,7 +18,7 @@ export class ResumeAIService {
   private genAI: GoogleGenerativeAI;
 
   constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "demo";
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || "demo").trim();
     console.log("Gemini key loaded:", import.meta.env.VITE_GEMINI_API_KEY);
 
     this.genAI = new GoogleGenerativeAI(apiKey);
@@ -60,42 +60,42 @@ Suggestions: …
       // Add custom instructions if provided
       if (customInstructions) {
         systemPrompt += `\n\nAdditional Custom Instructions:`;
-        
+
         if (customInstructions.resumeLength) {
           systemPrompt += `\n- Target resume length: ${customInstructions.resumeLength} page(s)`;
         }
-        
+
         if (customInstructions.selectedTags?.length > 0) {
           systemPrompt += `\n- Emphasize these areas: ${customInstructions.selectedTags.join(', ')}`;
         }
-        
+
         if (customInstructions.targetAudience) {
           systemPrompt += `\n- Target audience: ${customInstructions.targetAudience}`;
         }
-        
+
         if (customInstructions.leadershipGoals) {
           systemPrompt += `\n- Leadership focus: ${customInstructions.leadershipGoals}`;
         }
-        
+
         if (customInstructions.metrics) {
           systemPrompt += `\n- Metrics emphasis: ${customInstructions.metrics}`;
         }
-        
+
         if (customInstructions.summaryCount) {
           systemPrompt += `\n- Professional summary bullets: ${customInstructions.summaryCount}`;
         }
-        
+
         if (customInstructions.projectCount) {
           systemPrompt += `\n- Maximum projects to include: ${customInstructions.projectCount}`;
         }
-        
+
         if (customInstructions.prdrAllocation) {
           const allocations = Object.entries(customInstructions.prdrAllocation)
             .map(([key, value]) => `${key}: ${value}%`)
             .join(', ');
           systemPrompt += `\n- Skill emphasis allocation: ${allocations}`;
         }
-        
+
         if (customInstructions.customInstructions) {
           systemPrompt += `\n- Custom guidance: ${customInstructions.customInstructions}`;
         }
@@ -132,10 +132,10 @@ ${jobDescription || "N/A"}`;
     );
     const missingKeywords = keywordsLine
       ? keywordsLine
-          .replace("Missing Keywords:", "")
-          .split(",")
-          .map((k) => k.trim())
-          .filter((k) => k)
+        .replace("Missing Keywords:", "")
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k)
       : [];
 
     const suggestions: string[] = [];
@@ -176,6 +176,93 @@ ${jobDescription || "N/A"}`;
     } catch (error) {
       console.error("Resume evaluation failed:", error);
       throw new Error("Failed to evaluate resume. Please try again.");
+    }
+  }
+
+  async analyzeSection(sectionName: string, content: any): Promise<any> {
+    try {
+      const prompt = `
+        Analyze the following resume section (${sectionName}) and provide feedback.
+        Return ONLY valid JSON with this structure:
+        {
+          "score": number (0-100),
+          "strengths": string[],
+          "weaknesses": string[],
+          "suggestions": string[]
+        }
+
+        Content to analyze:
+        ${JSON.stringify(content, null, 2)}
+      `;
+
+      if (this.genAI.apiKey === 'demo' || !this.genAI.apiKey) {
+        throw new Error('Demo mode');
+      }
+
+      const result = await this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" }).generateContent(prompt);
+      const text = await result.response.text();
+      return JSON.parse(text.replace(/```json|```/g, '').trim());
+    } catch (error) {
+      console.warn(`Failed to analyze section ${sectionName} (using fallback):`, error);
+      // Fallback mock response
+      return {
+        score: 75,
+        strengths: ["Clear structure", "Good use of basics"],
+        weaknesses: ["Lacks quantifiable metrics", "Could be more specific"],
+        suggestions: ["Add numbers to show impact", "Use stronger action verbs", "Tailor to the job description"]
+      };
+    }
+  }
+
+  async improveContent(sectionName: string, content: any, tone: string = 'professional'): Promise<any> {
+    try {
+      const prompt = `
+        Rewrite the following resume section (${sectionName}) to be more ${tone}.
+        Improve clarity, impact, and fix grammar.
+        Return ONLY valid JSON with the improved content matching the original structure.
+
+        Original Content:
+        ${JSON.stringify(content, null, 2)}
+      `;
+
+      if (this.genAI.apiKey === 'demo' || !this.genAI.apiKey) {
+        throw new Error('Demo mode');
+      }
+
+      const result = await this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" }).generateContent(prompt);
+      const text = await result.response.text();
+      return JSON.parse(text.replace(/```json|```/g, '').trim());
+    } catch (error) {
+      console.warn(`Failed to improve section ${sectionName} (using fallback):`, error);
+
+      // Smart Fallback strategy for Demo Mode
+      if (typeof content === 'string') {
+        // Improve Summary/Text by swapping weak verbs
+        let improved = content
+          .replace(/\b(worked on|worked with)\b/gi, "collaborated on")
+          .replace(/\b(helped)\b/gi, "facilitated")
+          .replace(/\b(led|managed)\b/gi, "spearheaded")
+          .replace(/\b(created|made)\b/gi, "engineered")
+          .replace(/\b(changed)\b/gi, "transformed")
+          .replace(/\b(good)\b/gi, "exceptional");
+
+        return improved;
+
+      } else if (Array.isArray(content)) {
+        // Improve Experience/Projects in Demo Mode
+        return content.map((item: any) => ({
+          ...item,
+          description: item.description
+            ? item.description
+              .replace(/\b(responsibility included|duties were)\b/gi, "Key achievements included")
+              .replace(/\b(worked on)\b/gi, "executed")
+              .replace(/\b(helped)\b/gi, "assisted")
+            : ""
+        }));
+      } else if (typeof content === 'object') {
+        return content;
+      }
+      throw error;
     }
   }
 }

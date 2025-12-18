@@ -1,35 +1,59 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, MouseSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { useSortable, arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 // Simple sortable item component
-const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
-  return <div data-id={id} className="w-full">{children}</div>;
+const SortableItem = ({ id, children, disabled }: { id: string; children: React.ReactNode; disabled?: boolean }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? (isDragging ? 100 : 1) : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} className="w-full group/sortable relative">
+      <div
+        {...listeners}
+        className={cn(
+          "absolute -left-1 top-1/2 -translate-y-1/2 p-1 transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground",
+          disabled && "hidden"
+        )}
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </div>
+      {children}
+    </div>
+  );
 };
+
 import { useWizard } from '@/shared/contexts/WizardContext';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useATS } from '@/shared/hooks/use-ats';
 import { TEMPLATE_OPTIONS } from '@/shared/config/wizardSteps';
+import { TemplateCustomizer } from '@/features/resume-builder/components/editor/steps/TemplateCustomizer';
 import { Button } from '@/shared/ui/button';
-import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Separator } from '@/shared/ui/separator';
 import { Badge } from '@/shared/ui/badge';
-import { Progress } from '@/shared/ui/progress';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/shared/ui/accordion';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select';
 import { cn } from '@/shared/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical } from 'lucide-react';
 
 interface WizardSidebarProps {
   isCollapsed: boolean;
@@ -37,13 +61,13 @@ interface WizardSidebarProps {
 }
 
 export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onToggle }) => {
-  const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion } = useWizard();
-  const { resumeData, addCustomSection, updateCustomSection, reorderCustomSections } = useResume();
+  const { resumeData, addCustomSection, updateCustomSection, updateResumeData, reorderSections } = useResume();
+  const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion, setSelectedTemplate } = useWizard();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { atsScore, analysis } = useATS(resumeData);
-  
+
   const prefersReducedMotion = useMemo(() => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
@@ -81,17 +105,27 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const handleAddSection = () => {
     const id = Date.now().toString();
-    const newSection = { 
-      id, 
-      title: `Custom ${resumeData.customSections.length + 1}`, 
-      description: '', 
-      fields: [], 
-      entries: [] 
+    const newSectionId = `custom:${id}`;
+    const newSection = {
+      id,
+      title: `Custom ${resumeData.customSections.length + 1}`,
+      description: '',
+      fields: [],
+      entries: []
     };
+
     addCustomSection(newSection);
+
+    // Update sectionOrder to include the new section
+    const currentOrder = resumeData.metadata?.sectionOrder || [
+      'personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications'
+    ];
+    const newOrder = [...currentOrder, newSectionId];
+    reorderSections(newOrder);
+
     // Give WizardContext a tick to recompute steps, then navigate
     setTimeout(() => {
-      goToStep(`custom:${id}`);
+      goToStep(newSectionId);
     }, 0);
   };
 
@@ -102,9 +136,9 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const handleSaveSectionTitle = (sectionId: string, index: number) => {
     if (sectionTitle.trim()) {
-      updateCustomSection(index, { 
-        ...resumeData.customSections[index], 
-        title: sectionTitle.trim() 
+      updateCustomSection(index, {
+        ...resumeData.customSections[index],
+        title: sectionTitle.trim()
       });
     }
     setEditingSectionId(null);
@@ -136,7 +170,22 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   // Set up drag and drop
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -144,14 +193,18 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
-      const oldIndex = resumeData.customSections?.findIndex(section => `custom:${section.id}` === active.id) ?? -1;
-      const newIndex = resumeData.customSections?.findIndex(section => `custom:${section.id}` === over.id) ?? -1;
-      
+      const currentOrder = resumeData.metadata?.sectionOrder?.length
+        ? resumeData.metadata.sectionOrder
+        : ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications'];
+
+      const oldIndex = currentOrder.indexOf(active.id.toString());
+      const newIndex = currentOrder.indexOf(over.id.toString());
+
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove([...resumeData.customSections], oldIndex, newIndex);
-        reorderCustomSections(newOrder.map(section => section.id));
+        const newOrder = arrayMove([...currentOrder], oldIndex, newIndex);
+        reorderSections(newOrder);
       }
     }
   };
@@ -169,7 +222,6 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        {/* Quick add button in collapsed view */}
         <Button
           variant="outline"
           size="icon"
@@ -203,7 +255,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
   }
 
   return (
-    <div className="flex h-full flex-col border-r">
+    <div className="flex h-full flex-col border-r bg-card">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -211,11 +263,11 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           <h2 className="font-semibold">Resume Wizard</h2>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs"
-            onClick={() => {}}
+            onClick={() => { }}
           >
             <Save className="h-3.5 w-3.5 mr-1.5" />
             Save Draft
@@ -226,97 +278,12 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="space-y-6 p-4 pb-6">
-          {/* Step Navigation */}
-          <div className="space-y-1">
-            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Sections</h3>
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep.id === step.id;
-              const canNavigate = canNavigateToStep(step.id);
-              const completion = getStepCompletion(step.id);
-              const isCustomStep = step.id.startsWith('custom:');
-              const sectionId = isCustomStep ? step.id.replace('custom:', '') : '';
-              const section = isCustomStep ? 
-                (resumeData.customSections || []).find((s: any) => s.id === sectionId) : null;
-
-              return (
-                <motion.div 
-                  key={step.id}
-                  initial={prefersReducedMotion ? {} : { opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.2 }}
-                  className={cn(
-                    'relative flex items-center gap-2 p-2 rounded-md transition-all',
-                    isActive ? 'bg-accent shadow-sm' : 'hover:bg-accent/50',
-                    'cursor-pointer',
-                    !canNavigate && 'opacity-50 cursor-not-allowed'
-                  )}
-                  onClick={() => canNavigate && goToStep(step.id)}
-                  whileHover={!prefersReducedMotion ? { x: 2 } : {}}
-                  whileTap={!prefersReducedMotion ? { scale: 0.98 } : {}}
-                >
-                  {/* Connector line to next step */}
-                  {index < steps.length - 1 && (
-                    <motion.div 
-                      className="absolute left-5 top-full w-px bg-border"
-                      initial={{ height: 0 }}
-                      animate={{ height: completion === 100 ? 16 : 16 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.3, delay: 0.1 }}
-                    />
-                  )}
-                  
-                  <div className="flex-1 flex items-center gap-2 min-w-0">
-                    <motion.div
-                      animate={
-                        isActive && !prefersReducedMotion 
-                          ? { scale: [1, 1.1, 1] } 
-                          : completion === 100 && !prefersReducedMotion
-                          ? { scale: [1, 1.2, 1] }
-                          : {}
-                      }
-                      transition={{ duration: 0.3 }}
-                    >
-                      {completion === 100 ? (
-                        <motion.div
-                          initial={prefersReducedMotion ? {} : { scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ duration: 0.3, delay: 0.1 }}
-                        >
-                          {getStatusIcon(step.id)}
-                        </motion.div>
-                      ) : (
-                        getStatusIcon(step.id)
-                      )}
-                    </motion.div>
-                    <span className={cn('truncate', isActive && 'font-semibold')}>
-                      {isCustomStep ? (section?.title || 'Untitled Section') : step.title}
-                    </span>
-                  </div>
-                  {!isCollapsed && (
-                    <div className="w-16">
-                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <motion.div 
-                          className={cn('h-full transition-colors', getStatusColor(step.id))}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${completion}%` }}
-                          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: 'easeOut' }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <Separator />
-
-          {/* Custom Sections */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-medium text-muted-foreground">Custom Sections</h3>
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-6 p-4">
+          {/* Section List */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground">Sections</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -326,263 +293,262 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add
               </Button>
             </div>
-            
-            <div className="space-y-2">
-              {resumeData.customSections.length > 0 ? (
-                <DndContext 
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext 
-                    items={resumeData.customSections.map(section => `custom:${section.id}`)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {resumeData.customSections.map((section, index) => {
-                      const stepId = `custom:${section.id}`;
-                      const step = steps.find(s => s.id === stepId);
-                      const isActive = currentStep.id === stepId;
-                      
-                      return (
-                        <SortableItem key={stepId} id={stepId}>
-                          <div 
-                            className={cn(
-                              'flex items-center gap-2 p-2 rounded-md hover:bg-accent/50 group',
-                              isActive && 'bg-accent',
-                              'w-full'
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={(resumeData.metadata?.sectionOrder?.length
+                  ? resumeData.metadata.sectionOrder
+                  : ['personal', 'summary', 'experience', 'education', 'skills', 'projects', 'achievements', 'certifications']
+                ).filter(id => id !== 'template' && id !== 'review')}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1">
+                  {steps.filter(s => s.id !== 'template' && s.id !== 'review').map((step, index) => {
+                    const isActive = currentStep.id === step.id;
+                    const canNavigate = canNavigateToStep(step.id);
+                    const completion = getStepCompletion(step.id);
+                    const isCustomStep = step.id.startsWith('custom:');
+                    const sectionId = isCustomStep ? step.id.replace('custom:', '') : '';
+                    const sectionIndex = isCustomStep ? (resumeData.customSections || []).findIndex(s => s.id === sectionId) : -1;
+                    const section = isCustomStep ? (resumeData.customSections || [])[sectionIndex] : null;
+                    const sectionName = isCustomStep ? (section?.title || 'Untitled Section') : step.title;
+
+                    return (
+                      <SortableItem key={step.id} id={step.id}>
+                        <div
+                          className={cn(
+                            'relative flex items-center gap-2 p-2 rounded-md transition-all group',
+                            isActive ? 'bg-accent shadow-sm' : 'hover:bg-accent/50',
+                            'cursor-pointer',
+                            !canNavigate && 'opacity-50 cursor-not-allowed'
+                          )}
+                          onClick={() => canNavigate && goToStep(step.id)}
+                        >
+                          <div className="flex-1 flex items-center gap-2 min-w-0 ml-4">
+                            <div>{getStatusIcon(step.id)}</div>
+                            {isCustomStep && editingSectionId === sectionId ? (
+                              <input
+                                ref={inputRef}
+                                type="text"
+                                value={sectionTitle}
+                                onChange={(e) => setSectionTitle(e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, sectionId, sectionIndex)}
+                                onBlur={() => handleBlur(sectionId, sectionIndex)}
+                                className="w-full bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <span className={cn('truncate text-sm', isActive ? 'font-semibold' : 'font-medium')}>
+                                {sectionName}
+                              </span>
                             )}
-                            onClick={() => goToStep(stepId)}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(stepId)}
-                                {editingSectionId === section.id ? (
-                                  <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={sectionTitle}
-                                    onChange={(e) => setSectionTitle(e.target.value)}
-                                    onKeyDown={(e) => handleKeyDown(e, section.id, index)}
-                                    onBlur={() => handleBlur(section.id, index)}
-                                    className="w-full bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
-                                    aria-label="Edit section title"
-                                    placeholder="Section title"
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <span className="truncate font-medium">
-                                    {section.title || 'Untitled Section'}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditSection(section.id, section.title);
-                                  }}
-                                >
-                                  <Edit className="h-3.5 w-3.5" />
-                                </Button>
-                                <div className="h-4 w-px bg-border mx-1"></div>
-                                <div className="h-4 w-4 flex items-center justify-center text-muted-foreground">
-                                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></div>
-                                </div>
-                              </div>
+                          </div>
+
+                          {isCustomStep && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditSection(sectionId, section?.title || '');
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+
+                          <div className="w-10 ml-auto">
+                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={cn('h-full transition-all duration-500', getStatusColor(step.id))}
+                                style={{ width: `${completion}%` }}
+                              />
                             </div>
                           </div>
-                        </SortableItem>
-                      );
-                    })}
-                  
-                  </SortableContext>
-                </DndContext>
-              ) : (
-                <div className="text-center py-4 text-sm text-muted-foreground">
-                  No custom sections added yet
+                        </div>
+                      </SortableItem>
+                    );
+                  })}
                 </div>
-              )}
-              
-              {/* Navigation Buttons */}
-              <div className="flex justify-between pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-8 px-3"
-                  onClick={() => {
-                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
-                    if (currentIndex > 0) {
-                      goToStep(steps[currentIndex - 1].id);
-                    }
-                  }}
-                  disabled={steps.findIndex(step => step.id === currentStep.id) === 0}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-8 px-3"
-                  onClick={() => {
-                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
-                    if (currentIndex < steps.length - 1) {
-                      goToStep(steps[currentIndex + 1].id);
-                    }
-                  }}
-                  disabled={steps.findIndex(step => step.id === currentStep.id) === steps.length - 1}
-                >
-                  Next
-                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                </Button>
+              </SortableContext>
+            </DndContext>
+
+            {/* Review Step Fixed Link */}
+            {steps.find(s => s.id === 'review') && (
+              <div
+                className={cn(
+                  'flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 cursor-pointer mt-2 border border-transparent',
+                  currentStep.id === 'review' && 'bg-accent border-accent shadow-sm'
+                )}
+                onClick={() => goToStep('review')}
+              >
+                <div className="ml-4">{getStatusIcon('review')}</div>
+                <span className={cn('truncate text-sm', currentStep.id === 'review' ? 'font-semibold' : 'font-medium')}>Review & Export</span>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* ATS Score */}
-          <motion.div 
-            className="space-y-3"
-            initial={prefersReducedMotion ? {} : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h3 className="text-sm font-medium text-muted-foreground">ATS Score</h3>
-            <div className="rounded-lg border bg-card p-4">
-              <div className="flex items-center justify-center">
-                <div className="relative h-32 w-32">
-                  {/* Circular progress */}
-                  <svg className="h-32 w-32 -rotate-90 transform">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      className="text-muted"
-                    />
-                    <motion.circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      strokeDasharray={`${2 * Math.PI * 56}`}
-                      initial={{ strokeDashoffset: 2 * Math.PI * 56 }}
-                      animate={{ strokeDashoffset: 2 * Math.PI * 56 * (1 - atsScore / 100) }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 1, ease: 'easeOut', delay: 0.5 }}
-                      className={cn('transition-colors duration-500', getATSScoreColor(atsScore))}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.span 
-                      className={cn('text-3xl font-bold', getATSScoreColor(atsScore))}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.8, duration: 0.3 }}
-                    >
-                      {atsScore}
-                    </motion.span>
-                    <span className="text-xs text-muted-foreground">out of 100</span>
-                  </div>
+          <Separator />
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs h-8"
+              onClick={() => {
+                const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                if (currentIndex > 0) goToStep(steps[currentIndex - 1].id);
+              }}
+              disabled={steps.findIndex(step => step.id === currentStep.id) === 0}
+            >
+              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs h-8"
+              onClick={() => {
+                const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                if (currentIndex < steps.length - 1) goToStep(steps[currentIndex + 1].id);
+              }}
+              disabled={steps.findIndex(step => step.id === currentStep.id) === steps.length - 1}
+            >
+              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* ATS Score Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground">ATS Score</h3>
+              <Badge variant={atsScore >= 70 ? 'default' : 'destructive'} className="text-[10px] px-1.5 py-0 h-5">
+                {getATSScoreLabel(atsScore)}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-muted">
+              <div className="relative h-16 w-16 shrink-0">
+                <svg className="h-16 w-16 -rotate-90 transform">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-muted" />
+                  <circle
+                    cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent"
+                    strokeDasharray={175.9}
+                    strokeDashoffset={175.9 - (175.9 * atsScore) / 100}
+                    strokeLinecap="round"
+                    className={cn("transition-all duration-1000", getATSScoreColor(atsScore))}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={cn('text-lg font-bold', getATSScoreColor(atsScore))}>{atsScore}</span>
                 </div>
               </div>
-              <div className="mt-3 text-center">
-                <Badge variant={atsScore >= 70 ? 'default' : 'destructive'}>
-                  {getATSScoreLabel(atsScore)}
-                </Badge>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground mb-1">Resume Strength</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Your resume is {atsScore}% optimized for ATS systems.</p>
               </div>
             </div>
-          </motion.div>
 
-          {/* ATS Suggestions */}
-          {analysis.suggestions && analysis.suggestions.length > 0 && (
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="suggestions">
-                <AccordionTrigger className="text-sm font-medium">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    Suggestions ({analysis.suggestions.length})
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2">
-                    {analysis.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
-                      <div
-                        key={index}
-                        className="rounded-md border p-2 text-xs hover:bg-accent cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start gap-2">
-                          <Badge
-                            variant={
-                              suggestion.priority === 'high'
-                                ? 'destructive'
-                                : suggestion.priority === 'medium'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                            className="text-[10px] px-1 py-0"
-                          >
-                            {suggestion.priority}
-                          </Badge>
-                          <span className="flex-1">{suggestion.text}</span>
+            {/* ATS Suggestions */}
+            {analysis.suggestions && analysis.suggestions.length > 0 && (
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="suggestions" className="border-none">
+                  <AccordionTrigger className="text-xs font-bold py-2 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 text-primary" />
+                      View Suggestions ({analysis.suggestions.length})
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-1 pb-2">
+                    <div className="space-y-2">
+                      {analysis.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
+                        <div key={index} className="rounded-md border bg-muted/20 p-2 text-[10px]">
+                          <div className="flex items-start gap-2">
+                            <div className={cn(
+                              "mt-1 rotate-45 h-1 w-1 shrink-0",
+                              suggestion.priority === 'high' ? 'bg-red-500' : 'bg-yellow-500'
+                            )} />
+                            <span className="text-muted-foreground">{suggestion.text}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+          </div>
 
-          {/* Template Switcher */}
-          {wizardState.selectedTemplate && (
+          <Separator />
+
+          {/* Template Selection & Customization */}
+          <div className="space-y-6">
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Template</h3>
-              <Select
-                value={wizardState.selectedTemplate}
-                onValueChange={(value) => goToStep('template')}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEMPLATE_OPTIONS.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{template.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          ATS {template.atsScore}%
-                        </Badge>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Layout className="h-4 w-4" />
+                  Template
+                </h3>
+                <Badge variant="outline" className="text-[10px]">
+                  {TEMPLATE_OPTIONS.length} Options
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {TEMPLATE_OPTIONS.map((template) => {
+                  const isSelected = wizardState.selectedTemplate === template.id;
+                  return (
+                    <div
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={cn(
+                        "group cursor-pointer p-2 rounded-lg border transition-all duration-200",
+                        isSelected
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-background hover:border-muted-foreground/30 hover:bg-muted/10 border-muted"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "h-2 w-2 rounded-full",
+                            isSelected ? "bg-primary" : "bg-muted-foreground/30"
+                          )} />
+                          <span className={cn(
+                            "text-[12px] font-semibold",
+                            isSelected ? "text-primary" : "text-foreground"
+                          )}>
+                            {template.name}
+                          </span>
+                        </div>
+                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          )}
 
-          {/* Auto-save status */}
-          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Circle
-                className={cn(
-                  'h-2 w-2 fill-current',
-                  wizardState.autoSaveStatus === 'saved' && 'text-green-500',
-                  wizardState.autoSaveStatus === 'saving' && 'text-yellow-500 animate-pulse',
-                  wizardState.autoSaveStatus === 'error' && 'text-red-500'
-                )}
-              />
+            <TemplateCustomizer />
+          </div>
+
+          {/* Footer Save Info */}
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <div className={cn(
+                "h-1.5 w-1.5 rounded-full transition-colors",
+                wizardState.autoSaveStatus === 'saved' ? 'bg-green-500' :
+                  wizardState.autoSaveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' : 'bg-muted'
+              )} />
               <span>
-                {wizardState.autoSaveStatus === 'saved' && 'All changes saved'}
-                {wizardState.autoSaveStatus === 'saving' && 'Saving...'}
-                {wizardState.autoSaveStatus === 'error' && 'Save failed'}
-                {wizardState.autoSaveStatus === 'idle' && 'Auto-save enabled'}
+                {wizardState.autoSaveStatus === 'saved' ? 'All changes saved' :
+                  wizardState.autoSaveStatus === 'saving' ? 'Saving changes...' : 'Auto-save enabled'}
               </span>
             </div>
           </div>

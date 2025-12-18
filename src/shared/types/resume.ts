@@ -29,11 +29,21 @@ export interface CustomSection {
   entries: CustomSectionEntry[];
 }
 
+export interface ThemeSettings {
+  primaryColor: string;
+  fontFamily: string;
+  titleColor?: string;
+  headingsColor?: string;
+  subheadingsColor?: string;
+  linksColor?: string;
+}
+
 export interface ResumeMetadata {
   sectionOrder?: string[];
   lastUpdated?: string;
   template?: string;
   version?: string;
+  themeConfig?: Record<string, ThemeSettings>; // templateId -> settings
 }
 
 export interface Certification {

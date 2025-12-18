@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode, useRef } from 'react';
 import { debounce } from 'lodash';
-import { ResumeData, initialResumeData, CustomSection, CustomField, CustomSectionEntry } from '@/shared/lib/initialData';
+import { ResumeData, initialResumeData } from '@/shared/lib/initialData';
+import { CustomSection, CustomField, CustomSectionEntry, Certification } from '@/shared/types/resume';
 
 const STORAGE_KEY = 'resumeBuilderDraft';
 const SNAPSHOTS_STORAGE_KEY = 'resumeBuilderSnapshots';
@@ -39,13 +40,14 @@ type ResumeAction =
   | { type: 'ADD_ACHIEVEMENT'; payload: ResumeData['achievements'][0] }
   | { type: 'UPDATE_ACHIEVEMENT'; payload: { index: number; data: ResumeData['achievements'][0] } }
   | { type: 'REMOVE_ACHIEVEMENT'; payload: number }
-  | { type: 'ADD_CERTIFICATION'; payload: ResumeData['certifications'][0] }
-  | { type: 'UPDATE_CERTIFICATION'; payload: { index: number; data: ResumeData['certifications'][0] } }
+  | { type: 'ADD_CERTIFICATION'; payload: any }
+  | { type: 'UPDATE_CERTIFICATION'; payload: { index: number; data: any } }
   | { type: 'REMOVE_CERTIFICATION'; payload: number }
   | { type: 'ADD_CUSTOM_SECTION'; payload: ResumeData['customSections'][0] }
   | { type: 'UPDATE_CUSTOM_SECTION'; payload: { index: number; data: ResumeData['customSections'][0] } }
   | { type: 'REMOVE_CUSTOM_SECTION'; payload: string }
   | { type: 'REORDER_CUSTOM_SECTIONS'; payload: string[] }
+  | { type: 'REORDER_SECTIONS'; payload: string[] }
   | { type: 'ADD_CUSTOM_FIELD'; payload: { sectionId: string; field: CustomField } }
   | { type: 'UPDATE_CUSTOM_FIELD'; payload: { sectionId: string; fieldId: string; updates: Partial<CustomField> } }
   | { type: 'REMOVE_CUSTOM_FIELD'; payload: { sectionId: string; fieldId: string } }
@@ -77,6 +79,7 @@ interface ResumeContextType {
   updateCustomSection: (index: number, data: ResumeData['customSections'][0]) => void;
   removeCustomSection: (id: string) => void;
   reorderCustomSections: (ids: string[]) => void;
+  reorderSections: (ids: string[]) => void;
   addCustomField: (sectionId: string, field: CustomField) => void;
   updateCustomField: (sectionId: string, fieldId: string, updates: Partial<CustomField>) => void;
   removeCustomField: (sectionId: string, fieldId: string) => void;
@@ -101,27 +104,27 @@ export const ResumeContext = createContext<ResumeContextType | undefined>(undefi
 function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
   switch (action.type) {
     case 'SET_RESUME_DATA':
-        // Ensure customSections has proper structure with initialized fields and entries
-        const data = action.payload;
-        return {
-          ...data,
-          customSections: (data.customSections || []).map(section => ({
-            ...section,
-            fields: section.fields?.map(f => ({
-              id: f.id,
-              name: f.name || '',
-              type: f.type || 'text',
-              required: f.required || false,
-              options: f.options || []
-            })) || [],
-            entries: section.entries?.map(entry => ({
-              ...entry,
-              values: entry.values || {}
-            })) || []
-          }))
-        };
+      // Ensure customSections has proper structure with initialized fields and entries
+      const data = action.payload;
+      return {
+        ...data,
+        customSections: (data.customSections || []).map(section => ({
+          ...section,
+          fields: section.fields?.map(f => ({
+            id: f.id,
+            name: f.name || '',
+            type: f.type || 'text',
+            required: f.required || false,
+            options: f.options || []
+          })) || [],
+          entries: section.entries?.map(entry => ({
+            ...entry,
+            values: entry.values || {}
+          })) || []
+        }))
+      };
     case 'UPDATE_SECTION':
-        return { ...state, [action.payload.section]: action.payload.data };
+      return { ...state, [action.payload.section]: action.payload.data };
     case 'ADD_SKILL':
       return {
         ...state,
@@ -133,7 +136,7 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           ]
         }
       };
-    
+
     case 'REMOVE_SKILL':
       return {
         ...state,
@@ -142,13 +145,13 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           [action.payload.category]: state.skills[action.payload.category].filter((_, index) => index !== action.payload.index)
         }
       };
-    
+
     case 'ADD_EXPERIENCE':
       return {
         ...state,
         experience: [...state.experience, action.payload],
       };
-    
+
     case 'UPDATE_EXPERIENCE':
       return {
         ...state,
@@ -156,19 +159,19 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_EXPERIENCE':
       return {
         ...state,
         experience: state.experience.filter((_, index) => index !== action.payload),
       };
-    
+
     case 'ADD_EDUCATION':
       return {
         ...state,
         education: [...state.education, action.payload],
       };
-    
+
     case 'UPDATE_EDUCATION':
       return {
         ...state,
@@ -176,19 +179,19 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_EDUCATION':
       return {
         ...state,
         education: state.education.filter((_, index) => index !== action.payload),
       };
-    
+
     case 'ADD_PROJECT':
       return {
         ...state,
         projects: [...state.projects, action.payload],
       };
-    
+
     case 'UPDATE_PROJECT':
       return {
         ...state,
@@ -196,19 +199,19 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_PROJECT':
       return {
         ...state,
         projects: state.projects.filter((_, index) => index !== action.payload),
       };
-    
+
     case 'ADD_ACHIEVEMENT':
       return {
         ...state,
         achievements: [...state.achievements, action.payload],
       };
-    
+
     case 'UPDATE_ACHIEVEMENT':
       return {
         ...state,
@@ -216,38 +219,38 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_ACHIEVEMENT':
       return {
         ...state,
         achievements: state.achievements.filter((_, index) => index !== action.payload),
       };
-    
+
     case 'ADD_CERTIFICATION':
       return {
         ...state,
-        certifications: [...state.certifications, action.payload],
+        certifications: [...(state.certifications || []), action.payload],
       };
-    
+
     case 'UPDATE_CERTIFICATION':
       return {
         ...state,
-        certifications: state.certifications.map((item, index) =>
+        certifications: (state.certifications || []).map((item, index) =>
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_CERTIFICATION':
       return {
         ...state,
-        certifications: state.certifications.filter((_, index) => index !== action.payload),
+        certifications: (state.certifications || []).filter((_, index) => index !== action.payload),
       };
-    
+
     case 'ADD_CUSTOM_SECTION':
       return {
         ...state,
         customSections: [
-          ...state.customSections, 
+          ...state.customSections,
           {
             ...action.payload,
             fields: action.payload.fields || [],
@@ -255,7 +258,7 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           }
         ],
       };
-    
+
     case 'UPDATE_CUSTOM_SECTION':
       return {
         ...state,
@@ -263,11 +266,15 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           index === action.payload.index ? action.payload.data : item
         ),
       };
-    
+
     case 'REMOVE_CUSTOM_SECTION':
       return {
         ...state,
         customSections: state.customSections.filter((section) => section.id !== action.payload),
+        metadata: {
+          ...state.metadata,
+          sectionOrder: state.metadata?.sectionOrder?.filter(id => id !== `custom:${action.payload}`)
+        }
       };
     case 'REORDER_CUSTOM_SECTIONS':
       return {
@@ -276,13 +283,21 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
           .map(id => state.customSections.find(s => s.id === id))
           .filter((s): s is CustomSection => Boolean(s))
       };
+    case 'REORDER_SECTIONS':
+      return {
+        ...state,
+        metadata: {
+          ...state.metadata,
+          sectionOrder: action.payload
+        }
+      };
     case 'ADD_CUSTOM_FIELD': {
       const { sectionId, field } = action.payload;
       return {
         ...state,
         customSections: state.customSections.map(sec => {
           if (sec.id !== sectionId) return sec;
-          
+
           // Initialize the new field's value in all existing entries
           const updatedEntries = (sec.entries || []).map(entry => ({
             ...entry,
@@ -291,7 +306,7 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
               [field.id]: field.type === 'tag' ? [] : ''
             }
           }));
-          
+
           return {
             ...sec,
             fields: [...(sec.fields || []), field],
@@ -327,11 +342,11 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
         customSections: state.customSections.map(sec =>
           sec.id === sectionId
             ? {
-                ...sec,
-                fields: fieldIds
-                  .map(id => (sec.fields || []).find(f => f.id === id))
-                  .filter((f): f is CustomField => Boolean(f))
-              }
+              ...sec,
+              fields: fieldIds
+                .map(id => (sec.fields || []).find(f => f.id === id))
+                .filter((f): f is CustomField => Boolean(f))
+            }
             : sec
         )
       };
@@ -342,13 +357,13 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
         ...state,
         customSections: state.customSections.map(sec => {
           if (sec.id !== sectionId) return sec;
-          
+
           // Initialize values for all fields
           const initialValues: Record<string, any> = {};
           (sec.fields || []).forEach(field => {
             initialValues[field.id] = field.type === 'tag' ? [] : '';
           });
-          
+
           return {
             ...sec,
             entries: [
@@ -385,6 +400,8 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
         )
       };
     }
+    default:
+      return state;
   }
 }
 
@@ -394,49 +411,49 @@ const historyReducer = (
   action: ResumeAction & { pastLimit?: boolean }
 ): HistoryState => {
   const { past, present, future } = state;
-  
+
   switch (action.type) {
     case 'UNDO':
       if (past.length === 0) return state;
       const undoPrevious = past[past.length - 1];
       const undoNewPast = past.slice(0, past.length - 1);
-      
+
       return {
         past: undoNewPast,
         present: undoPrevious,
         future: [present, ...future]
       };
-      
+
     case 'REDO':
       if (future.length === 0) return state;
       const next = future[0];
       const newFuture = future.slice(1);
-      
+
       return {
         past: [...past, present],
         present: next,
         future: newFuture
       };
-      
+
     case 'CLEAR_HISTORY':
       return {
         past: [],
         present: state.present,
         future: []
       };
-      
+
     default:
       // For other actions, update the present state
       const defaultNewPresent = resumeReducer(present, action);
-      
+
       // If the state hasn't changed, don't update history
       if (defaultNewPresent === present) return state;
-      
+
       // Limit history size
-      const defaultNewPast = action.pastLimit 
+      const defaultNewPast = action.pastLimit
         ? [...past.slice(1), present]
         : [...past, present];
-      
+
       return {
         past: defaultNewPast,
         present: defaultNewPresent,
@@ -511,7 +528,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     const pastLimit = past.length >= 100; // Using a reasonable default limit
     historyDispatch({ ...action, pastLimit } as any);
   }, [past.length]);
-  
+
   // Set resume data function
   const setResumeData = useCallback((data: React.SetStateAction<ResumeData>) => {
     const newData = typeof data === 'function' ? data(resumeData) : data;
@@ -598,6 +615,10 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   const reorderCustomSections = useCallback((ids: string[]) => {
     dispatch({ type: 'REORDER_CUSTOM_SECTIONS', payload: ids });
+  }, [dispatch]);
+
+  const reorderSections = useCallback((ids: string[]) => {
+    dispatch({ type: 'REORDER_SECTIONS', payload: ids });
   }, [dispatch]);
 
   const addCustomField = useCallback((sectionId: string, field: CustomField) => {
@@ -704,6 +725,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     updateCustomSection,
     removeCustomSection,
     reorderCustomSections,
+    reorderSections,
     addCustomField,
     updateCustomField,
     removeCustomField,
