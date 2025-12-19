@@ -42,11 +42,23 @@ export class ResumeAIService {
   private provider: AIProvider;
 
   constructor() {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+
+    // Diagnostic log for the user to verify key loading (sanitized)
     if (geminiKey) {
-      this.genAI = new GoogleGenerativeAI(geminiKey);
+      const isWrappedInQuotes = (geminiKey.startsWith('"') && geminiKey.endsWith('"')) || (geminiKey.startsWith("'") && geminiKey.endsWith("'"));
+      console.log(`[AI Debug] Key loaded. Length: ${geminiKey.length}. ${isWrappedInQuotes ? "⚠️ WARNING: Key appears to be wrapped in quotes which might cause issues." : ""}`);
+      if (geminiKey.length < 20) {
+        console.warn(`[AI Debug] ⚠️ WARNING: API key seems unusually short (${geminiKey.length} chars).`);
+      }
+      this.genAI = new GoogleGenerativeAI(isWrappedInQuotes ? geminiKey.slice(1, -1) : geminiKey);
+    } else {
+      console.error("[AI Debug] ❌ VITE_GEMINI_API_KEY is missing from environment variables.");
     }
-    this.provider = (import.meta.env.VITE_AI_PROVIDER as AIProvider) || (import.meta.env.VITE_OPENAI_API_KEY ? 'openai' : 'gemini');
+
+    const provider = import.meta.env.VITE_AI_PROVIDER?.trim();
+    const openAIKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
+    this.provider = (provider as AIProvider) || (openAIKey ? 'openai' : 'gemini');
   }
 
   private getSystemPrompt(): string {
@@ -85,7 +97,7 @@ Do not include any text before or after this JSON object.`;
   }
 
   private async callOpenAI(payload: any): Promise<string> {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
     if (!apiKey) throw new Error("OpenAI API key missing");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -115,9 +127,10 @@ Do not include any text before or after this JSON object.`;
 
   private async callGemini(payload: any): Promise<string> {
     if (!this.genAI) {
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
       if (!geminiKey) throw new Error("Gemini API key missing");
-      this.genAI = new GoogleGenerativeAI(geminiKey);
+      const isWrappedInQuotes = (geminiKey.startsWith('"') && geminiKey.endsWith('"')) || (geminiKey.startsWith("'") && geminiKey.endsWith("'"));
+      this.genAI = new GoogleGenerativeAI(isWrappedInQuotes ? geminiKey.slice(1, -1) : geminiKey);
     }
 
     const model = this.genAI.getGenerativeModel({
@@ -131,7 +144,7 @@ Do not include any text before or after this JSON object.`;
   }
 
   private async callGroq(payload: any): Promise<string> {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
     if (!apiKey) throw new Error("Groq API key missing");
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -162,6 +175,7 @@ Do not include any text before or after this JSON object.`;
   async enhanceSection(request: EnhancementRequest): Promise<EnhancementResponse> {
     try {
       let responseText: string;
+      console.log(`AI Enhancement using provider: ${this.provider}`);
 
       switch (this.provider) {
         case 'openai':
@@ -174,16 +188,29 @@ Do not include any text before or after this JSON object.`;
           responseText = await this.callGroq(request);
           break;
         default:
-          throw new Error(`Unsupported provider: ${this.provider}`);
+          throw new Error(`Unsupported provider configured: ${this.provider}`);
       }
 
       // Cleanup response text in case AI added markdown blocks
       const cleanedJson = responseText.replace(/```json|```/g, '').trim();
       return JSON.parse(cleanedJson);
-    } catch (error) {
-      console.error("AI Enhancement failed:", error);
-      // Sophisticated Fallback for Demo/Error mode
-      return this.getFallbackEnhancement(request);
+    } catch (error: any) {
+      console.error("AI Enhancement failed detail:", error);
+
+      // Specifically catch the "API key not valid" error to provide debugging info
+      if (error.message?.includes("API key not valid") || error.message?.includes("400")) {
+        const currentKey = import.meta.env.VITE_GEMINI_API_KEY?.trim() || "";
+        console.warn(`[AI Debug] Key validation failed. Current key starts with: "${currentKey.substring(0, 4)}...", length: ${currentKey.length}`);
+        if (currentKey.includes(" ")) {
+          console.error("[AI Debug] ❌ ERROR: Your API key contains spaces. Please remove all spaces from your .env file.");
+        }
+        if (currentKey.toLowerCase().includes("api key:")) {
+          console.error("[AI Debug] ❌ ERROR: Your API key value seems to include the label 'API key:'. Please remove the label and only keep the alphanumeric string.");
+        }
+      }
+
+      // Pass the specific error message to the fallback for better user feedback
+      return this.getFallbackEnhancement(request, error.message);
     }
   }
 
@@ -231,36 +258,14 @@ Do not include any text before or after this JSON object.`;
     }
   }
 
-  private getFallbackEnhancement(request: EnhancementRequest): EnhancementResponse {
-    const original = request.original_text || "";
-
-    const transform = (text: string) => text; // No manual transformation
-
-    let variant1 = original, variant2 = original, variant3 = original;
-
-    try {
-      if (original.startsWith('[') || original.startsWith('{')) {
-        variant1 = original;
-        variant2 = original;
-        variant3 = original;
-      } else {
-        variant1 = original;
-        variant2 = original;
-        variant3 = original;
-      }
-    } catch {
-      variant1 = original;
-      variant2 = original;
-      variant3 = original;
-    }
-
+  private getFallbackEnhancement(request: EnhancementRequest, errorCode?: string): EnhancementResponse {
     return {
       section_type: request.section_type,
       preset_used: request.quick_preset || null,
       applied_tone_style: request.tone_style || [],
       applied_highlight_areas: request.highlight_areas || [],
-      variants: [variant1, variant2, variant3],
-      notes: "Running in offline/fallback mode. Please check your API keys."
+      variants: [],
+      notes: errorCode || "AI Service is currently unavailable. Please check your internet connection and API key settings."
     };
   }
 

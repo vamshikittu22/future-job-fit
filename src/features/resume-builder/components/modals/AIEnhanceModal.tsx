@@ -141,10 +141,17 @@ export default function AIEnhanceModal({
       };
 
       const result = await resumeAI.enhanceSection(request);
-      setVariants(result.variants);
-      setAiNotes(result.notes || null);
 
-      if (result.variants.length > 0) {
+      if (!result.variants || result.variants.length === 0) {
+        toast({
+          title: "AI Response Unavailable",
+          description: result.notes || "We couldn't generate any improvements at this time. Please check your API key settings or try again later.",
+          variant: "destructive"
+        });
+        setVariants([]);
+      } else {
+        setVariants(result.variants);
+        setAiNotes(result.notes || null);
         setSelectedIndex(0);
       }
     } catch (error) {
