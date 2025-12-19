@@ -19,8 +19,12 @@ export const SkillsStep: React.FC = () => {
     frameworks: '',
     tools: '',
   });
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const skills = resumeData.skills || { languages: [], frameworks: [], tools: [] };
+  const skillsData = resumeData.skills;
+  const skills = (skillsData && !Array.isArray(skillsData)
+    ? skillsData
+    : { languages: [], frameworks: [], tools: [] }) as { languages: string[]; frameworks: string[]; tools: string[] };
 
   const handleAddSkill = (category: 'languages' | 'frameworks' | 'tools') => {
     const value = inputs[category].trim();
@@ -60,9 +64,9 @@ export const SkillsStep: React.FC = () => {
     tools: ['Git', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'Jenkins', 'Jira', 'Figma'],
   };
 
-  const totalSkills = (skills.languages?.length || 0) + 
-                      (skills.frameworks?.length || 0) + 
-                      (skills.tools?.length || 0);
+  const totalSkills = (skills.languages?.length || 0) +
+    (skills.frameworks?.length || 0) +
+    (skills.tools?.length || 0);
 
   const handleAIEnhance = (enhancedData: any) => {
     setResumeData(enhancedData);
@@ -145,7 +149,21 @@ export const SkillsStep: React.FC = () => {
             icon: category.icon,
             content: (
               <CardContent className="pt-0">
-                <CardDescription className="mb-4">{category.description}</CardDescription>
+                <div className="flex items-center justify-between mb-4">
+                  <CardDescription>{category.description}</CardDescription>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setActiveCategory(category.id);
+                      setIsAIEnhanceModalOpen(true);
+                    }}
+                    className="h-7 text-[10px] text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    AI Enhance Category
+                  </Button>
+                </div>
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     <Input
@@ -223,6 +241,7 @@ export const SkillsStep: React.FC = () => {
         resumeData={resumeData}
         onEnhance={handleAIEnhance}
         step="skills"
+        targetField={activeCategory}
       />
     </WizardStepContainer>
   );

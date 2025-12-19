@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Progress } from '@/shared/ui/progress';
 import { Badge } from '@/shared/ui/badge';
-import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Lightbulb, CheckCircle2, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/lib/utils';
@@ -16,6 +15,7 @@ interface SectionAIAnalysisProps {
     isAnalyzing: boolean;
     onRefresh: () => void;
     className?: string;
+    hideHeader?: boolean;
 }
 
 export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
@@ -25,7 +25,8 @@ export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
     suggestions,
     isAnalyzing,
     onRefresh,
-    className
+    className,
+    hideHeader = false
 }) => {
     const getScoreColor = (score: number) => {
         if (score >= 80) return 'text-green-500';
@@ -40,26 +41,27 @@ export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
     };
 
     return (
-        <Card className={cn("border-l-4 border-l-primary/50 overflow-hidden", className)}>
-            <CardHeader className="pb-3 bg-muted/20">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-                        <Sparkles className="w-4 h-4 text-purple-500" />
-                        AI Analysis
-                    </CardTitle>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onRefresh}
-                        disabled={isAnalyzing}
-                        className={cn("h-6 w-6", isAnalyzing && "animate-spin")}
-                    >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-5">
-
+        <Card className={cn("border-l-4 border-l-primary/50", !hideHeader && "overflow-hidden", className)}>
+            {!hideHeader && (
+                <CardHeader className="pb-3 bg-muted/20">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
+                            <Sparkles className="w-4 h-4 text-purple-500" />
+                            AI Analysis
+                        </CardTitle>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onRefresh}
+                            disabled={isAnalyzing}
+                            className={cn("h-6 w-6", isAnalyzing && "animate-spin")}
+                        >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </CardHeader>
+            )}
+            <CardContent className={cn("space-y-5", hideHeader ? "p-0 pt-2" : "pt-4")}>
                 {/* Score Section */}
                 <div className="space-y-2">
                     <div className="flex justify-between items-end">
@@ -87,12 +89,12 @@ export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
                             {/* Strengths */}
                             {strengths.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="text-xs font-bold uppercase text-green-600 flex items-center gap-1.5">
+                                    <h4 className="text-xs font-bold uppercase text-green-600 dark:text-green-400 flex items-center gap-1.5">
                                         <CheckCircle2 className="w-3.5 h-3.5" /> Strengths
                                     </h4>
                                     <div className="flex flex-wrap gap-1.5">
                                         {strengths.map((str, i) => (
-                                            <Badge key={i} variant="outline" className="text-[10px] bg-green-50/50 border-green-200 text-green-700">
+                                            <Badge key={i} variant="outline" className="text-[10px] bg-green-500/10 dark:bg-green-500/20 border-green-200/50 dark:border-green-800/30 text-green-700 dark:text-green-400 whitespace-normal text-left">
                                                 {str}
                                             </Badge>
                                         ))}
@@ -103,14 +105,14 @@ export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
                             {/* Suggestions */}
                             {suggestions.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="text-xs font-bold uppercase text-amber-600 flex items-center gap-1.5">
+                                    <h4 className="text-xs font-bold uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                                         <Lightbulb className="w-3.5 h-3.5" /> Improvements
                                     </h4>
                                     <ul className="space-y-2">
                                         {suggestions.map((sug, i) => (
-                                            <li key={i} className="text-xs text-muted-foreground bg-amber-50/30 p-2 rounded border border-amber-100/50 flex gap-2 items-start">
-                                                <span className="mt-0.5 block w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                                                {sug}
+                                            <li key={i} className="text-xs text-muted-foreground bg-amber-500/10 dark:bg-amber-500/20 p-2 rounded border border-amber-200/50 dark:border-amber-800/30 flex gap-2 items-start">
+                                                <span className="mt-0.5 block w-1 h-1 rounded-full bg-amber-500 shrink-0 shadow-[0_0_5px_rgba(245,158,11,0.5)]" />
+                                                <span className="leading-tight text-foreground/80">{sug}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -120,12 +122,12 @@ export const SectionAIAnalysis: React.FC<SectionAIAnalysisProps> = ({
                             {/* Weaknesses (Optional / If critical) */}
                             {weaknesses.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="text-xs font-bold uppercase text-red-600 flex items-center gap-1.5">
+                                    <h4 className="text-xs font-bold uppercase text-red-600 dark:text-red-400 flex items-center gap-1.5">
                                         <AlertCircle className="w-3.5 h-3.5" /> Critical Issues
                                     </h4>
                                     <ul className="space-y-1">
                                         {weaknesses.map((weak, i) => (
-                                            <li key={i} className="text-xs text-red-600/80 pl-2 border-l-2 border-red-200">
+                                            <li key={i} className="text-xs text-red-600 dark:text-red-400 pl-2 border-l-2 border-red-200 dark:border-red-900 leading-tight opacity-90">
                                                 {weak}
                                             </li>
                                         ))}

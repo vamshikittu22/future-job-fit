@@ -41,7 +41,7 @@ export const useSectionAnalysis = (sectionId: string, content: any) => {
     );
 
     const debouncedAnalyze = useCallback(
-        debounce((data: any) => analyze(data), 2000),
+        debounce((data: any) => analyze(data), 1000),
         [analyze]
     );
 
@@ -50,5 +50,10 @@ export const useSectionAnalysis = (sectionId: string, content: any) => {
         return () => debouncedAnalyze.cancel();
     }, [content, debouncedAnalyze]);
 
-    return { analysis, isAnalyzing, error, triggerAnalysis: () => analyze(content) };
+    return {
+        analysis,
+        isAnalyzing,
+        error,
+        triggerAnalysis: () => analyze(content)
+    };
 };

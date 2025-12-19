@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, MouseSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { useSortable, arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -53,7 +53,9 @@ import {
   AccordionTrigger,
 } from '@/shared/ui/accordion';
 import { cn } from '@/shared/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
+import { useSectionAnalysis } from '@/shared/hooks/useSectionAnalysis';
 
 interface WizardSidebarProps {
   isCollapsed: boolean;
@@ -65,8 +67,28 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
   const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion, setSelectedTemplate } = useWizard();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState('');
+  const [isAIAnalysisExpanded, setIsAIAnalysisExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { atsScore, analysis } = useATS(resumeData);
+  const { atsScore, analysis: atsAnalysis } = useATS(resumeData);
+
+  // AI Content Analysis Logic
+  const analysisEnabledSteps = ['summary', 'experience', 'projects', 'achievements', 'education', 'skills'];
+  const showSectionAnalysis = analysisEnabledSteps.includes(currentStep.id) || currentStep.id.startsWith('custom:');
+
+  const getSectionData = () => {
+    switch (currentStep.id) {
+      case 'summary': return resumeData.summary;
+      case 'experience': return resumeData.experience;
+      case 'projects': return resumeData.projects;
+      case 'achievements': return resumeData.achievements;
+      case 'education': return resumeData.education;
+      case 'skills': return resumeData.skills;
+      default: return null;
+    }
+  };
+
+  const sectionData = getSectionData();
+  const { analysis: sectionAnalysis, isAnalyzing, triggerAnalysis } = useSectionAnalysis(currentStep.id, sectionData);
 
   const prefersReducedMotion = useMemo(() => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -457,18 +479,18 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
             </div>
 
             {/* ATS Suggestions */}
-            {analysis.suggestions && analysis.suggestions.length > 0 && (
+            {atsAnalysis.suggestions && atsAnalysis.suggestions.length > 0 && (
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="suggestions" className="border-none">
                   <AccordionTrigger className="text-xs font-bold py-2 hover:no-underline">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-3.5 w-3.5 text-primary" />
-                      View Suggestions ({analysis.suggestions.length})
+                      View Suggestions ({atsAnalysis.suggestions.length})
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pt-1 pb-2">
                     <div className="space-y-2">
-                      {analysis.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
+                      {atsAnalysis.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
                         <div key={index} className="rounded-md border bg-muted/20 p-2 text-[10px]">
                           <div className="flex items-start gap-2">
                             <div className={cn(
@@ -485,6 +507,78 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
               </Accordion>
             )}
           </div>
+
+          <Separator />
+
+          {/* AI Section Analysis */}
+          {showSectionAnalysis && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-500" />
+                  <h3 className="text-sm font-medium text-muted-foreground">AI Content Score</h3>
+                </div>
+                {sectionAnalysis && (
+                  <Badge variant="outline" className={cn(
+                    "text-[10px] px-1.5 py-0 h-5 dark:border-opacity-20",
+                    sectionAnalysis.score >= 80 ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" :
+                      sectionAnalysis.score >= 60 ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800" :
+                        "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                  )}>
+                    {sectionAnalysis.score}/100
+                  </Badge>
+                )}
+              </div>
+
+              <div className="bg-purple-500/10 dark:bg-purple-500/20 p-3 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-tighter">Current Section Quality</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-purple-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-500/10"
+                    onClick={() => setIsAIAnalysisExpanded(!isAIAnalysisExpanded)}
+                  >
+                    {isAIAnalysisExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </Button>
+                </div>
+
+                <AnimatePresence>
+                  {isAIAnalysisExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <SectionAIAnalysis
+                        score={sectionAnalysis?.score || 0}
+                        strengths={sectionAnalysis?.strengths || []}
+                        weaknesses={sectionAnalysis?.weaknesses || []}
+                        suggestions={sectionAnalysis?.suggestions || []}
+                        isAnalyzing={isAnalyzing}
+                        onRefresh={triggerAnalysis}
+                        className="bg-transparent border-none shadow-none pt-0 p-0"
+                        hideHeader
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {!isAIAnalysisExpanded && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 bg-purple-500/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 transition-all duration-500 shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                        style={{ width: `${sectionAnalysis?.score || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400">{sectionAnalysis?.score || 0}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <Separator />
 

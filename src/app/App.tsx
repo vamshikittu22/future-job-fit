@@ -19,6 +19,8 @@ import { ExperienceStep } from "@/features/resume-builder/components/editor/step
 import { EducationStep } from "@/features/resume-builder/components/editor/steps/EducationStep";
 import { SkillsStep } from "@/features/resume-builder/components/editor/steps/SkillsStep";
 import { ProjectsStep } from "@/features/resume-builder/components/editor/steps/ProjectsStep";
+import { AchievementsStep } from "@/features/resume-builder/components/editor/steps/AchievementsStep";
+import { CertificationsStep } from "@/features/resume-builder/components/editor/steps/CertificationsStep";
 import { ReviewStep } from "@/features/resume-builder/components/editor/steps/ReviewStep";
 import CustomSectionStep from "@/features/resume-builder/components/editor/steps/CustomSectionStep";
 
@@ -40,6 +42,8 @@ const router = createBrowserRouter([
       { path: "education", element: <EducationStep /> },
       { path: "skills", element: <SkillsStep /> },
       { path: "projects", element: <ProjectsStep /> },
+      { path: "achievements", element: <AchievementsStep /> },
+      { path: "certifications", element: <CertificationsStep /> },
       { path: "review", element: <ReviewStep /> },
       { path: "custom/:id", element: <CustomSectionStep /> },
     ],

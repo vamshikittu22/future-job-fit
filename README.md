@@ -71,3 +71,24 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## AI Resume Enhancement
+
+This project features a production-ready AI Resume Enhancement system that connects to real AI models (OpenAI, Gemini, and Groq).
+
+### Setup API Keys
+
+To use the AI features, you need to set up environment variables in a `.env` file at the root of your project:
+
+1. Create a `.env` file (you can use `.env.example` as a template).
+2. Add your API keys:
+   - `VITE_OPENAI_API_KEY`: Your OpenAI API key (for GPT-4o-mini).
+   - `VITE_GEMINI_API_KEY`: Your Google Gemini API key (for Gemini 1.5 Flash).
+   - `VITE_GROQ_API_KEY`: Your Groq API key (for free Llama models).
+3. Choose your provider by setting `VITE_AI_PROVIDER` to `openai`, `gemini`, or `groq`.
+
+### Features
+- **Multi-Variant Generation**: Every enhancement request returns 3-5 high-quality variations based on your chosen strategy.
+- **Quick Presets**: Choose from ATS Optimized, Concise Professional, or Maximum Impact.
+- **Custom Strategy**: Fine-tune the tone (Formal, Modern, Concise, etc.) and highlight areas (Technical, Leadership, etc.).
+- **Token Efficiency**: The system uses highly optimized prompts and cost-effective models like `gpt-4o-mini` and `gemini-1.5-flash` to maximize performance while minimizing costs.

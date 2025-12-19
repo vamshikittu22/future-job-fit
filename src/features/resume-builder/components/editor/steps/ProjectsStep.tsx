@@ -7,14 +7,16 @@ import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
-import { Plus, Trash2, Edit, X, Save, Code } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Save, Code, Sparkles } from 'lucide-react';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
+import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 
 export const ProjectsStep: React.FC = () => {
-  const { resumeData, addProject, updateProject, removeProject } = useResume();
+  const { resumeData, addProject, updateProject, removeProject, setResumeData } = useResume();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     id: '',
@@ -46,7 +48,7 @@ export const ProjectsStep: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const projectData = {
       ...formData,
       technologies: [...formData.technologies],
@@ -58,7 +60,7 @@ export const ProjectsStep: React.FC = () => {
     } else {
       addProject(projectData);
     }
-    
+
     resetForm();
   };
 
@@ -100,23 +102,30 @@ export const ProjectsStep: React.FC = () => {
       description="Showcase your notable projects"
     >
       <ProgressStepper />
-      
+
       <div className="space-y-6">
         {!isAdding ? (
-          <Button 
-            onClick={() => setIsAdding(true)}
-            className="w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Project
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsAIEnhanceModalOpen(true)}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Enhance with AI
+            </Button>
+            <Button onClick={() => setIsAdding(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Project
+            </Button>
+          </div>
         ) : (
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>{editingIndex !== null ? 'Edit Project' : 'Add New Project'}</CardTitle>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={resetForm}
                 >
                   <X className="h-4 w-4" />
@@ -128,28 +137,40 @@ export const ProjectsStep: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Project Name *</label>
-                    <Input 
+                    <Input
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Project Name"
                       required
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Your Role</label>
-                    <Input 
+                    <Input
                       value={formData.role}
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       placeholder="Your Role"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Description *</label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAIEnhanceModalOpen(true)}
+                      className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Enhance with AI
+                    </Button>
+                  </div>
                   <Textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe the project, your role, and key achievements"
                     rows={4}
                     required
@@ -165,8 +186,8 @@ export const ProjectsStep: React.FC = () => {
                       placeholder="Add technology"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTechnology())}
                     />
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       variant="outline"
                       onClick={addTechnology}
                     >
@@ -178,7 +199,7 @@ export const ProjectsStep: React.FC = () => {
                       {formData.technologies.map(tech => (
                         <div key={tech} className="bg-muted px-2 py-1 rounded-md text-sm flex items-center gap-1">
                           {tech}
-                          <button 
+                          <button
                             type="button"
                             onClick={() => removeTechnology(tech)}
                             className="text-muted-foreground hover:text-foreground"
@@ -196,34 +217,34 @@ export const ProjectsStep: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Project URL</label>
-                    <Input 
+                    <Input
                       type="url"
                       value={formData.url}
-                      onChange={(e) => setFormData({...formData, url: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                       placeholder="https://example.com"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Start Date</label>
-                    <Input 
+                    <Input
                       type="month"
                       value={formData.startDate}
-                      onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">End Date</label>
-                    <Input 
+                    <Input
                       type="month"
                       value={formData.endDate}
-                      onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                     />
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={resetForm}
                 >
@@ -305,6 +326,20 @@ export const ProjectsStep: React.FC = () => {
           </div>
         )}
       </div>
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={(enhancedData) => {
+          setResumeData(enhancedData);
+          if (editingIndex !== null) {
+            setFormData(prev => ({ ...prev, description: enhancedData.projects[editingIndex].description }));
+          }
+        }}
+        step="projects"
+        targetItemIndex={editingIndex}
+        targetField="description"
+      />
     </WizardStepContainer>
   );
 };

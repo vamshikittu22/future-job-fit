@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
   User, FileText, Briefcase, GraduationCap, Code,
-  Folder, CheckCircle, Layout
+  Folder, CheckCircle, Layout, Award, Trophy
 } from 'lucide-react';
 
 // Wizard Step Configuration
@@ -94,6 +94,28 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     isRequired: false,
     fields: ['projects'],
     helpText: 'Showcase your notable projects',
+    atsWeight: 10,
+  },
+  {
+    id: 'achievements',
+    title: 'Achievements',
+    label: 'Achievements',
+    path: '/resume-wizard/achievements',
+    icon: Trophy,
+    isRequired: false,
+    fields: ['achievements'],
+    helpText: 'Highlight your key accomplishments and awards',
+    atsWeight: 10,
+  },
+  {
+    id: 'certifications',
+    title: 'Certifications',
+    label: 'Certifications',
+    path: '/resume-wizard/certifications',
+    icon: Award,
+    isRequired: false,
+    fields: ['certifications'],
+    helpText: 'List your professional certifications and licenses',
     atsWeight: 10,
   },
 ];
@@ -427,6 +449,14 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
     case 'projects':
       if (!data.projects || data.projects.length === 0) return 0;
       return data.projects.length > 0 ? 100 : 0;
+
+    case 'achievements':
+      if (!data.achievements || data.achievements.length === 0) return 0;
+      return data.achievements.length > 0 ? 100 : 0;
+
+    case 'certifications':
+      if (!data.certifications || data.certifications.length === 0) return 0;
+      return data.certifications.length > 0 ? 100 : 0;
 
     case 'review':
       return 100;

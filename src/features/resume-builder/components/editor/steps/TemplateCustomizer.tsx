@@ -76,9 +76,9 @@ export const TemplateCustomizer: React.FC = () => {
 
     const ColorInput = ({ label, field, value }: { label: string, field: keyof ThemeSettings, value: string }) => (
         <div className="space-y-1">
-            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
+            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/90 dark:text-muted-foreground">{label}</Label>
             <div className="flex gap-2 items-center">
-                <div className="relative h-7 w-7 shrink-0 rounded overflow-hidden border shadow-sm">
+                <div className="relative h-7 w-7 shrink-0 rounded overflow-hidden border border-input shadow-sm">
                     <input
                         type="color"
                         value={value}
@@ -116,7 +116,7 @@ export const TemplateCustomizer: React.FC = () => {
                             value={currentSettings.fontFamily}
                             onValueChange={(val) => handleChange('fontFamily', val)}
                         >
-                            <SelectTrigger className="w-full h-8 bg-white border-muted">
+                            <SelectTrigger className="w-full h-8 bg-background dark:bg-muted/50 border-muted">
                                 <SelectValue placeholder="Typeface" />
                             </SelectTrigger>
                             <SelectContent>

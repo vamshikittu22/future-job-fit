@@ -7,10 +7,11 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Badge } from '@/shared/ui/badge';
-import { GraduationCap, Save, Trash2, Edit, Plus, X } from 'lucide-react';
+import { GraduationCap, Save, Trash2, Edit, Plus, X, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
+import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 
 interface EducationFormData {
   id?: string;
@@ -24,8 +25,9 @@ interface EducationFormData {
 }
 
 export const EducationStep: React.FC = () => {
-  const { resumeData, addEducation, updateEducation, removeEducation } = useResume();
+  const { resumeData, addEducation, updateEducation, removeEducation, setResumeData } = useResume();
   const [isAdding, setIsAdding] = useState(false);
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState<EducationFormData>({
     institution: '',
@@ -42,9 +44,9 @@ export const EducationStep: React.FC = () => {
       const education = resumeData.education[editingIndex];
       setFormData({
         id: education.id,
-        institution: education.institution || '',
+        institution: education.school || education.institution || '',
         degree: education.degree || '',
-        fieldOfStudy: education.fieldOfStudy || '',
+        fieldOfStudy: education.fieldOfStudy || education.field || '',
         startDate: education.startDate || '',
         endDate: education.endDate || '',
         description: education.description || '',
@@ -75,14 +77,20 @@ export const EducationStep: React.FC = () => {
     setIsAdding(false);
   };
 
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const educationData = {
       id: formData.id || uuidv4(),
+      school: formData.institution,
       institution: formData.institution,
       degree: formData.degree,
       fieldOfStudy: formData.fieldOfStudy,
+      field: formData.fieldOfStudy,
       startDate: formData.startDate,
       endDate: formData.endDate,
       description: formData.description,
@@ -94,7 +102,7 @@ export const EducationStep: React.FC = () => {
     } else {
       addEducation(educationData);
     }
-    
+
     resetForm();
   };
 
@@ -118,10 +126,18 @@ export const EducationStep: React.FC = () => {
       description="Add your educational background"
     >
       <ProgressStepper />
-      
+
       <div className="space-y-6">
         {!isAdding && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsAIEnhanceModalOpen(true)}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Enhance with AI
+            </Button>
             <Button onClick={() => setIsAdding(true)}>
               <Plus className="mr-2 h-4 w-4" /> Add Education
             </Button>
@@ -199,7 +215,19 @@ export const EducationStep: React.FC = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Description</label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAIEnhanceModalOpen(true)}
+                      className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Enhance with AI
+                    </Button>
+                  </div>
                   <Textarea
                     name="description"
                     value={formData.description}
@@ -238,7 +266,7 @@ export const EducationStep: React.FC = () => {
                   <CardContent className="pt-0">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{edu.institution}</span>
+                        <span>{edu.school || edu.institution}</span>
                         <span>•</span>
                         <span>
                           {edu.startDate && format(new Date(edu.startDate), 'MMM yyyy')}
@@ -285,6 +313,21 @@ export const EducationStep: React.FC = () => {
           )}
         </div>
       </div>
+
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={(newData) => {
+          setResumeData(newData);
+          if (editingIndex !== null) {
+            setFormData(prev => ({ ...prev, description: newData.education[editingIndex].description }));
+          }
+        }}
+        step="education"
+        targetItemIndex={editingIndex}
+        targetField="description"
+      />
     </WizardStepContainer>
   );
 };

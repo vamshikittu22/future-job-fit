@@ -177,6 +177,9 @@ interface ResumePreviewProps {
     resumeData: ResumeData | null;
     template: string;
     sectionOrder: string[];
+    onScaleChange?: (scale: number) => void;
+    manualScale?: number;
+    onTotalPagesChange?: (pages: number) => void;
 }
 
 // Data structure for a "Render Block"
@@ -186,7 +189,14 @@ type RenderBlock = {
     content: React.ReactNode;
 };
 
-export default function ResumePreview({ resumeData, template, sectionOrder }: ResumePreviewProps) {
+export default function ResumePreview({
+    resumeData,
+    template,
+    sectionOrder,
+    onScaleChange,
+    manualScale,
+    onTotalPagesChange
+}: ResumePreviewProps) {
     const resumeDataString = JSON.stringify(resumeData);
 
     const themeSettings = useMemo(() => {
@@ -295,7 +305,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
                 b.push({ id: 'summary-title', type: 'title', content: renderTitle(SECTION_NAMES.summary) });
                 b.push({ id: 'summary-content', type: 'item', content: <p className={styles.itemDesc}>{resumeData.summary}</p> });
             }
-            if (sectionKey === 'experience' && resumeData.experience?.length) {
+            if (sectionKey === 'experience' && Array.isArray(resumeData.experience) && resumeData.experience.length) {
                 b.push({ id: 'exp-title', type: 'title', content: renderTitle(SECTION_NAMES.experience) });
                 resumeData.experience.forEach((exp, idx) => {
                     b.push({
@@ -311,7 +321,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
                                 </div>
                                 <div className={styles.itemSubtitle}>{exp.company}{exp.location ? `, ${exp.location}` : ''}</div>
                                 {exp.description && <p className={styles.itemDesc}>{exp.description}</p>}
-                                {exp.bullets && exp.bullets.length > 0 && (
+                                {Array.isArray(exp.bullets) && exp.bullets.length > 0 && (
                                     <ul className={styles.list}>
                                         {exp.bullets.map((bullet, i) => <li key={i} className="text-[11px] text-gray-600">{bullet}</li>)}
                                     </ul>
@@ -322,7 +332,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
                 });
             }
 
-            if (sectionKey === 'education' && resumeData.education?.length) {
+            if (sectionKey === 'education' && Array.isArray(resumeData.education) && resumeData.education.length) {
                 b.push({ id: 'edu-title', type: 'title', content: renderTitle(SECTION_NAMES.education) });
                 resumeData.education.forEach((edu, idx) => {
                     b.push({
@@ -349,7 +359,15 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
 
             // Skills (Pills Style)
             if (sectionKey === 'skills') {
-                const skillsList = Array.isArray(resumeData.skills) ? resumeData.skills : [];
+                const skillsList = Array.isArray(resumeData.skills)
+                    ? resumeData.skills
+                    : (typeof resumeData.skills === 'object' && resumeData.skills !== null)
+                        ? Object.entries(resumeData.skills).map(([category, items]) => ({
+                            category,
+                            items: Array.isArray(items) ? items : []
+                        }))
+                        : [];
+
                 if (skillsList.length > 0) {
                     b.push({ id: 'skills-title', type: 'title', content: renderTitle(SECTION_NAMES.skills) });
                     b.push({
@@ -374,7 +392,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             }
 
             // Projects
-            if (sectionKey === 'projects' && resumeData.projects?.length) {
+            if (sectionKey === 'projects' && Array.isArray(resumeData.projects) && resumeData.projects.length) {
                 b.push({ id: 'proj-title', type: 'title', content: renderTitle(SECTION_NAMES.projects) });
                 resumeData.projects.forEach((proj, idx) => {
                     b.push({
@@ -399,7 +417,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             }
 
             // Achievements
-            if (sectionKey === 'achievements' && resumeData.achievements?.length) {
+            if (sectionKey === 'achievements' && Array.isArray(resumeData.achievements) && resumeData.achievements.length) {
                 b.push({
                     id: 'ach-title',
                     type: 'title',
@@ -423,7 +441,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             }
 
             // Certifications
-            if (sectionKey === 'certifications' && resumeData.certifications?.length) {
+            if (sectionKey === 'certifications' && Array.isArray(resumeData.certifications) && resumeData.certifications.length) {
                 b.push({
                     id: 'cert-title',
                     type: 'title',
@@ -448,7 +466,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
 
             // Custom Sections
             const customSec = resumeData.customSections?.find(cs => cs.id === sectionKey);
-            if (customSec && customSec.entries?.length) {
+            if (customSec && Array.isArray(customSec.entries) && customSec.entries.length) {
                 b.push({
                     id: `cs-${customSec.id}-title`,
                     type: 'title',
@@ -494,9 +512,15 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             if (!MeasureContainerRef.current || !contentRef.current) return;
 
             const parentWidth = MeasureContainerRef.current.offsetWidth;
-            const availableWidth = parentWidth - 32; // deduction for padding
-            const newScale = Math.max(0.3, Math.min(availableWidth / A4_WIDTH_PX, 2.5));
-            setScale(newScale);
+            const availableWidth = parentWidth - 32;
+            const autoScale = Math.max(0.3, Math.min(availableWidth / A4_WIDTH_PX, 1.5));
+
+            const finalScale = manualScale || autoScale;
+            setScale(finalScale);
+
+            if (onScaleChange && !manualScale) {
+                onScaleChange(autoScale);
+            }
 
             const itemNodes = Array.from(contentRef.current.children) as HTMLElement[];
             const newPages: RenderBlock[][] = [];
@@ -536,6 +560,9 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             }
 
             setPages(newPages.length > 0 ? newPages : [[]]);
+            if (onTotalPagesChange) {
+                onTotalPagesChange(newPages.length || 1);
+            }
         };
 
         const timeoutId = setTimeout(calculateLayout, 50);
@@ -555,7 +582,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
     return (
         <div
             ref={MeasureContainerRef}
-            className="flex flex-col items-center bg-gray-100 min-h-full w-full overflow-x-hidden p-4"
+            className="flex flex-col items-center min-h-full w-full overflow-x-hidden"
             style={{
                 '--primary-color': themeSettings.primaryColor,
                 '--primary-color-muted': themeSettings.primaryColorMuted,
@@ -584,7 +611,7 @@ export default function ResumePreview({ resumeData, template, sectionOrder }: Re
             {/* Visible Content Layer (Scaled) */}
             <div
                 style={{
-                    transform: `scale(${scale})`,
+                    transform: `scale(${manualScale || scale})`,
                     transformOrigin: 'top center',
                     width: `${A4_WIDTH_PX}px`,
                 }}

@@ -43,6 +43,8 @@ export const ReviewStep: React.FC = () => {
     { id: 'education', name: 'Education', data: resumeData.education },
     { id: 'skills', name: 'Skills', data: resumeData.skills },
     { id: 'projects', name: 'Projects', data: resumeData.projects },
+    { id: 'achievements', name: 'Achievements', data: resumeData.achievements },
+    { id: 'certifications', name: 'Certifications', data: resumeData.certifications },
   ];
 
   // Add custom sections

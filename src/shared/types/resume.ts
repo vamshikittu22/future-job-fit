@@ -85,11 +85,13 @@ export interface ResumeData {
     id: string;
     degree: string;
     school: string;
+    institution?: string; // Alias for school
     fieldOfStudy?: string;
     field?: string; // Alias for fieldOfStudy
     startDate: string;
     endDate: string;
     description?: string;
+    gpa?: string;
   }>;
   skills: Array<{
     category: string;

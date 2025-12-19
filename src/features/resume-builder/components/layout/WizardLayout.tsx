@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Eye, Home } from 'lucide-react';
+import { Menu, Eye, Home, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
@@ -75,122 +75,129 @@ const WizardLayoutContent: React.FC = () => {
   };
 
   const getContentWidth = () => {
-    if (isMobile || !isPreviewVisible) return 'w-full';
-    if (isSidebarCollapsed) return 'w-3/5';
-    return 'w-1/2';
+    if (isMobile) return 'w-full';
+    if (!isPreviewVisible) return isSidebarCollapsed ? 'w-[calc(100%-4rem)]' : 'w-[85%]';
+    return 'w-[45%]';
   };
 
-  const getPreviewWidth = () => (isSidebarCollapsed ? 'w-2/5' : 'w-1/2');
+  const getPreviewWidth = () => {
+    if (!isPreviewVisible) return 'w-0';
+    if (isSidebarCollapsed) return 'w-[calc(100%-45%-4rem)]';
+    return 'w-[40%]';
+  };
+
+  const getSidebarWidth = () => {
+    if (isMobile) return 'hidden';
+    return isSidebarCollapsed ? 'w-16' : 'w-[15%]';
+  };
 
   return (
     <>
       <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
-          <div
-            className={cn(
-              'transition-all duration-300 ease-in-out border-r bg-card h-full overflow-y-auto',
-              isMobile ? 'hidden' : isSidebarCollapsed ? 'w-16' : 'w-72',
-              'flex-shrink-0 z-10'
-            )}
-          >
-            <WizardSidebar
-              isCollapsed={isSidebarCollapsed}
-              onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
-            />
-          </div>
-
-          <div className="flex-1 flex overflow-hidden min-w-0">
+          {/* Preview Panel (Left Side) */}
+          {!isMobile && isPreviewVisible && (
             <div
               className={cn(
-                'flex flex-col h-full overflow-y-auto',
+                'bg-muted/30 flex-shrink-0 overflow-y-auto scrollbar-hide border-r',
                 'transition-all duration-300',
-                getContentWidth(),
-                'min-w-0'
+                getPreviewWidth(),
+                'flex flex-col min-w-0'
               )}
             >
-              <div className="flex items-center justify-between border-b bg-card p-4 flex-shrink-0">
-                <div className="flex items-center space-x-2">
-                  {isMobile && (
-                    <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed((prev) => !prev)}>
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hidden md:flex items-center gap-2 font-semibold text-lg"
-                    onClick={() => navigate('/')}
-                  >
-                    <span className="bg-primary text-primary-foreground rounded-md px-2 py-1">Resume</span>
-                    <span>AI</span>
-                  </Button>
-                </div>
+              <WizardPreview />
+            </div>
+          )}
 
-                <h1 className="text-lg font-semibold">Resume Wizard</h1>
-
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate('/')}
-                    title="Go to Home"
-                  >
-                    <Home className="h-5 w-5" />
+          {/* Editor Panel (Center) */}
+          <div
+            className={cn(
+              'flex flex-col h-full overflow-y-auto min-w-0',
+              'transition-all duration-300',
+              getContentWidth()
+            )}
+          >
+            <div className="flex items-center justify-between border-b bg-card p-4 flex-shrink-0">
+              <div className="flex items-center space-x-2">
+                {isMobile && (
+                  <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed((prev) => !prev)}>
+                    <Menu className="h-5 w-5" />
                   </Button>
-                  {isMobile && (
-                    <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)}>
-                      <Eye className="h-5 w-5" />
-                    </Button>
-                  )}
-                </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:flex items-center gap-2 font-semibold text-lg"
+                  onClick={() => navigate('/')}
+                >
+                  <span className="bg-primary text-primary-foreground rounded-md px-2 py-1">Resume</span>
+                  <span>AI</span>
+                </Button>
               </div>
 
-              {!isMobile && (
-                <QuickActionsBar
-                  onLoadSample={() => setIsSampleDataModalOpen(true)}
-                  onAIEnhance={() => setIsAIEnhanceModalOpen(true)}
-                  onTogglePreview={() => setIsPreviewVisible((prev) => !prev)}
-                  onExport={() => setIsExportModalOpen(true)}
-                  isPreviewVisible={isPreviewVisible}
-                  isSaving={false}
-                />
-              )}
+              <h1 className="text-lg font-semibold">Resume Wizard</h1>
 
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="max-w-4xl mx-auto w-full h-full p-4">
-                  <motion.div
-                    key={`${location.pathname}-${currentStep?.id || lastStepId || 'default'}`}
-                    initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: prefersReducedMotion ? 0 : 0.15,
-                      ease: 'easeOut'
-                    }}
-                    className="w-full h-full"
-                  >
-                    <Outlet />
-                  </motion.div>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/')}
+                  title="Go to Home"
+                >
+                  <Home className="h-5 w-5" />
+                </Button>
+                {isMobile && (
+                  <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(true)}>
+                    <Eye className="h-5 w-5" />
+                  </Button>
+                )}
               </div>
             </div>
 
-            {!isMobile && isPreviewVisible && (
-              <div
-                className={cn(
-                  'border-l bg-muted/30 flex-shrink-0 overflow-y-auto',
-                  'transition-all duration-300',
-                  getPreviewWidth(),
-                  'flex flex-col min-w-0'
-                )}
-              >
-                <div className="flex-1 overflow-y-auto p-2 flex justify-center">
-                  <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
-                    <WizardPreview />
-                  </div>
-                </div>
-              </div>
+            {!isMobile && (
+              <QuickActionsBar
+                onLoadSample={() => setIsSampleDataModalOpen(true)}
+                onAIEnhance={() => setIsAIEnhanceModalOpen(true)}
+                onTogglePreview={() => setIsPreviewVisible((prev) => !prev)}
+                onExport={() => setIsExportModalOpen(true)}
+                isPreviewVisible={isPreviewVisible}
+                isSaving={false}
+              />
             )}
+
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="max-w-4xl mx-auto w-full h-full p-4">
+                <motion.div
+                  key={`${location.pathname}-${currentStep?.id || lastStepId || 'default'}`}
+                  initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.15,
+                    ease: 'easeOut'
+                  }}
+                  className="w-full h-full"
+                >
+                  <Outlet />
+                </motion.div>
+              </div>
+            </div>
           </div>
+
+          {/* Sidebar Panel (Right Side) */}
+          {!isMobile && (
+            <div
+              className={cn(
+                'transition-all duration-300 ease-in-out border-l bg-card h-full overflow-y-auto',
+                getSidebarWidth(),
+                'flex-shrink-0 z-10'
+              )}
+            >
+              <WizardSidebar
+                isCollapsed={isSidebarCollapsed}
+                onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+              />
+            </div>
+          )}
         </div>
 
         <SampleDataLoader open={isSampleDataModalOpen} onOpenChange={setIsSampleDataModalOpen} />

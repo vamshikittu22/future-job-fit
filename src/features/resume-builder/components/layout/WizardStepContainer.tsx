@@ -204,23 +204,9 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
           className="flex gap-6 h-full"
         >
           {/* Main Form Content */}
-          <div className={cn("flex-1 transition-all duration-300", showAnalysis && analysis && !isMobile ? "max-w-[70%]" : "max-w-full")}>
+          <div className="flex-1 transition-all duration-300 max-w-full">
             {children || lastChildren || <div className="text-muted-foreground text-center py-8">Loading section...</div>}
           </div>
-
-          {/* AI Analysis Side Panel (Desktop) */}
-          {showAnalysis && !isMobile && (
-            <div className="w-[30%] min-w-[300px] shrink-0 sticky top-0 self-start animate-in slide-in-from-right-10 fade-in duration-500">
-              <SectionAIAnalysis
-                score={analysis?.score || 0}
-                strengths={analysis?.strengths || []}
-                weaknesses={analysis?.weaknesses || []}
-                suggestions={analysis?.suggestions || []}
-                isAnalyzing={isAnalyzing}
-                onRefresh={triggerAnalysis}
-              />
-            </div>
-          )}
         </motion.div>
       </div>
 

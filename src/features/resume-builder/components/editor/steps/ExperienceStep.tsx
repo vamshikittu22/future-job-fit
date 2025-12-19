@@ -256,7 +256,18 @@ export const ExperienceStep: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description & Achievements *</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description & Achievements *</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAIEnhanceModalOpen(true)}
+                  className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Enhance with AI
+                </Button>
+              </div>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -300,6 +311,8 @@ export const ExperienceStep: React.FC = () => {
         resumeData={resumeData}
         onEnhance={handleAIEnhance}
         step="experience"
+        targetItemIndex={editingIndex}
+        targetField="description"
       />
     </WizardStepContainer>
   );
