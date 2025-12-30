@@ -1,137 +1,63 @@
-# Resume Export System
+# 📄 Resume Export System
 
-This directory contains the core functionality for exporting resumes in multiple formats (PDF, Word, and plain text) with consistent styling and structure.
+This directory manages the transformation of `ResumeData` into professional documents (PDF, Word, LaTeX, HTML, and Markdown).
 
-## Features
+## 🌟 Supported Formats
 
-- **Multiple Export Formats**: Export resumes as PDF, Word (DOCX), or plain text
-- **Consistent Styling**: Uniform appearance across all export formats
-- **Responsive Design**: Adapts to different content lengths and screen sizes
-- **Progress Tracking**: Real-time export progress updates
-- **Error Handling**: Comprehensive error handling with user feedback
-- **Customizable**: Easy to extend with new formats or custom templates
+- **PDF (Formatted)**: High-fidelity, template-based rendering using `jsPDF` and `html2canvas`.
+- **PDF (ATS-Friendly)**: A text-only PDF optimized for machine readability.
+- **DOCX**: Structured Microsoft Word document generation via `docx.js`.
+- **HTML**: A standalone, self-contained web version of your resume.
+- **LaTeX**: Professional TEX source for academic or technical users.
+- **Markdown & TXT**: Clean text versions for easy copy-pasting or minimalists.
+- **JSON**: Portable data format for imports and backups.
 
-## Components
+## 🛠️ Core Utilities
 
-### BaseResumeTemplate
+### `formats.ts`
+The central hub for export logic.
+- **`generateHTML`**: Generates a thematic HTML string based on the chosen template (Modern, Creative, Classic).
+- **`generateLaTeX`**: Maps resume data to LaTeX commands.
+- **`generateMarkdown` / `generatePlainText`**: Simple serializers for text-based exports.
 
-The main template component that defines the structure of the resume. It takes formatted resume data and renders it consistently across all export formats.
+### `pdf.ts`
+Handles the complexity of client-side PDF generation:
+- Uses `generatePdfFromElement` to convert hidden DOM nodes into A4-sized PDF blobs.
+- Manages print-specific CSS and DPI scaling.
 
-### Export Utilities
+### `docx.ts`
+Builds a word document object model:
+- Define sections, styles, and headers.
+- Handles bulleted lists and multi-column contact info.
 
-- `exportToPDF`: Generates a PDF version of the resume using jsPDF and html2canvas
-- `exportToWord`: Creates a Word document using docx
-- `exportToText`: Generates a plain text version of the resume
-- `exportResume`: Unified function to handle all export formats
+## 🎨 Templates
 
-### Data Utilities
+The system supports a variety of themes:
+1. **Modern**: Blue-accented, clean sans-serif layout.
+2. **Creative**: Elegant serif typography with colored backgrounds.
+3. **Classic**: Traditional, black-and-white serif layout (Times New Roman inspired).
+4. **Minimal**: Focused on whitespace and readability.
 
-- `formatResumeData`: Converts the application's resume data structure into a format suitable for the templates
-- `formatDate`: Helper function to format dates consistently
+## 🚀 Usage
 
-### Hooks
-
-- `useResumeExport`: Custom hook that manages the export process, including loading states and error handling
-
-### Components
-
-- `ExportButton`: A reusable button component with a dropdown menu for selecting export formats
-
-## Usage
-
-### Using the ExportButton Component
-
-The easiest way to add export functionality is to use the `ExportButton` component:
-
-```tsx
-import { ExportButton } from '@/components/ExportButton';
-import { useResume } from '@/contexts/ResumeContext';
-import { formatResumeData } from '@/templates/resumeDataUtils';
-
-function MyComponent() {
-  const { resumeData } = useResume();
-  const formattedData = formatResumeData(resumeData);
-  
-  return (
-    <ExportButton 
-      data={formattedData}
-      fileName="my-resume"
-      variant="outline"
-      size="sm"
-      onExportStart={() => console.log('Export started')}
-      onExportSuccess={() => console.log('Export successful')}
-      onExportError={(error) => console.error('Export failed:', error)}
-    />
-  );
-}
-```
-
-### Using the useResumeExport Hook
-
-For more control, you can use the `useResumeExport` hook directly:
+To trigger an export from a component:
 
 ```tsx
-import { useResumeExport } from '@/hooks/useResumeExport';
-import { formatResumeData } from '@/templates/resumeDataUtils';
+import { exportResume } from '@/shared/lib/export/formats';
+import { useResume } from '@/shared/contexts/ResumeContext';
 
-function MyComponent() {
-  const { exportAsPdf, exportAsWord, exportAsText, isExporting } = useResumeExport({
-    onSuccess: () => console.log('Export successful'),
-    onError: (error) => console.error('Export failed:', error),
-  });
-  
-  const formattedData = formatResumeData(resumeData);
-  
-  return (
-    <div>
-      <button 
-        onClick={() => exportAsPdf(formattedData, 'my-resume')}
-        disabled={isExporting}
-      >
-        {isExporting ? 'Exporting...' : 'Export as PDF'}
-      </button>
-      
-      {/* Other export buttons */}
-    </div>
-  );
-}
+const { resumeData } = useResume();
+
+const handleDownload = async () => {
+  const blob = await exportResume('pdf-formatted', resumeData, 'modern');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `resume.pdf`;
+  link.click();
+};
 ```
 
-### Customizing the Template
-
-To customize the resume template, modify the `BaseResumeTemplate` component. The template uses Tailwind CSS for styling, so you can easily adjust the appearance by updating the className props.
-
-## Adding a New Export Format
-
-1. Create a new export function in `exportUtils.ts` following the pattern of the existing ones
-2. Update the `ExportFormat` type in `useResumeExport.ts`
-3. Add the new format to the `formatIcons` and `formatLabels` objects in `ExportButton.tsx`
-4. Update the `handleExport` function in `ExportButton.tsx` to support the new format
-
-## Dependencies
-
-- `jspdf`: For PDF generation
-- `html2canvas`: For converting HTML to canvas
-- `docx`: For Word document generation
-- `file-saver`: For handling file downloads
-
-## Known Issues
-
-- Complex layouts may not render perfectly in all formats
-- Some advanced styling features may not be supported in all export formats
-- Large documents may take longer to generate and export
-
-## Troubleshooting
-
-### PDF Export Issues
-- Ensure all images have proper CORS headers if loaded from external sources
-- Check the browser console for any errors during export
-- For complex layouts, try simplifying the HTML structure
-
-### Word Export Issues
-- Complex layouts may not translate perfectly to Word
-- Some CSS styles may not be supported in Word
-
-### Text Export Issues
-- Text export is intentionally simple and may not preserve all formatting
-- Complex layouts will be flattened to plain text
+## 📝 Best Practices
+- **Printing**: All templates include `@media print` rules to ensure the web view matches the exported PDF.
+- **Validation**: Ensure `resumeData` is valid before calling export functions to avoid broken layouts.

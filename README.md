@@ -1,82 +1,70 @@
-# AI Resume Evaluator & Builder
+# 🚀 AI Resume Evaluator & Builder
 
-## How can I edit this code?
+A professional, high-performance resume building platform powered by advanced AI and a sleek, Swiss-inspired design system. Create ATS-optimized resumes in minutes with real-time feedback and premium export options.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes.
+## 🌟 Key Features
 
-Follow these steps:
+- **🤖 Multi-Model AI Engine**: Connect to OpenAI (GPT-4o), Google Gemini (1.5 Flash), or Groq (Llama 3) for high-speed resume enhancements.
+- **📊 Real-time ATS Scoring**: Get instant feedback on your resume's compatibility with Applicant Tracking Systems (ATS).
+- **📝 Intelligent Wizard**: A guided, multi-step experience that handles Personal Info, Summary, Experience, Education, Skills, Projects, and Certifications.
+- **👁️ Live Preview**: See your changes instantly in a high-fidelity, printable preview panel.
+- **📑 Premium Exports**: Download your resume in professional PDF, DOCX, and JSON formats.
+- **💾 Advanced Persistence**: Automatic 2-second debounced saving to LocalStorage with full Undo/Redo support.
+- **🎨 Swiss Design System**: A clean, monochrome aesthetic with smooth Framer Motion animations and full Dark Mode support.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🛠️ Tech Stack
 
-Follow these steps:
+- **Core**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Shadcn/UI
+- **Animations**: Framer Motion
+- **Forms & Validation**: React Hook Form, Zod
+- **AI Integration**: Google Generative AI SDK, OpenAI/Groq API
+- **Exports**: jsPDF, docx.js, html2canvas
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚀 Getting Started
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Prerequisites
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js (v18+)
+- npm or bun
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Local Setup
 
-**Edit a file directly in GitHub**
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd future-job-fit
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-**Use GitHub Codespaces**
+3. **Configure Environment Variables**
+   Create a `.env` file in the root:
+   ```env
+   VITE_AI_PROVIDER=gemini # 'openai', 'gemini', or 'groq'
+   VITE_GEMINI_API_KEY=your_key_here
+   VITE_OPENAI_API_KEY=your_key_here
+   VITE_GROQ_API_KEY=your_key_here
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
 
-## What technologies are used for this project?
+## 📖 Documentation
 
-This project is built with:
+- **[Wizard Quick Start](WIZARD_QUICKSTART.md)**: A guide for users on how to build their first resume.
+- **[Technical Implementation](WIZARD_IMPLEMENTATION.md)**: Deep dive into the architecture and data flow.
+- **[AI Integration Guide](GPT_INTEGRATION.md)**: Details on how the AI engine works and how to switch providers.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🤝 Contributing
 
-## How can I deploy this project?
+We welcome contributions! Please feel free to submit a Pull Request.
 
-Simply open [Lovable](https://lovable.dev/projects/af7b975b-72a4-4d49-a1bf-35f584ad00e0) and click on Share -> Publish.
+## 📄 License
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-## AI Resume Enhancement
-
-This project features a production-ready AI Resume Enhancement system that connects to real AI models (OpenAI, Gemini, and Groq).
-
-### Setup API Keys
-
-To use the AI features, you need to set up environment variables in a `.env` file at the root of your project:
-
-1. Create a `.env` file (you can use `.env.example` as a template).
-2. Add your API keys:
-   - `VITE_OPENAI_API_KEY`: Your OpenAI API key (for GPT-4o-mini).
-   - `VITE_GEMINI_API_KEY`: Your Google Gemini API key (for Gemini 1.5 Flash).
-   - `VITE_GROQ_API_KEY`: Your Groq API key (for free Llama models).
-3. Choose your provider by setting `VITE_AI_PROVIDER` to `openai`, `gemini`, or `groq`.
-
-### Features
-- **Multi-Variant Generation**: Every enhancement request returns 3-5 high-quality variations based on your chosen strategy.
-- **Quick Presets**: Choose from ATS Optimized, Concise Professional, or Maximum Impact.
-- **Custom Strategy**: Fine-tune the tone (Formal, Modern, Concise, etc.) and highlight areas (Technical, Leadership, etc.).
-- **Token Efficiency**: The system uses highly optimized prompts and cost-effective models like `gpt-4o-mini` and `gemini-1.5-flash` to maximize performance while minimizing costs.
+MIT License - see [LICENSE](LICENSE) for details. (Note: Ensure you have a LICENSE file if publishing)

@@ -1,62 +1,62 @@
-# GPT Integration Guide
+# 🤖 AI Integration Guide
 
-## Current Implementation
+The **AI Resume Builder** features a powerful, multi-provider AI engine that helps users optimize their resumes for ATS and professional impact.
 
-The app is now integrated with the GPT Action configuration you provided. Here's what's implemented:
+## ⚙️ Configuration
 
-### 🤖 AI Service (`src/services/resumeAI.ts`)
-- Structured GPT call with your exact system prompt
-- Response parsing for ATS scores, keywords, and suggestions
-- Error handling and retry logic
-- Currently uses mock responses for demo purposes
+The AI engine is configured via your `.env` file. You can choose your provider and model depending on your needs for speed, cost, or quality.
 
-### 📊 Real-time Results (`src/pages/Results.tsx`)
-- Calls GPT service instead of showing mock data
-- Enhanced loading states with better UX
-- Error handling with retry options
-- Navigation guards to prevent empty requests
+### Provider Settings
 
-## To Enable Real GPT API
+Set `VITE_AI_PROVIDER` to one of the following:
 
-### Option 1: OpenAI API Key
-Replace the mock response in `resumeAI.ts` with:
+| Provider | Model Used | Best For |
+| :--- | :--- | :--- |
+| `gemini` | `gemini-1.5-flash` | Speed & Free-tier availability |
+| `openai` | `gpt-4o-mini` | High quality & consistency |
+| `groq` | `llama-3.3-70b` | Performance and ultra-low latency |
 
-```typescript
-const response = await fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    model: 'gpt-4o-mini',
-    temperature: 0.4,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ]
-  })
-});
+### API Keys
+
+Add the corresponding keys to your `.env` file:
+```env
+VITE_GEMINI_API_KEY=...
+VITE_OPENAI_API_KEY=...
+VITE_GROQ_API_KEY=...
 ```
 
-### Option 2: Supabase Edge Function
-1. Create a Supabase Edge Function
-2. Add your OpenAI API key to Supabase secrets
-3. Call the edge function from the frontend
+## 🛠️ How it Works
 
-### Option 3: Backend Proxy
-1. Create a backend API endpoint
-2. Handle GPT calls server-side
-3. Call your backend from the frontend
+The core logic resides in `src/shared/api/resumeAI.ts`. It uses a centralized `ResumeAIService` class.
 
-## Configuration Match
+### 1. Enhancement Request
+When a user clicks "Enhance", the service sends the following context to the AI:
+- The **Section Type** (e.g., "Experience")
+- The **Original Text**
+- The **Quick Preset** (ATS Optimized, Concise, or Maximum Impact)
+- **Tone & Style** (Formal, Modern, etc.)
+- **Highlights** (Technical, Leadership, etc.)
 
-Your GPT Action config is perfectly mapped:
+### 2. Multi-Variant Response
+The AI returns a JSON object containing 3 to 5 improved variations. The user can then preview and select the one they like best.
 
-- ✅ **Model**: gpt-4o-mini (cost-effective)
-- ✅ **Temperature**: 0.4 (consistent responses)
-- ✅ **System Prompt**: Exact ATS expert instructions
-- ✅ **Input Mapping**: Resume + Job Description
-- ✅ **Output Parsing**: Structured evaluation format
+### 3. Section Analysis
+The service also provides an `analyzeSection` method. This evaluates the user's current content and returns:
+- A numerical score (0-100)
+- A list of strengths
+- A list of weaknesses
+- Actionable suggestions
 
-The app is ready to work with real GPT as soon as you add API credentials!
+## 🚨 Security & Efficiency
+
+- **Client-Side Proxy**: Currently, requests are made directly from the client. Ensure your API keys are protected or use a backend proxy for production environments.
+- **Optimized Prompting**: We use highly tuned system prompts to ensure the AI remains factual and avoids "hallucinations" (inventing companies or roles).
+- **JSON Mode**: Both OpenAI and Gemini are forced into `json_object` or `responseMimeType: "application/json"` mode to ensure reliable parsing.
+
+## 🧪 Testing your Setup
+
+You can verify your AI setup by:
+1. Opening the **Professional Summary** step.
+2. Typing a few words.
+3. Clicking the **"Enhance with AI"** button.
+4. If the variants appear, your API key and provider are correctly configured.
