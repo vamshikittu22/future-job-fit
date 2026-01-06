@@ -1,10 +1,8 @@
 import { LucideIcon } from 'lucide-react';
 
-export interface Language {
-  id: string;
-  name: string;
-  proficiency: 'Basic' | 'Conversational' | 'Professional' | 'Native';
-}
+// ============================================
+// UI-Specific Types (not domain data)
+// ============================================
 
 export interface Section {
   id: string;
@@ -13,48 +11,21 @@ export interface Section {
   icon: LucideIcon | (() => JSX.Element);
 }
 
-export interface PersonalInfo {
+export interface ResumeFormProps {
+  resumeData: import('@/shared/types/resume').ResumeData;
+  onChange: (data: Partial<import('@/shared/types/resume').ResumeData>) => void;
+  onSave: () => Promise<void>;
+  isSaving: boolean;
+}
+
+// ============================================
+// Extended Types (may not be in canonical)
+// ============================================
+
+export interface Language {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  location: string;
-  portfolioUrl?: string;
-  linkedinUrl?: string;
-  githubUrl?: string;
-  summary: string;
-}
-
-export interface Experience {
-  id: string;
-  position: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  current: boolean;
-  description: string[];
-  skills: string[];
-}
-
-export interface Education {
-  id: string;
-  institution: string;
-  degree: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate: string;
-  current: boolean;
-  description: string;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  description: string;
-  technologies: string[];
-  url?: string;
-  githubUrl?: string;
+  proficiency: 'Basic' | 'Conversational' | 'Professional' | 'Native';
 }
 
 export type SkillCategory =
@@ -74,22 +45,6 @@ export interface Skill {
   showProficiency?: boolean;
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  date: string;
-  description: string;
-}
-
-export interface Certification {
-  id: string;
-  name: string;
-  issuer: string;
-  date: string;
-  credentialUrl?: string;
-  description?: string;
-}
-
 export interface ATSScore {
   score: number;
   suggestions: string[];
@@ -97,21 +52,9 @@ export interface ATSScore {
   jobDescription: string;
 }
 
-export interface ResumeData {
-  personal: PersonalInfo;
-  experience: Experience[];
-  education: Education[];
-  projects: Project[];
-  skills: Skill[];
-  certifications: Certification[];
-  achievements: Achievement[];
-  languages: Language[];
-  atsScore?: ATSScore;
-}
-
-export interface ResumeFormProps {
-  resumeData: ResumeData;
-  onChange: (data: Partial<ResumeData>) => void;
-  onSave: () => Promise<void>;
-  isSaving: boolean;
-}
+// ============================================
+// REMOVED: Duplicate ResumeData, PersonalInfo, Experience, Education,
+// Project, Achievement, Certification
+// 
+// These are now imported from @/shared/types/resume
+// ============================================

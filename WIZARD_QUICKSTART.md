@@ -4,8 +4,9 @@ Welcome to the **Resume Builder Wizard**! This guide will help you navigate the 
 
 ## 🚀 Launching the Wizard
 
-1. Start your local dev server: `npm run dev`
-2. Navigate to: `http://localhost:5173/resume-wizard`
+1. Start the dev server: `npm run dev`
+2. Navigate to: `http://localhost:8080/resume-wizard`
+3. Follow the wizard steps in order:
 
 ## 🎨 The Interface
 

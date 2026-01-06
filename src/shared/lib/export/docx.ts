@@ -1,114 +1,68 @@
 import { Document, HeadingLevel, Paragraph, TextRun, Packer, AlignmentType, UnderlineType, BorderStyle } from 'docx';
 import { ResumeData } from '@/shared/types/resume';
+import { getTemplateStyle, applyThemeConfig, TemplateStyleConfig } from '@/shared/templates/templateStyles';
 
-const getDocxStyles = (template: string, themeConfig?: any) => {
-  const t = template.toLowerCase();
-
-  interface DocxStyle {
-    fontBody: string;
-    fontHeading: string;
-    colorTitle: string;
-    colorHeadings: string;
-    colorSubheadings: string;
-    colorLinks: string;
-    colorPrimary: string;
-    colorMuted: string;
-    alignment: (typeof AlignmentType)[keyof typeof AlignmentType];
-    headerAlignment: (typeof AlignmentType)[keyof typeof AlignmentType];
-    showLines: boolean;
-    nameSize: number;
-    sectionSize: number;
-    bodySize: number;
-    italicSubtitle: boolean;
-    uppercaseName: boolean;
-    headerPadding: number;
-  }
-
-  const styles: DocxStyle = {
-    fontBody: 'Arial',
-    fontHeading: 'Arial',
-    colorTitle: '111827',
-    colorHeadings: '111827',
-    colorSubheadings: '374151',
-    colorLinks: '2563EB',
-    colorPrimary: '111827',
-    colorMuted: '6B7280',
-    alignment: AlignmentType.LEFT,
-    headerAlignment: AlignmentType.CENTER,
-    showLines: false,
-    nameSize: 48,
-    sectionSize: 18,
-    bodySize: 18,
-    italicSubtitle: false,
-    uppercaseName: false,
-    headerPadding: 200,
+/**
+ * Convert template style configuration to DOCX-specific format
+ * @param style - Template style configuration from registry
+ * @returns DOCX-compatible style object
+ */
+const convertTemplateStyleToDocx = (style: TemplateStyleConfig) => {
+  // Map alignment types
+  const getAlignment = (align: string): typeof AlignmentType[keyof typeof AlignmentType] => {
+    switch (align) {
+      case 'center':
+        return AlignmentType.CENTER;
+      case 'right':
+        return AlignmentType.RIGHT;
+      case 'justified':
+        return AlignmentType.JUSTIFIED;
+      default:
+        return AlignmentType.LEFT;
+    }
   };
 
-  switch (t) {
-    case 'modern':
-      styles.fontBody = 'Calibri';
-      styles.fontHeading = 'Calibri';
-      styles.colorTitle = '1E3A8A';
-      styles.colorHeadings = '1E3A8A';
-      styles.colorSubheadings = '4B5563';
-      styles.colorPrimary = '2563EB';
-      styles.colorLinks = '2563EB';
-      styles.headerAlignment = AlignmentType.LEFT;
-      styles.nameSize = 64;
-      styles.sectionSize = 28;
-      styles.showLines = true;
-      break;
-    case 'creative':
-      styles.fontBody = 'Georgia';
-      styles.fontHeading = 'Georgia';
-      styles.colorTitle = '4C1D95';
-      styles.colorHeadings = '4C1D95';
-      styles.colorSubheadings = '5B21B6';
-      styles.colorPrimary = '7C3AED';
-      styles.colorLinks = '7C3AED';
-      styles.headerAlignment = AlignmentType.CENTER;
-      styles.italicSubtitle = true;
-      styles.headerPadding = 400;
-      break;
-    case 'classic':
-      styles.fontBody = 'Times New Roman';
-      styles.fontHeading = 'Times New Roman';
-      styles.colorTitle = '000000';
-      styles.colorHeadings = '000000';
-      styles.colorSubheadings = '000000';
-      styles.colorPrimary = '000000';
-      styles.colorLinks = '000000';
-      styles.headerAlignment = AlignmentType.CENTER;
-      styles.nameSize = 44;
-      styles.showLines = true;
-      styles.uppercaseName = true;
-      break;
-  }
+  return {
+    // Fonts
+    fontBody: style.fonts.body,
+    fontHeading: style.fonts.heading,
 
-  if (themeConfig) {
-    if (themeConfig.primaryColor) styles.colorPrimary = themeConfig.primaryColor.replace('#', '');
-    if (themeConfig.titleColor) styles.colorTitle = themeConfig.titleColor.replace('#', '');
-    if (themeConfig.headingsColor) styles.colorHeadings = themeConfig.headingsColor.replace('#', '');
-    if (themeConfig.subheadingsColor) styles.colorSubheadings = themeConfig.subheadingsColor.replace('#', '');
-    if (themeConfig.linksColor) styles.colorLinks = themeConfig.linksColor.replace('#', '');
+    // Colors (already without # prefix in registry)
+    colorPrimary: style.colors.primary,
+    colorTitle: style.colors.title,
+    colorHeadings: style.colors.heading,
+    colorSubheadings: style.colors.subheading,
+    colorBody: style.colors.body,
+    colorMuted: style.colors.muted,
+    colorLinks: style.colors.link,
 
-    if (themeConfig.fontFamily) {
-      const fontMap: Record<string, string> = {
-        "'Inter', sans-serif": 'Inter',
-        "'Times New Roman', Times, serif": 'Times New Roman',
-        "'Georgia', serif": 'Georgia',
-        "'Roboto', sans-serif": 'Roboto',
-        "'Outfit', sans-serif": 'Calibri'
-      };
-      const docxFont = fontMap[themeConfig.fontFamily];
-      if (docxFont) {
-        styles.fontBody = docxFont;
-        styles.fontHeading = docxFont;
-      }
-    }
-  }
+    // Sizes (convert points to half-points for DOCX)
+    nameSize: style.sizes.titleSize * 2,
+    sectionSize: style.sizes.headingSize * 2,
+    subheadingSize: style.sizes.subheadingSize * 2,
+    bodySize: style.sizes.bodySize * 2,
+    smallSize: style.sizes.smallSize * 2,
 
-  return styles;
+    // Layout - Alignment
+    headerAlignment: getAlignment(style.layout.headerAlign),
+    bodyAlignment: getAlignment(style.layout.bodyAlign),
+    alignment: getAlignment(style.layout.bodyAlign),
+
+    // Layout - Spacing (convert points to twips: 1pt = 20 twips)
+    sectionSpacing: style.layout.sectionSpacing * 20,
+    itemSpacing: style.layout.itemSpacing * 20,
+
+    // Layout - Visual elements
+    showLines: style.layout.showBorders,
+    showIcons: style.layout.showIcons,
+    borderColor: style.colors.border || style.colors.heading,
+    borderThickness: (style.layout.borderThickness || 1) * 8, // Convert to eighths of a point
+
+    // Template-specific flags (for backward compatibility)
+    italicSubtitle: style.id === 'creative',
+    uppercaseName: style.id === 'classic',
+    headerPadding: style.layout.headerAlign === 'center' ? 300 : 200,
+  };
 };
 
 export const generateDocx = async (resumeData: ResumeData, template: string = 'modern'): Promise<Blob> => {
@@ -124,7 +78,24 @@ export const generateDocx = async (resumeData: ResumeData, template: string = 'm
     customSections = []
   } = resumeData;
 
-  const style = getDocxStyles(template, resumeData.metadata?.themeConfig?.[template.toLowerCase()]);
+  // Get template style from centralized registry
+  const baseStyle = getTemplateStyle(template);
+
+  // Convert ThemeSettings to TemplateColors format if exists
+  const themeConfig = resumeData.metadata?.themeConfig?.[template.toLowerCase()];
+  const themeColors = themeConfig ? {
+    primary: themeConfig.primaryColor?.replace('#', ''),
+    title: themeConfig.titleColor?.replace('#', ''),
+    heading: themeConfig.headingsColor?.replace('#', ''),
+    subheading: themeConfig.subheadingsColor?.replace('#', ''),
+    link: themeConfig.linksColor?.replace('#', ''),
+  } : undefined;
+
+  // Apply any theme customizations
+  const finalStyle = applyThemeConfig(baseStyle, themeColors);
+
+  // Convert to DOCX-specific format
+  const style = convertTemplateStyleToDocx(finalStyle);
   const sections: Paragraph[] = [];
 
   sections.push(

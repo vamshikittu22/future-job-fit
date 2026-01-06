@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { supabase } from '@/shared/integrations/supabase/client';
 
 export type AIProvider = 'openai' | 'gemini' | 'groq';
 
@@ -38,263 +38,119 @@ interface ResumeEvaluationResponse {
 }
 
 export class ResumeAIService {
-  private genAI: GoogleGenerativeAI | null = null;
   private provider: AIProvider;
 
   constructor() {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-
-    // Diagnostic log for the user to verify key loading (sanitized)
-    if (geminiKey) {
-      const isWrappedInQuotes = (geminiKey.startsWith('"') && geminiKey.endsWith('"')) || (geminiKey.startsWith("'") && geminiKey.endsWith("'"));
-      console.log(`[AI Debug] Key loaded. Length: ${geminiKey.length}. ${isWrappedInQuotes ? "⚠️ WARNING: Key appears to be wrapped in quotes which might cause issues." : ""}`);
-      if (geminiKey.length < 20) {
-        console.warn(`[AI Debug] ⚠️ WARNING: API key seems unusually short (${geminiKey.length} chars).`);
-      }
-      this.genAI = new GoogleGenerativeAI(isWrappedInQuotes ? geminiKey.slice(1, -1) : geminiKey);
-    } else {
-      console.error("[AI Debug] ❌ VITE_GEMINI_API_KEY is missing from environment variables.");
-    }
-
+    // Get provider from environment or default to gemini
     const provider = import.meta.env.VITE_AI_PROVIDER?.trim();
-    const openAIKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
-    this.provider = (provider as AIProvider) || (openAIKey ? 'openai' : 'gemini');
+    this.provider = (provider as AIProvider) || 'gemini';
+
+    console.log(`[AI Service] Using provider: ${this.provider} (server-side via Supabase Edge Function)`);
   }
 
-  private getSystemPrompt(): string {
-    return `You are an AI Resume Enhancement assistant embedded in a resume builder. Your job is to rewrite the user’s selected resume text into a small set of improved options that match the chosen strategy and custom settings.
+  /**
+   * Calls the Supabase Edge Function for AI operations
+   * All API keys are securely stored on the server
+   */
+  private async callEdgeFunction(task: string, data: any): Promise<any> {
+    try {
+      const { data: result, error } = await supabase.functions.invoke('resume-ai', {
+        body: {
+          task,
+          provider: this.provider,
+          ...data,
+        },
+      });
 
-You will receive a JSON object with section_type, original_text, quick_preset, tone_style, highlight_areas, industry_keywords, restrictions, and optional job_description or target_role.
+      if (error) {
+        throw new Error(error.message || 'Edge function call failed');
+      }
 
-Your rules:
-- Preserve the factual information in the original text. Do not invent roles, companies, technologies, or metrics.
-- Use professional resume language in third person, with no ‘I’ or ‘we’.
-- Keep verb tenses consistent.
-- AVOID generic, robotic adverbs like "Expertly", "Consistently", "Efficiently", or "Successfully" at the start of sentences. Instead, use strong, specific action verbs (e.g., "Architected", "Spearheaded", "Negotiated").
-- Focus on concrete actions and measurable outcomes rather than subjective descriptors.
-- Always return 3–5 alternative improved versions.
-
-Quick Presets logic:
-- ATS Optimized: focus on Applicant Tracking System compatibility. Use clear phrases and explicitly mention keywords.
-- Concise Professional: shorten text, keep key achievements, easy to skim.
-- Maximum Impact: emphasize results, metrics, and business value. Move strongest achievements to the front.
-
-Tone & Style: Formal, Modern, Concise, Impactful, Creative. Blend if multiple selected.
-Highlight Areas: Technical Skills, Leadership, Results & Impact, Collaboration. Surface relevant details early.
-
-Respect industry_keywords and restrictions strictly.
-
-Output EXACTLY one JSON object with this shape:
-{
-  "section_type": "string",
-  "preset_used": "string or null",
-  "applied_tone_style": ["string"],
-  "applied_highlight_areas": ["string"],
-  "variants": ["string"],
-  "notes": "string or null"
-}
-Do not include any text before or after this JSON object.`;
-  }
-
-  private async callOpenAI(payload: any): Promise<string> {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
-    if (!apiKey) throw new Error("OpenAI API key missing");
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: this.getSystemPrompt() },
-          { role: "user", content: JSON.stringify(payload) },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || "OpenAI API call failed");
+      return result;
+    } catch (error) {
+      console.error('[AI Service] Edge function error:', error);
+      throw error;
     }
-
-    const result = await response.json();
-    return result.choices[0].message.content;
-  }
-
-  private async callGemini(payload: any): Promise<string> {
-    if (!this.genAI) {
-      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-      if (!geminiKey) throw new Error("Gemini API key missing");
-      const isWrappedInQuotes = (geminiKey.startsWith('"') && geminiKey.endsWith('"')) || (geminiKey.startsWith("'") && geminiKey.endsWith("'"));
-      this.genAI = new GoogleGenerativeAI(isWrappedInQuotes ? geminiKey.slice(1, -1) : geminiKey);
-    }
-
-    const model = this.genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
-    });
-
-    const prompt = `${this.getSystemPrompt()}\n\nInput Data:\n${JSON.stringify(payload)}`;
-    const result = await model.generateContent(prompt);
-    return result.response.text();
-  }
-
-  private async callGroq(payload: any): Promise<string> {
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
-    if (!apiKey) throw new Error("Groq API key missing");
-
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: this.getSystemPrompt() },
-          { role: "user", content: JSON.stringify(payload) },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || "Groq API call failed");
-    }
-
-    const result = await response.json();
-    return result.choices[0].message.content;
   }
 
   async enhanceSection(request: EnhancementRequest): Promise<EnhancementResponse> {
     try {
-      let responseText: string;
-      console.log(`AI Enhancement using provider: ${this.provider}`);
+      console.log(`[AI Service] Enhancing section via server-side gateway: ${this.provider}`);
 
-      switch (this.provider) {
-        case 'openai':
-          responseText = await this.callOpenAI(request);
-          break;
-        case 'gemini':
-          responseText = await this.callGemini(request);
-          break;
-        case 'groq':
-          responseText = await this.callGroq(request);
-          break;
-        default:
-          throw new Error(`Unsupported provider configured: ${this.provider}`);
-      }
+      const result = await this.callEdgeFunction('enhanceSection', request);
 
-      // Cleanup response text in case AI added markdown blocks
-      const cleanedJson = responseText.replace(/```json|```/g, '').trim();
-      return JSON.parse(cleanedJson);
+      return result;
     } catch (error: any) {
-      console.error("AI Enhancement failed detail:", error);
+      console.error('[AI Service] Enhancement failed:', error);
 
-      // Specifically catch the "API key not valid" error to provide debugging info
-      if (error.message?.includes("API key not valid") || error.message?.includes("400")) {
-        const currentKey = import.meta.env.VITE_GEMINI_API_KEY?.trim() || "";
-        console.warn(`[AI Debug] Key validation failed. Current key starts with: "${currentKey.substring(0, 4)}...", length: ${currentKey.length}`);
-        if (currentKey.includes(" ")) {
-          console.error("[AI Debug] ❌ ERROR: Your API key contains spaces. Please remove all spaces from your .env file.");
-        }
-        if (currentKey.toLowerCase().includes("api key:")) {
-          console.error("[AI Debug] ❌ ERROR: Your API key value seems to include the label 'API key:'. Please remove the label and only keep the alphanumeric string.");
-        }
-      }
-
-      // Pass the specific error message to the fallback for better user feedback
+      // Return fallback with error message
       return this.getFallbackEnhancement(request, error.message);
     }
   }
 
   async analyzeSection(sectionId: string, content: any): Promise<any> {
-    const payload = {
-      task: 'analyze_section',
-      sectionId,
-      content: typeof content === 'string' ? content : JSON.stringify(content)
-    };
-
-    const systemPrompt = `You are an expert Resume Analyst. Analyze the provided section content and return a JSON object with:
-    {
-      "score": number (0-100),
-      "strengths": string[],
-      "weaknesses": string[],
-      "suggestions": string[]
-    }
-    Focus on: impact, clarity, action verbs, metrics, and industry standards for that specific section.
-    Return ONLY JSON.`;
-
     try {
-      let responseText: string;
-      if (this.provider === 'openai') {
-        responseText = await this.callOpenAI({ ...payload, systemPromptOverride: systemPrompt });
-      } else if (this.provider === 'gemini') {
-        if (!this.genAI) throw new Error("Gemini not configured");
-        const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { responseMimeType: "application/json" } });
-        const result = await model.generateContent(`${systemPrompt}\n\nSection ID: ${sectionId}\nData: ${payload.content}`);
-        responseText = result.response.text();
-      } else {
-        // Fallback or Groq
-        responseText = await this.callGroq({ ...payload, systemPromptOverride: systemPrompt });
-      }
+      const result = await this.callEdgeFunction('analyzeSection', {
+        sectionId,
+        content: typeof content === 'string' ? content : JSON.stringify(content),
+      });
 
-      const cleanedJson = responseText.replace(/```json|```/g, '').trim();
-      return JSON.parse(cleanedJson);
+      return result;
     } catch (error) {
-      console.error("Section analysis failed:", error);
+      console.error('[AI Service] Section analysis failed:', error);
+
+      // Return fallback analysis
       return {
         score: 70,
-        strengths: ["Content is present"],
-        weaknesses: ["AI analysis failed/unavailable"],
-        suggestions: ["Check your API settings"]
+        strengths: ['Content is present'],
+        weaknesses: ['AI analysis failed/unavailable'],
+        suggestions: ['Check your API settings or try again later'],
       };
     }
   }
 
-  private getFallbackEnhancement(request: EnhancementRequest, errorCode?: string): EnhancementResponse {
+  async evaluateResume(request: ResumeEvaluationRequest): Promise<ResumeEvaluationResponse> {
+    try {
+      const result = await this.callEdgeFunction('evaluateResume', {
+        resumeText: request.resumeText,
+        jobDescription: request.jobDescription,
+      });
+
+      return result;
+    } catch (error) {
+      console.error('[AI Service] Resume evaluation failed:', error);
+
+      // Return fallback evaluation
+      return {
+        atsScore: 75,
+        missingKeywords: [],
+        suggestions: ['AI evaluation unavailable', 'Please try again later'],
+        rewrittenResume: request.resumeText,
+      };
+    }
+  }
+
+  // Legacy compatibility method
+  async improveContent(sectionName: string, content: any, tone: string): Promise<any> {
+    const request: EnhancementRequest = {
+      section_type: sectionName.toLowerCase() as any,
+      original_text: typeof content === 'string' ? content : JSON.stringify(content),
+      tone_style: [tone],
+    };
+
+    const response = await this.enhanceSection(request);
+    return response.variants[0] || content; // Return first variant or original
+  }
+
+  private getFallbackEnhancement(request: EnhancementRequest, errorMessage?: string): EnhancementResponse {
     return {
       section_type: request.section_type,
       preset_used: request.quick_preset || null,
       applied_tone_style: request.tone_style || [],
       applied_highlight_areas: request.highlight_areas || [],
       variants: [],
-      notes: errorCode || "AI Service is currently unavailable. Please check your internet connection and API key settings."
+      notes: errorMessage || 'AI Service is currently unavailable. Please check your connection and try again.',
     };
-  }
-
-  // Legacy/Internal compatibility methods
-  async evaluateResume(request: ResumeEvaluationRequest): Promise<ResumeEvaluationResponse> {
-    // For now, redirect to Gemini as it was before, or implement multi-provider
-    if (!this.genAI) throw new Error("Gemini not configured for legacy evaluation");
-    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `Evaluate the following resume and return evaluation. Resume: ${request.resumeText}. JD: ${request.jobDescription || "N/A"}`;
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    // Simplified parsing to keep existing interface
-    return {
-      atsScore: 85,
-      missingKeywords: [],
-      suggestions: ["Improve action verbs", "Add more metrics"],
-      rewrittenResume: text
-    };
-  }
-
-  async improveContent(sectionName: string, content: any, tone: string): Promise<any> {
-    // Map old call to new system
-    const request: EnhancementRequest = {
-      section_type: sectionName.toLowerCase() as any,
-      original_text: typeof content === 'string' ? content : JSON.stringify(content),
-      tone_style: [tone]
-    };
-    const response = await this.enhanceSection(request);
-    return response.variants[0]; // Just return the first one for direct replacement
   }
 }
 

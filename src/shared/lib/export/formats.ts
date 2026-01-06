@@ -1,5 +1,6 @@
 import { ResumeData, ThemeSettings } from '@/shared/types/resume';
 import { generatePdfFromElement } from '@/shared/lib/export/pdf';
+import { getTemplateStyle, applyThemeConfig } from '@/shared/templates/templateStyles';
 
 const escapeLatex = (str: string): string => {
   if (!str) return '';
@@ -32,68 +33,55 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
     ? skills.flatMap(cat => cat.items)
     : [...(skills?.languages || []), ...(skills?.frameworks || []), ...(skills?.tools || [])];
 
-  const t = template.toLowerCase();
+  // Get template style from centralized registry
+  const baseStyle = getTemplateStyle(template);
 
-  let fontFamily = "'Inter', -apple-system, sans-serif";
-  let headingColor = "#111827";
-  let primaryColor = "#111827";
-  let headerAlign = "center";
-  let headerWrapperStyles = "padding-bottom: 24px; border-bottom: 1px solid #f3f4f6;";
-  let sectionTitleStyles = "font-size: 9pt; text-transform: uppercase; letter-spacing: 0.15em; border: none;";
-  let pageBg = "#ffffff";
-  let bodyColor = "#374151";
-  let nameStyles = "font-size: 24pt; font-weight: 800; letter-spacing: -0.025em;";
-  let subtitleStyles = "font-size: 12pt; font-weight: 500; color: #6b7280; margin-bottom: 5px;";
-  let itemTitleColor = "#111827";
-  let itemDateColor = "#6b7280";
+  // Convert ThemeSettings to TemplateColors format if exists
+  const themeConfig = resumeData.metadata?.themeConfig?.[template.toLowerCase()];
+  const themeColors = themeConfig ? {
+    primary: themeConfig.primaryColor?.replace('#', ''),
+    title: themeConfig.titleColor?.replace('#', ''),
+    heading: themeConfig.headingsColor?.replace('#', ''),
+    subheading: themeConfig.subheadingsColor?.replace('#', ''),
+    link: themeConfig.linksColor?.replace('#', ''),
+  } : undefined;
 
-  // Override with user customization if available
-  const themeConfig = resumeData.metadata?.themeConfig?.[t];
+  // Apply any theme customizations
+  const finalStyle = applyThemeConfig(baseStyle, themeColors);
 
-  if (themeConfig) {
-    if (themeConfig.primaryColor) primaryColor = themeConfig.primaryColor;
-    if (themeConfig.fontFamily) fontFamily = themeConfig.fontFamily;
-    if (themeConfig.titleColor) headingColor = themeConfig.titleColor;
-  }
+  // Extract values for HTML  
+  const fontFamily = finalStyle.fonts.body;
+  const headingColor = `#${finalStyle.colors.heading}`;
+  const primaryColor = `#${finalStyle.colors.primary}`;
+  const titleColor = `#${finalStyle.colors.title}`;
+  const subheadingColor = `#${finalStyle.colors.subheading}`;
+  const bodyColor = `#${finalStyle.colors.body}`;
+  const mutedColor = `#${finalStyle.colors.muted}`;
+  const linksColor = `#${finalStyle.colors.link}`;
+  const borderColor = finalStyle.colors.border ? `#${finalStyle.colors.border}` : headingColor;
 
-  if (t === 'modern') {
-    fontFamily = themeConfig?.fontFamily || "'Inter', sans-serif";
-    headingColor = themeConfig?.titleColor || "#1e3a8a";
-    primaryColor = themeConfig?.primaryColor || "#2563eb";
-    headerAlign = "left";
-    headerWrapperStyles = `border-bottom: 4px solid ${primaryColor}; padding-bottom: 16px; margin-bottom: 32px;`;
-    sectionTitleStyles = `font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; text-transform: uppercase; letter-spacing: normal; color: ${themeConfig?.headingsColor || primaryColor};`;
-    nameStyles = `font-size: 32pt; font-weight: 700; color: ${themeConfig?.titleColor || headingColor}; letter-spacing: -0.05em;`;
-    subtitleStyles = `font-size: 16pt; font-weight: 500; color: ${themeConfig?.subheadingsColor || primaryColor}; margin-bottom: 10px;`;
-    itemTitleColor = themeConfig?.titleColor || headingColor;
-    itemDateColor = themeConfig?.primaryColor || primaryColor;
-  } else if (t === 'creative') {
-    fontFamily = themeConfig?.fontFamily || "'Georgia', serif";
-    headingColor = themeConfig?.titleColor || "#4c1d95";
-    primaryColor = themeConfig?.primaryColor || "#7c3aed";
-    headerAlign = "center";
-    headerWrapperStyles = `background: ${primaryColor}10; margin: -20mm -20mm 32px -20mm; padding: 32px 20mm;`;
-    sectionTitleStyles = `font-size: 11pt; border-bottom: 1px solid ${primaryColor}20; padding-bottom: 8px; margin: 32px 48px 16px 48px; text-transform: none; color: ${themeConfig?.headingsColor || primaryColor};`;
-    pageBg = "#fafaf9";
-    nameStyles = `font-size: 28pt; font-weight: 700; color: ${themeConfig?.titleColor || headingColor};`;
-    subtitleStyles = `font-size: 12pt; font-style: italic; color: ${themeConfig?.subheadingsColor || primaryColor};`;
-    itemDateColor = themeConfig?.primaryColor || primaryColor;
-    itemTitleColor = themeConfig?.titleColor || headingColor;
-  } else if (t === 'classic') {
-    fontFamily = themeConfig?.fontFamily || "'Times New Roman', Times, serif";
-    headingColor = themeConfig?.titleColor || "#000000";
-    primaryColor = themeConfig?.primaryColor || "#000000";
-    headerAlign = "center";
-    headerWrapperStyles = `border-bottom: 2px solid ${themeConfig?.titleColor || headingColor}; padding-bottom: 16px; margin-bottom: 24px;`;
-    sectionTitleStyles = `font-size: 11pt; border-bottom: 1px solid ${themeConfig?.headingsColor || headingColor}; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; justify-content: center; color: ${themeConfig?.headingsColor || headingColor};`;
-    nameStyles = `font-size: 22pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: ${themeConfig?.titleColor || headingColor};`;
-    subtitleStyles = `font-size: 12pt; font-style: italic; color: ${themeConfig?.subheadingsColor || primaryColor};`;
-    itemTitleColor = themeConfig?.titleColor || headingColor;
-    itemDateColor = themeConfig?.primaryColor || primaryColor;
-    bodyColor = "#000000";
-  }
+  const headerAlign = finalStyle.layout.headerAlign;
+  const showBorders = finalStyle.layout.showBorders;
+  const titleSize = finalStyle.sizes.titleSize;
+  const headingSize = finalStyle.sizes.headingSize;
+  const bodySize = finalStyle.sizes.bodySize;
+  const smallSize = finalStyle.sizes.smallSize;
+  const subheadingSize = finalStyle.sizes.subheadingSize;
 
-  const linksColor = themeConfig?.linksColor || primaryColor;
+  // Build template-specific styles
+  const pageBg = '#ffffff';
+  const headerWrapperStyles = showBorders
+    ? `border-bottom: ${finalStyle.layout.borderThickness || 2}px solid ${borderColor}; padding-bottom: 24px; margin-bottom: 32px;`
+    : 'padding-bottom: 24px; margin-bottom: 24px;';
+
+  const sectionTitleStyles = showBorders
+    ? `font-size: ${headingSize}pt; border-bottom: 1px solid ${borderColor}; padding-bottom: 8px; text-transform: uppercase;`
+    : `font-size: ${headingSize}pt; text-transform: uppercase; letter-spacing: 0.1em;`;
+
+  const nameStyles = `font-size: ${titleSize}pt; font-weight: 700; color: ${titleColor}; line-height: 1.1;`;
+  const subtitleStyles = `font-size: ${subheadingSize}pt; font-weight: 500; color: ${subheadingColor}; margin-bottom: 10px;`;
+  const itemTitleColor = titleColor;
+  const itemDateColor = primaryColor;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -101,26 +89,130 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
   <meta charset="UTF-8">
   <title>${personal?.name || 'Resume'}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Roboto:wght@400;700&family=Outfit:wght@400;700&display=swap');
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: ${fontFamily}; line-height: 1.5; color: ${bodyColor}; background-color: #f3f4f6; padding: 40px 0; -webkit-font-smoothing: antialiased; }
-    .page { background-color: ${pageBg}; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 20mm; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    
+    :root {
+      --primary: ${primaryColor};
+      --title: ${titleColor};
+      --heading: ${headingColor};
+      --subheading: ${subheadingColor};
+      --body: ${bodyColor};
+      --muted: ${mutedColor};
+      --border: ${borderColor};
+    }
+
+    body { 
+      font-family: ${fontFamily}, -apple-system, sans-serif; 
+      line-height: ${finalStyle.layout.lineHeight}; 
+      color: var(--body); 
+      background-color: #f3f4f6; 
+      padding: 40px 0; 
+      -webkit-font-smoothing: antialiased; 
+    }
+
+    .page { 
+      background-color: ${pageBg}; 
+      width: 210mm; 
+      min-height: 297mm; 
+      margin: 0 auto; 
+      padding: 20mm; 
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+      position: relative;
+    }
+
     header { text-align: ${headerAlign}; ${headerWrapperStyles} }
-    h1 { ${nameStyles} color: ${headingColor}; margin-bottom: 4px; }
+    h1 { ${nameStyles} margin-bottom: 4px; }
     .subtitle { ${subtitleStyles} }
-    .contact { display: flex; justify-content: ${headerAlign === 'center' ? 'center' : 'flex-start'}; flex-wrap: wrap; gap: 12px; font-size: 9pt; color: #6b7280; }
-    h2 { ${sectionTitleStyles} color: ${headingColor}; font-weight: 700; margin-top: 24px; margin-bottom: 16px; display: flex; align-items: center; }
-    ${t !== 'modern' && t !== 'classic' ? 'h2::after { content: ""; flex: 1; height: 1px; background: #e5e7eb; margin-left: 16px; }' : ''}
-    .entry { margin-bottom: 12px; }
-    .entry-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; color: ${itemTitleColor}; font-size: 10pt; }
-    .entry-sub { font-style: italic; color: #4b5563; font-size: 9pt; margin-bottom: 2px; }
-    .entry-desc { font-size: 9pt; color: #4b5563; text-align: justify; margin-top: 4px; }
-    ul { padding-left: 16px; margin-top: 4px; }
-    li { margin-bottom: 2px; color: #4b5563; }
-    .tag-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-    .tag { background: #f3f4f6; color: #374151; padding: 1px 6px; border-radius: 4px; font-size: 8pt; border: 1px solid #e5e7eb; }
+    
+    .contact { 
+      display: flex; 
+      justify-content: ${headerAlign === 'center' ? 'center' : headerAlign === 'left' ? 'flex-start' : 'flex-end'}; 
+      flex-wrap: wrap; 
+      gap: 16px; 
+      font-size: ${smallSize}pt; 
+      color: var(--muted); 
+      margin-top: 8px;
+    }
+
+    section { margin-bottom: ${finalStyle.layout.sectionSpacing}pt; }
+    
+    h2 { 
+      ${sectionTitleStyles} 
+      color: var(--heading); 
+      font-weight: 700; 
+      margin-top: 24px; 
+      margin-bottom: 16px; 
+      display: flex; 
+      align-items: center; 
+      page-break-after: avoid;
+    }
+    
+    ${!showBorders ? 'h2::after { content: ""; flex: 1; height: 1px; background: #e5e7eb; margin-left: 16px; }' : ''}
+
+    .entry { margin-bottom: ${finalStyle.layout.itemSpacing}pt; page-break-inside: avoid; }
+    
+    .entry-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: baseline; 
+      font-weight: 700; 
+      color: ${itemTitleColor}; 
+      font-size: ${bodySize}pt; 
+    }
+    
+    .entry-sub { 
+      font-size: ${subheadingSize}pt; 
+      font-weight: 600; 
+      color: var(--subheading); 
+      margin-bottom: 2px; 
+    }
+    
+    .entry-meta {
+      font-size: ${smallSize}pt;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+
+    .entry-desc { 
+      font-size: ${bodySize}pt; 
+      color: var(--body); 
+      text-align: ${finalStyle.layout.bodyAlign}; 
+      margin-top: 4px; 
+    }
+
+    ul { padding-left: 20px; margin-top: 6px; list-style-type: disc; }
+    li { margin-bottom: 4px; color: var(--body); font-size: ${bodySize}pt; }
+
+    .tag-container { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      margin-top: 8px; 
+    }
+    
+    .tag { 
+      background: #f8fafc; 
+      color: var(--body); 
+      padding: 2px 10px; 
+      border-radius: 6px; 
+      font-size: ${smallSize}pt; 
+      border: 1px solid #e2e8f0; 
+      font-weight: 500;
+    }
+
     a { color: ${linksColor}; text-decoration: none; }
-    @media print { body { background: white; padding: 0; } .page { box-shadow: none; margin: 0; width: 100%; border: none; } @page { size: A4; margin: 15mm; } }
+    a:hover { text-decoration: underline; }
+
+    @media print { 
+      body { background: white; padding: 0; } 
+      .page { box-shadow: none; margin: 0; width: 100%; border: none; padding: 15mm; } 
+      @page { size: A4; margin: 0; }
+      h2 { break-after: avoid; }
+      .entry { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -129,19 +221,27 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
       <h1>${personal?.name || ''}</h1>
       ${personal?.title ? `<div class="subtitle">${personal.title}</div>` : ''}
       <div class="contact">
-        ${[personal?.email, personal?.phone, personal?.location, personal?.website, personal?.linkedin, personal?.github].filter(Boolean).join(' | ')}
+        ${[
+      personal?.email ? `<span>${personal.email}</span>` : '',
+      personal?.phone ? `<span>${personal.phone}</span>` : '',
+      personal?.location ? `<span>${personal.location}</span>` : '',
+      personal?.website ? `<a href="${personal.website}">${personal.website.replace(/^https?:\/\//, '')}</a>` : '',
+      personal?.linkedin ? `<a href="${personal.linkedin}">LinkedIn</a>` : '',
+      personal?.github ? `<a href="${personal.github}">GitHub</a>` : ''
+    ].filter(Boolean).join(' <span style="color: #cbd5e1;">|</span> ')}
       </div>
     </header>
 
-    ${summary ? `<section><h2>Summary</h2><p class="entry-desc">${summary}</p></section>` : ''}
+    ${summary ? `<section><h2>Summary</h2><div class="entry-desc">${summary}</div></section>` : ''}
 
     ${experience.length ? `<section><h2>Experience</h2>${experience.map(e => `
       <div class="entry">
         <div class="entry-header">
           <span>${e.title}</span>
-          <span style="font-size: 8pt; color: ${itemDateColor}; font-weight: 600;">${e.startDate} — ${e.endDate || 'Present'}</span>
+          <span style="color: ${itemDateColor};">${e.startDate} — ${e.endDate || 'Present'}</span>
         </div>
-        <div class="entry-sub">${e.company}${e.location ? `, ${e.location}` : ''}</div>
+        <div class="entry-sub">${e.company}</div>
+        ${e.location ? `<div class="entry-meta">${e.location}</div>` : ''}
         <div class="entry-desc">
           ${e.description ? `<p>${e.description}</p>` : ''}
           ${e.bullets?.length ? `<ul>${e.bullets.map(b => `<li>${b}</li>`).join('')}</ul>` : ''}
@@ -152,7 +252,7 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
       <div class="entry">
         <div class="entry-header">
           <span>${e.school}</span>
-          <span style="font-size: 8pt; color: ${itemDateColor}; font-weight: 600;">${e.startDate} — ${e.endDate || 'Present'}</span>
+          <span style="color: ${itemDateColor};">${e.startDate} — ${e.endDate || 'Present'}</span>
         </div>
         <div class="entry-sub">${e.degree}${e.fieldOfStudy ? ` in ${e.fieldOfStudy}` : ''}</div>
         ${e.description ? `<div class="entry-desc">${e.description}</div>` : ''}
@@ -162,7 +262,7 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
       <div class="entry">
         <div class="entry-header">
           <span>${p.name}</span>
-          <span style="font-size: 8pt; color: ${itemDateColor}; font-weight: 600;">${p.startDate || ''} — ${p.endDate || ''}</span>
+          <span style="color: ${itemDateColor};">${p.startDate || ''} — ${p.endDate || ''}</span>
         </div>
         ${p.role ? `<div class="entry-sub">${p.role}</div>` : ''}
         <div class="entry-desc">
@@ -177,7 +277,7 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
       <div class="entry">
         <div class="entry-header">
           <span>${a.title}</span>
-          <span style="font-size: 8pt; color: ${itemDateColor}; font-weight: 600;">${a.date || ''}</span>
+          <span style="color: ${itemDateColor};">${a.date || ''}</span>
         </div>
         ${a.issuer ? `<div class="entry-sub">${a.issuer}</div>` : ''}
         <div class="entry-desc">${a.description}</div>
@@ -187,10 +287,10 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
       <div class="entry">
         <div class="entry-header">
           <span>${c.name}</span>
-          <span style="font-size: 8pt; color: ${itemDateColor}; font-weight: 600;">${c.date || ''}</span>
+          <span style="color: ${itemDateColor};">${c.date || ''}</span>
         </div>
         <div class="entry-sub">${c.issuer}</div>
-        ${c.credentialUrl ? `<div class="entry-desc"><a href="${c.credentialUrl}" style="color: ${linksColor}; text-decoration: none;">View Credential</a></div>` : ''}
+        ${c.credentialUrl ? `<div class="entry-desc"><a href="${c.credentialUrl}">View Credential</a></div>` : ''}
       </div>`).join('')}</section>` : ''}
 
     ${customSections.map(cs => cs.entries?.length ? `
@@ -215,42 +315,54 @@ export const generateHTML = (resumeData: ResumeData, template: string = 'modern'
 
 export const generateLaTeX = (resumeData: ResumeData, template: string = 'modern'): string => {
   const { personal, summary, experience = [], education = [], skills, projects = [], achievements = [], certifications = [], customSections = [] } = resumeData;
-  const t = template.toLowerCase();
-  const themeConfig = resumeData.metadata?.themeConfig?.[t];
 
+  // Get template style from centralized registry
+  const baseStyle = getTemplateStyle(template);
+
+  // Convert ThemeSettings to TemplateColors format if exists
+  const themeConfig = resumeData.metadata?.themeConfig?.[template.toLowerCase()];
+  const themeColors = themeConfig ? {
+    primary: themeConfig.primaryColor?.replace('#', ''),
+    title: themeConfig.titleColor?.replace('#', ''),
+    heading: themeConfig.headingsColor?.replace('#', ''),
+    subheading: themeConfig.subheadingsColor?.replace('#', ''),
+    link: themeConfig.linksColor?.replace('#', ''),
+  } : undefined;
+
+  // Apply any theme customizations
+  const finalStyle = applyThemeConfig(baseStyle, themeColors);
+
+  // Extract colors for LaTeX (already without # prefix)
   const colors = {
-    primary: (themeConfig?.primaryColor || (t === 'modern' ? '#2563eb' : t === 'creative' ? '#7c3aed' : '#000000')).replace('#', ''),
-    title: (themeConfig?.titleColor || (t === 'modern' ? '#1e3a8a' : t === 'creative' ? '#4c1d95' : '#000000')).replace('#', ''),
-    headings: (themeConfig?.headingsColor || (t === 'modern' ? '#1e3a8a' : t === 'creative' ? '#4c1d95' : '#000000')).replace('#', ''),
-    subheadings: (themeConfig?.subheadingsColor || (t === 'modern' ? '#2563eb' : t === 'creative' ? '#7c3aed' : '#000000')).replace('#', ''),
-    links: (themeConfig?.linksColor || (t === 'modern' ? '#2563eb' : t === 'creative' ? '#7c3aed' : '#2563eb')).replace('#', ''),
+    primary: finalStyle.colors.primary,
+    title: finalStyle.colors.title,
+    headings: finalStyle.colors.heading,
+    subheadings: finalStyle.colors.subheading,
+    links: finalStyle.colors.link,
   };
 
-  let fontPackage = "\\usepackage[utf8]{inputenc}\n\\usepackage[T1]{fontenc}";
-  const fontMap: Record<string, string> = {
-    "'Inter', sans-serif": "\\usepackage[sfdefault]{inter}",
-    "'Times New Roman', Times, serif": "\\usepackage{times}",
-    "'Georgia', serif": "\\usepackage{charter}",
-    "'Roboto', sans-serif": "\\usepackage[sfdefault]{roboto}",
-    "'Outfit', sans-serif": "\\usepackage[sfdefault]{helvet}"
-  };
+  // Map font to LaTeX package
+  const fontPackages = [
+    "\\usepackage[utf8]{inputenc}",
+    "\\usepackage[T1]{fontenc}"
+  ];
 
-  if (themeConfig?.fontFamily && fontMap[themeConfig.fontFamily]) {
-    fontPackage += "\n" + fontMap[themeConfig.fontFamily];
+  const fontBody = finalStyle.fonts.body.toLowerCase();
+  if (fontBody.includes('times')) {
+    fontPackages.push("\\usepackage{times}");
+  } else if (fontBody.includes('georgia') || fontBody.includes('charter')) {
+    fontPackages.push("\\usepackage{charter}");
+  } else if (fontBody.includes('roboto')) {
+    fontPackages.push("\\usepackage[sfdefault]{roboto}");
   } else {
-    if (t === 'modern') {
-      fontPackage += "\n\\usepackage{lmodern}\n\\renewcommand{\\familydefault}{\\sfdefault}";
-    } else if (t === 'creative') {
-      fontPackage += "\n\\usepackage{charter}";
-    } else if (t === 'classic') {
-      fontPackage += "\n\\usepackage{times}";
-    }
+    fontPackages.push("\\usepackage{lmodern}");
+    fontPackages.push("\\renewcommand{\\familydefault}{\\sfdefault}");
   }
 
-  const headerAlign = t === 'modern' ? "flushleft" : "center";
+  const headerAlign = finalStyle.layout.headerAlign === 'left' ? "flushleft" : "center";
 
   return `\\documentclass[10pt,a4paper]{article}
-${fontPackage}
+${fontPackages.join('\n')}
 \\usepackage{geometry}
 \\usepackage{hyperref}
 \\usepackage{xcolor}

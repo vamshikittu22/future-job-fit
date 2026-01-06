@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
 import { SECTION_NAMES } from "@/shared/constants/sectionNames";
 import type { ResumeData } from "@/shared/types/resume";
+import { getTemplateStyle, applyThemeConfig } from "@/shared/templates/templateStyles";
 
 // ============================================================================
 // CONSTANTS & CONFIGURATION
@@ -32,43 +33,43 @@ const getThemeStyles = (template: string) => {
         page: "bg-white shadow-xl mb-8 mx-auto relative overflow-hidden [font-family:var(--font-family)] text-gray-800 subpixel-antialiased",
 
         // Header
-        headerWrapper: "pb-6 mb-2 border-b border-gray-100 text-center",
-        headerTitle: "text-4xl font-extrabold tracking-tight [color:var(--title-color)] mb-1",
-        headerSubtitle: "text-lg font-medium [color:var(--subheadings-color)] tracking-wide mb-3",
-        headerContact: "flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium text-gray-500",
+        headerWrapper: "pb-6 mb-2 border-b border-gray-100 [text-align:var(--header-align)]",
+        headerTitle: "font-extrabold tracking-tight [color:var(--title-color)] [font-size:var(--title-size)] mb-1",
+        headerSubtitle: "font-medium [color:var(--subheadings-color)] [font-size:var(--subheading-size)] tracking-wide mb-3",
+        headerContact: "flex flex-wrap justify-[var(--header-align)] gap-x-4 gap-y-1 [font-size:var(--small-size)] font-medium text-gray-500",
 
         // Sections
-        sectionTitle: "flex items-center gap-4 text-xs font-bold uppercase tracking-[0.15em] [color:var(--headings-color)] mb-4 mt-6",
+        sectionTitle: "flex items-center gap-4 [font-size:var(--heading-size)] font-bold uppercase tracking-[0.15em] [color:var(--headings-color)] mb-4 mt-6",
         sectionLine: "flex-1 h-px bg-gray-100",
 
         // Items
         item: "mb-4",
         itemHeader: "flex justify-between items-baseline mb-0.5",
-        itemTitle: "text-sm font-bold [color:var(--title-color)]",
-        itemSubtitle: "text-xs font-medium [color:var(--subheadings-color)] opacity-90",
-        itemDate: "text-[10px] font-semibold [color:var(--primary-color)] opacity-70 whitespace-nowrap ml-4",
-        itemDesc: "text-[11px] leading-relaxed text-gray-600 mt-1 text-justify",
+        itemTitle: "font-bold [color:var(--title-color)] [font-size:var(--body-size)]",
+        itemSubtitle: "[font-size:var(--small-size)] font-medium [color:var(--subheadings-color)] opacity-90",
+        itemDate: "font-semibold [color:var(--primary-color)] opacity-70 whitespace-nowrap ml-4 [font-size:var(--small-size)]",
+        itemDesc: "leading-relaxed text-gray-600 mt-1 text-justify [font-size:var(--body-size)]",
 
         // Lists & Tags
-        list: "list-disc pl-3 space-y-0.5 mt-1 marker:text-gray-300",
+        list: "list-disc pl-3 space-y-0.5 mt-1 marker:text-gray-300 [font-size:var(--body-size)]",
         link: "hover:[color:var(--links-color)] hover:underline transition-colors",
-        tag: "text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-700 rounded border border-gray-100 mr-1 mb-1 inline-block",
+        tag: "font-medium px-2 py-0.5 bg-gray-100 text-gray-700 rounded border border-gray-100 mr-1 mb-1 inline-block [font-size:var(--small-size)]",
     };
 
     if (t === 'modern') {
         return {
             ...base,
-            headerWrapper: "mb-8 text-left border-b-4 [border-color:var(--primary-color)] pb-4",
-            headerTitle: "text-5xl font-bold [color:var(--title-color)] tracking-tighter mb-0",
-            headerSubtitle: "text-xl [color:var(--subheadings-color)] font-medium mb-4",
-            headerContact: "flex flex-wrap gap-4 text-sm font-medium text-gray-600",
+            headerWrapper: "mb-8 [text-align:var(--header-align)] border-b-4 [border-color:var(--primary-color)] pb-4",
+            headerTitle: "font-bold [color:var(--title-color)] tracking-tighter mb-0 [font-size:var(--title-size)]",
+            headerSubtitle: "[font-size:var(--subheading-size)] [color:var(--subheadings-color)] font-medium mb-4",
+            headerContact: "flex flex-wrap gap-4 [font-size:var(--small-size)] font-medium text-gray-600",
 
-            sectionTitle: "text-lg font-bold [color:var(--headings-color)] border-b border-gray-200 pb-2 mb-4 mt-8 uppercase tracking-normal block",
+            sectionTitle: "[font-size:var(--heading-size)] font-bold [color:var(--headings-color)] border-b border-gray-200 pb-2 mb-4 mt-8 uppercase tracking-normal block",
             sectionLine: "hidden",
 
-            itemTitle: "text-sm font-bold [color:var(--title-color)]",
-            itemDate: "text-xs font-bold [color:var(--primary-color)]",
-            tag: "text-[10px] font-bold px-2 py-1 [background-color:var(--primary-color-muted)] [color:var(--links-color)] rounded mr-1 mb-1 inline-block",
+            itemTitle: "font-bold [color:var(--title-color)] [font-size:var(--body-size)]",
+            itemDate: "font-bold [color:var(--primary-color)] [font-size:var(--small-size)]",
+            tag: "font-bold px-2 py-1 [background-color:var(--primary-color-muted)] [color:var(--links-color)] rounded mr-1 mb-1 inline-block [font-size:var(--small-size)]",
         };
     }
 
@@ -76,55 +77,55 @@ const getThemeStyles = (template: string) => {
         return {
             ...base,
             page: cn(base.page, "bg-stone-50"),
-            headerWrapper: "mb-8 text-center py-8 [background-color:var(--primary-color-muted)] -mx-8 px-8",
-            headerTitle: "text-4xl font-bold [color:var(--title-color)] mb-2",
-            headerSubtitle: "text-base italic [color:var(--subheadings-color)] mb-0",
+            headerWrapper: "mb-8 [text-align:var(--header-align)] py-8 [background-color:var(--primary-color-muted)] -mx-8 px-8",
+            headerTitle: "font-bold [color:var(--title-color)] mb-2 [font-size:var(--title-size)]",
+            headerSubtitle: "italic [color:var(--subheadings-color)] mb-0 [font-size:var(--subheading-size)]",
 
-            sectionTitle: "text-center text-sm font-bold [color:var(--headings-color)] mb-6 mt-8 border-b [border-color:var(--primary-color-muted)] pb-2 mx-12",
+            sectionTitle: "[text-align:var(--header-align)] font-bold [color:var(--headings-color)] mb-6 mt-8 border-b [border-color:var(--primary-color-muted)] pb-2 mx-12 [font-size:var(--heading-size)]",
             sectionLine: "hidden",
 
             itemHeader: "flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1",
-            itemTitle: "text-sm font-bold [color:var(--title-color)]",
-            itemDate: "text-[10px] italic [color:var(--primary-color)]",
-            tag: "text-[10px] px-3 py-0.5 border [border-color:var(--primary-color-muted)] [color:var(--links-color)] rounded-full mr-1 mb-1 inline-block bg-white",
+            itemTitle: "font-bold [color:var(--title-color)] [font-size:var(--body-size)]",
+            itemDate: "italic [color:var(--primary-color)] [font-size:var(--small-size)]",
+            tag: "px-3 py-0.5 border [border-color:var(--primary-color-muted)] [color:var(--links-color)] rounded-full mr-1 mb-1 inline-block bg-white [font-size:var(--small-size)]",
         };
     }
 
     if (t === 'executive') {
         return {
             ...base,
-            headerWrapper: "mb-10 text-left border-l-[6px] [border-color:var(--primary-color)] pl-6 py-2 bg-gray-50",
-            headerTitle: "text-4xl font-black uppercase tracking-tight [color:var(--title-color)] mb-1",
-            headerSubtitle: "text-lg font-bold uppercase tracking-widest [color:var(--subheadings-color)] mb-4",
-            headerContact: "flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wider",
+            headerWrapper: "mb-10 [text-align:var(--header-align)] border-l-[6px] [border-color:var(--primary-color)] pl-6 py-2 bg-gray-50",
+            headerTitle: "font-black uppercase tracking-tight [color:var(--title-color)] mb-1 [font-size:var(--title-size)]",
+            headerSubtitle: "font-bold uppercase tracking-widest [color:var(--subheadings-color)] mb-4 [font-size:var(--subheading-size)]",
+            headerContact: "flex flex-wrap gap-x-4 gap-y-1 [font-size:var(--small-size)] font-semibold text-gray-500 uppercase tracking-wider",
 
-            sectionTitle: "text-lg font-black [color:var(--headings-color)] border-b-2 [border-color:var(--primary-color)] pb-1 mb-5 mt-10 uppercase tracking-tight block",
+            sectionTitle: "[font-size:var(--heading-size)] font-black [color:var(--headings-color)] border-b-2 [border-color:var(--primary-color)] pb-1 mb-5 mt-10 uppercase tracking-tight block",
             sectionLine: "hidden",
 
             itemHeader: "flex justify-between items-baseline mb-1",
-            itemTitle: "text-sm font-bold [color:var(--title-color)] uppercase",
-            itemSubtitle: "text-xs font-semibold italic text-gray-600",
-            itemDate: "text-[10px] font-black [color:var(--primary-color)] uppercase tracking-tighter",
-            tag: "text-[9px] font-bold px-2 py-0.5 bg-gray-900 text-white rounded-sm mr-1 mb-1 inline-block uppercase tracking-tight",
+            itemTitle: "font-bold [color:var(--title-color)] uppercase [font-size:var(--body-size)]",
+            itemSubtitle: "font-semibold italic text-gray-600 [font-size:var(--small-size)]",
+            itemDate: "font-black [color:var(--primary-color)] uppercase tracking-tighter [font-size:var(--small-size)]",
+            tag: "font-bold px-2 py-0.5 bg-gray-900 text-white rounded-sm mr-1 mb-1 inline-block uppercase tracking-tight [font-size:var(--small-size)]",
         };
     }
 
     if (t === 'elegant') {
         return {
             ...base,
-            headerWrapper: "mb-12 text-center",
-            headerTitle: "text-5xl font-light italic [color:var(--title-color)] mb-3 serif",
-            headerSubtitle: "text-[10px] tracking-[0.4em] uppercase font-medium [color:var(--subheadings-color)] mb-6",
-            headerContact: "flex justify-center flex-wrap gap-x-8 gap-y-2 text-[9px] uppercase tracking-[0.2em] text-gray-400",
+            headerWrapper: "mb-12 [text-align:var(--header-align)]",
+            headerTitle: "font-light italic [color:var(--title-color)] mb-3 serif [font-size:var(--title-size)]",
+            headerSubtitle: "tracking-[0.4em] uppercase font-medium [color:var(--subheadings-color)] mb-6 [font-size:var(--subheading-size)]",
+            headerContact: "flex justify-center flex-wrap gap-x-8 gap-y-2 [font-size:var(--small-size)] uppercase tracking-[0.2em] text-gray-400",
 
-            sectionTitle: "text-center text-[10px] font-bold uppercase tracking-[0.4em] [color:var(--headings-color)] mb-8 mt-12 border-y py-2.5 [border-color:var(--primary-color-muted)] block",
+            sectionTitle: "[text-align:var(--header-align)] [font-size:var(--heading-size)] font-bold uppercase tracking-[0.4em] [color:var(--headings-color)] mb-8 mt-12 border-y py-2.5 [border-color:var(--primary-color-muted)] block",
             sectionLine: "hidden",
 
             itemHeader: "flex flex-col items-center mb-2",
-            itemTitle: "text-xs font-bold uppercase tracking-[0.2em] [color:var(--title-color)]",
-            itemSubtitle: "text-[10px] italic text-gray-500 mb-1",
-            itemDate: "text-[9px] tracking-[0.2em] [color:var(--primary-color)] mb-2",
-            tag: "text-[9px] border-b [border-color:var(--primary-color)] [color:var(--links-color)] mx-2 mb-2 inline-block uppercase tracking-widest",
+            itemTitle: "font-bold uppercase tracking-[0.2em] [color:var(--title-color)] [font-size:var(--body-size)]",
+            itemSubtitle: "italic text-gray-500 mb-1 [font-size:var(--small-size)]",
+            itemDate: "tracking-[0.2em] [color:var(--primary-color)] mb-2 [font-size:var(--small-size)]",
+            tag: "border-b [border-color:var(--primary-color)] [color:var(--links-color)] mx-2 mb-2 inline-block uppercase tracking-widest [font-size:var(--small-size)]",
         };
     }
 
@@ -132,37 +133,37 @@ const getThemeStyles = (template: string) => {
         return {
             ...base,
             page: cn(base.page, "text-gray-900"),
-            headerWrapper: "mb-6 text-center border-b-2 [border-color:var(--title-color)] pb-4",
-            headerTitle: "text-3xl font-bold uppercase tracking-widest [color:var(--title-color)] mb-2",
-            headerSubtitle: "text-base italic [color:var(--subheadings-color)] mb-2",
+            headerWrapper: "mb-6 [text-align:var(--header-align)] border-b-2 [border-color:var(--title-color)] pb-4",
+            headerTitle: "font-bold uppercase tracking-widest [color:var(--title-color)] mb-2 [font-size:var(--title-size)]",
+            headerSubtitle: "italic [color:var(--subheadings-color)] mb-2 [font-size:var(--subheading-size)]",
 
-            sectionTitle: "text-center text-sm font-bold uppercase border-b [border-color:var(--headings-color)] pb-1 mb-3 mt-6 tracking-wider [color:var(--headings-color)] block",
+            sectionTitle: "[text-align:var(--header-align)] font-bold uppercase border-b [border-color:var(--headings-color)] pb-1 mb-3 mt-6 tracking-wider [color:var(--headings-color)] block [font-size:var(--heading-size)]",
             sectionLine: "hidden",
 
-            itemTitle: "text-sm font-bold [color:var(--title-color)]",
-            itemSubtitle: "text-xs italic [color:var(--subheadings-color)]",
-            itemDate: "text-xs italic [color:var(--primary-color)]",
+            itemTitle: "font-bold [color:var(--title-color)] [font-size:var(--body-size)]",
+            itemSubtitle: "italic [color:var(--subheadings-color)] [font-size:var(--subheading-size)]",
+            itemDate: "italic [color:var(--primary-color)] [font-size:var(--small-size)]",
 
-            list: "list-disc pl-4 space-y-0.5 mt-1 marker:text-black",
-            tag: "text-[10px] border border-gray-300 px-2 py-0.5 rounded-none mr-2 bg-transparent [color:var(--links-color)] italic",
+            list: "list-disc pl-4 space-y-0.5 mt-1 marker:text-black [font-size:var(--body-size)]",
+            tag: "border border-gray-300 px-2 py-0.5 rounded-none mr-2 bg-transparent [color:var(--links-color)] italic [font-size:var(--small-size)]",
         };
     }
 
     if (t === 'minimal') {
         return {
             ...base,
-            headerWrapper: "mb-6 text-left pb-4",
-            headerTitle: "text-3xl font-light tracking-tight [color:var(--title-color)]",
-            headerSubtitle: "text-base font-normal text-gray-400 mb-4",
-            headerContact: "flex flex-wrap gap-4 text-[10px] text-gray-400 uppercase tracking-widest",
+            headerWrapper: "mb-6 [text-align:var(--header-align)] pb-4",
+            headerTitle: "font-light tracking-tight [color:var(--title-color)] [font-size:var(--title-size)]",
+            headerSubtitle: "font-normal text-gray-400 mb-4 [font-size:var(--subheading-size)]",
+            headerContact: "flex flex-wrap gap-4 [font-size:var(--small-size)] text-gray-400 uppercase tracking-widest",
 
-            sectionTitle: "text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300 mb-4 mt-8 block",
+            sectionTitle: "[font-size:var(--heading-size)] font-bold uppercase tracking-[0.2em] text-gray-300 mb-4 mt-8 block",
             sectionLine: "hidden",
 
-            itemTitle: "text-sm font-medium [color:var(--title-color)]",
-            itemSubtitle: "text-xs text-gray-400",
-            itemDate: "text-[10px] text-gray-300",
-            tag: "text-[9px] text-gray-400 border border-gray-100 px-2 py-0.5 rounded-full mr-1 mb-1 inline-block",
+            itemTitle: "font-medium [color:var(--title-color)] [font-size:var(--body-size)]",
+            itemSubtitle: "text-gray-400 [font-size:var(--small-size)]",
+            itemDate: "text-gray-300 [font-size:var(--small-size)]",
+            tag: "text-gray-400 border border-gray-100 px-2 py-0.5 rounded-full mr-1 mb-1 inline-block [font-size:var(--small-size)]",
         };
     }
 
@@ -200,52 +201,35 @@ export default function ResumePreview({
     const resumeDataString = JSON.stringify(resumeData);
 
     const themeSettings = useMemo(() => {
-        const t = template.toLowerCase();
-        const config = resumeData?.metadata?.themeConfig?.[t];
+        const styleConfig = getTemplateStyle(template);
 
-        const primary = config?.primaryColor || (
-            t === 'modern' ? '#2563eb' :
-                t === 'creative' ? '#7c3aed' :
-                    t === 'executive' ? '#111827' :
-                        t === 'elegant' ? '#db2777' :
-                            '#000000'
-        );
+        // Convert ThemeSettings to TemplateColors format if exists
+        const themeConfig = resumeData?.metadata?.themeConfig?.[template.toLowerCase()];
+        const themeColors = themeConfig ? {
+            primary: themeConfig.primaryColor?.replace('#', ''),
+            title: themeConfig.titleColor?.replace('#', ''),
+            heading: themeConfig.headingsColor?.replace('#', ''),
+            subheading: themeConfig.subheadingsColor?.replace('#', ''),
+            link: themeConfig.linksColor?.replace('#', ''),
+        } : undefined;
+
+        const finalStyle = applyThemeConfig(styleConfig, themeColors);
 
         return {
-            primaryColor: primary,
-            fontFamily: config?.fontFamily || (
-                t === 'classic' || t === 'executive' ? "'Playfair Display', serif" :
-                    t === 'creative' || t === 'elegant' ? "'EB Garamond', serif" :
-                        "'Inter', sans-serif"
-            ),
-            titleColor: config?.titleColor || (
-                t === 'modern' ? '#1e3a8a' :
-                    t === 'creative' ? '#4c1d95' :
-                        t === 'executive' ? '#000000' :
-                            t === 'elegant' ? '#9d174d' :
-                                '#000000'
-            ),
-            headingsColor: config?.headingsColor || (
-                t === 'modern' ? '#1e3a8a' :
-                    t === 'creative' ? '#4c1d95' :
-                        t === 'executive' ? '#111827' :
-                            t === 'elegant' ? '#831843' :
-                                '#000000'
-            ),
-            subheadingsColor: config?.subheadingsColor || (
-                t === 'modern' ? '#2563eb' :
-                    t === 'creative' ? '#7c3aed' :
-                        t === 'executive' ? '#4b5563' :
-                            t === 'elegant' ? '#be185d' :
-                                '#000000'
-            ),
-            linksColor: config?.linksColor || (
-                t === 'modern' ? '#2563eb' :
-                    t === 'creative' ? '#7c3aed' :
-                        t === 'elegant' ? '#db2777' :
-                            '#2563eb'
-            ),
-            primaryColorMuted: primary + '10',
+            primaryColor: `#${finalStyle.colors.primary}`,
+            primaryColorMuted: `#${finalStyle.colors.primary}10`,
+            titleColor: `#${finalStyle.colors.title}`,
+            headingsColor: `#${finalStyle.colors.heading}`,
+            subheadingsColor: `#${finalStyle.colors.subheading}`,
+            linksColor: `#${finalStyle.colors.link}`,
+            fontFamily: themeConfig?.fontFamily || finalStyle.fonts.body,
+            // Add sizes for better consistency
+            titleSize: `${finalStyle.sizes.titleSize}pt`,
+            headingSize: `${finalStyle.sizes.headingSize}pt`,
+            subheadingSize: `${finalStyle.sizes.subheadingSize}pt`,
+            bodySize: `${finalStyle.sizes.bodySize}pt`,
+            smallSize: `${finalStyle.sizes.smallSize}pt`,
+            headerAlign: finalStyle.layout.headerAlign,
         };
     }, [resumeDataString, template]);
 
@@ -591,6 +575,12 @@ export default function ResumePreview({
                 '--subheadings-color': themeSettings.subheadingsColor,
                 '--links-color': themeSettings.linksColor,
                 '--font-family': themeSettings.fontFamily,
+                '--title-size': themeSettings.titleSize,
+                '--heading-size': themeSettings.headingSize,
+                '--subheading-size': themeSettings.subheadingSize,
+                '--body-size': themeSettings.bodySize,
+                '--small-size': themeSettings.smallSize,
+                '--header-align': themeSettings.headerAlign,
             } as React.CSSProperties}
         >
 

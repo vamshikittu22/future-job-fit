@@ -44,10 +44,22 @@ A professional, high-performance resume building platform powered by advanced AI
 3. **Configure Environment Variables**
    Create a `.env` file in the root:
    ```env
+   # Client-side (public)
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
    VITE_AI_PROVIDER=gemini # 'openai', 'gemini', or 'groq'
-   VITE_GEMINI_API_KEY=your_key_here
-   VITE_OPENAI_API_KEY=your_key_here
-   VITE_GROQ_API_KEY=your_key_here
+   
+   # Server-side (secret - for local Edge Function dev)
+   GEMINI_API_KEY=your_gemini_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
+   GROQ_API_KEY=your_groq_api_key_here
+   ```
+   
+   **Production**: Set secrets via Supabase Dashboard or CLI:
+   ```bash
+   supabase secrets set GEMINI_API_KEY=your_key
+   supabase secrets set OPENAI_API_KEY=your_key
+   supabase secrets set GROQ_API_KEY=your_key
    ```
 
 4. **Start Development Server**

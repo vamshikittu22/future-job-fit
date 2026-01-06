@@ -1,62 +1,216 @@
 # 🤖 AI Integration Guide
 
-The **AI Resume Builder** features a powerful, multi-provider AI engine that helps users optimize their resumes for ATS and professional impact.
+The **AI Resume Builder** features a secure, server-side AI engine powered by **Supabase Edge Functions** that protects your API keys and supports multiple AI providers.
+
+## 🔒 Security Architecture
+
+**Previous Approach** (❌ Insecure):
+- API keys in client-side `.env` with `VITE_` prefix
+- Keys exposed in browser bundle
+- Direct API calls from frontend
+
+**Current Approach** (✅ Secure):
+- API keys stored server-side in Supabase secrets
+- All AI calls routed through Supabase Edge Function (`resume-ai`)
+- Frontend only calls secure gateway endpoint
+- Zero API key exposure to browser
 
 ## ⚙️ Configuration
 
-The AI engine is configured via your `.env` file. You can choose your provider and model depending on your needs for speed, cost, or quality.
+### 1. Choose Your AI Provider
 
-### Provider Settings
-
-Set `VITE_AI_PROVIDER` to one of the following:
+Set `VITE_AI_PROVIDER` in your `.env` (client-side):
 
 | Provider | Model Used | Best For |
 | :--- | :--- | :--- |
 | `gemini` | `gemini-1.5-flash` | Speed & Free-tier availability |
 | `openai` | `gpt-4o-mini` | High quality & consistency |
-| `groq` | `llama-3.3-70b` | Performance and ultra-low latency |
+| `groq` | `llama-3.3-70b-versatile` | Performance and ultra-low latency |
 
-### API Keys
-
-Add the corresponding keys to your `.env` file:
 ```env
-VITE_GEMINI_API_KEY=...
-VITE_OPENAI_API_KEY=...
-VITE_GROQ_API_KEY=...
+VITE_AI_PROVIDER=gemini
 ```
 
-## 🛠️ How it Works
+### 2. Configure Supabase (Required)
 
-The core logic resides in `src/shared/api/resumeAI.ts`. It uses a centralized `ResumeAIService` class.
+Add your Supabase project credentials to `.env`:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+```
+
+### 3. Set Server-Side API Keys
+
+#### Local Development
+
+Add API keys to your local `.env` (WITHOUT `VITE_` prefix):
+
+```env
+GEMINI_API_KEY=your_actual_gemini_key
+OPENAI_API_KEY=your_actual_openai_key
+GROQ_API_KEY=your_actual_groq_key
+AI_PROVIDER=gemini
+```
+
+#### Production Deployment
+
+Set secrets in Supabase using the CLI or Dashboard:
+
+```bash
+# Using Supabase CLI
+supabase secrets set GEMINI_API_KEY=your_key
+supabase secrets set OPENAI_API_KEY=your_key
+supabase secrets set GROQ_API_KEY=your_key
+supabase secrets set AI_PROVIDER=gemini
+```
+
+Or via **Supabase Dashboard** → Project Settings → Edge Functions → Secrets.
+
+## 🛠️ How It Works
+
+### Architecture Flow
+
+```
+User Input
+   ↓
+Frontend (resumeAI.ts)
+   ↓
+Supabase Client SDK
+   ↓
+Edge Function (resume-ai)
+   ↓
+AI Provider API (Gemini/OpenAI/Groq)
+   ↓
+Response back to Frontend
+```
 
 ### 1. Enhancement Request
-When a user clicks "Enhance", the service sends the following context to the AI:
-- The **Section Type** (e.g., "Experience")
-- The **Original Text**
-- The **Quick Preset** (ATS Optimized, Concise, or Maximum Impact)
-- **Tone & Style** (Formal, Modern, etc.)
-- **Highlights** (Technical, Leadership, etc.)
 
-### 2. Multi-Variant Response
-The AI returns a JSON object containing 3 to 5 improved variations. The user can then preview and select the one they like best.
+When a user clicks **"Enhance with AI"**, the frontend calls:
 
-### 3. Section Analysis
-The service also provides an `analyzeSection` method. This evaluates the user's current content and returns:
-- A numerical score (0-100)
-- A list of strengths
-- A list of weaknesses
-- Actionable suggestions
+```typescript
+const result = await resumeAI.enhanceSection({
+  section_type: 'experience',
+  original_text: 'Led team of developers...',
+  quick_preset: 'ATS Optimized',
+  tone_style: ['Professional', 'Impactful'],
+});
+```
 
-## 🚨 Security & Efficiency
+This triggers the Supabase Edge Function at `supabase/functions/resume-ai/index.ts`.
 
-- **Client-Side Proxy**: Currently, requests are made directly from the client. Ensure your API keys are protected or use a backend proxy for production environments.
-- **Optimized Prompting**: We use highly tuned system prompts to ensure the AI remains factual and avoids "hallucinations" (inventing companies or roles).
-- **JSON Mode**: Both OpenAI and Gemini are forced into `json_object` or `responseMimeType: "application/json"` mode to ensure reliable parsing.
+### 2. Server-Side Processing
 
-## 🧪 Testing your Setup
+The edge function:
+1. Validates the request
+2. Selects the AI provider (Gemini/OpenAI/Groq)
+3. Makes the API call using server-side secret keys
+4. Returns 3-5 improved variants
 
-You can verify your AI setup by:
-1. Opening the **Professional Summary** step.
-2. Typing a few words.
-3. Clicking the **"Enhance with AI"** button.
-4. If the variants appear, your API key and provider are correctly configured.
+### 3. Multi-Variant Response
+
+Response format:
+
+```json
+{
+  "section_type": "experience",
+  "preset_used": "ATS Optimized",
+  "applied_tone_style": ["Professional", "Impactful"],
+  "variants": [
+    "Spearheaded cross-functional team of 5 developers...",
+    "Led engineering team that delivered 3 major features...",
+    "Directed development team, achieving 40% faster delivery..."
+  ],
+  "notes": "Optimized for ATS with industry keywords"
+}
+```
+
+### 4. Section Analysis
+
+The `analyzeSection` method evaluates content quality:
+
+```typescript
+const analysis = await resumeAI.analyzeSection('experience-1', content);
+```
+
+Returns:
+```json
+{
+  "score": 85,
+  "strengths": ["Strong action verbs", "Quantifiable metrics"],
+  "weaknesses": ["Missing industry keywords"],
+  "suggestions": ["Add specific technologies used", "Quantify team size"]
+}
+```
+
+## 🚀 Local Development Setup
+
+### 1. Install Supabase CLI
+
+```bash
+npm install -g supabase
+```
+
+### 2. Link to Your Project
+
+```bash
+supabase link --project-ref your-project-id
+```
+
+### 3. Serve Edge Functions Locally
+
+```bash
+supabase functions serve resume-ai --env-file .env
+```
+
+This runs the edge function at `http://localhost:54321/functions/v1/resume-ai`.
+
+### 4. Test the Function
+
+```bash
+curl -X POST http://localhost:54321/functions/v1/resume-ai \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "enhanceSection",
+    "provider": "gemini",
+    "section_type": "summary",
+    "original_text": "Experienced developer with 5 years in web development"
+  }'
+```
+
+## 🚨 Migration from Client-Side Keys
+
+If you were using the old approach with `VITE_GEMINI_API_KEY`, etc.:
+
+1. **Remove** all `VITE_*_API_KEY` variables from `.env`
+2. **Add** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
+3. **Set** server-side secrets in Supabase (see Configuration above)
+4. **Keep** `VITE_AI_PROVIDER` to choose your preferred provider
+
+## 🧪 Testing Your Setup
+
+1. Open the **Professional Summary** step in the wizard
+2. Type a few words in the summary field
+3. Click **"Enhance with AI"**
+4. If variants appear → ✅ Setup successful!
+5. If errors occur → Check browser console and Supabase function logs
+
+### Debugging
+
+View edge function logs:
+
+```bash
+supabase functions logs resume-ai
+```
+
+## 📚 Additional Resources
+
+- [Supabase Edge Functions Docs](https://supabase.com/docs/guides/functions)
+- [Gemini API Documentation](https://ai.google.dev/docs)
+- [OpenAI API Reference](https://platform.openai.com/docs)
+- [Groq API Docs](https://console.groq.com/docs)
+
+---
+
+**Security Note**: Never commit actual API keys to version control. Always use environment variables and Supabase secrets.

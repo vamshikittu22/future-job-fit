@@ -6,7 +6,7 @@ import { FileText, FileJson, FileCode, Printer, Download, Eye } from 'lucide-rea
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useWizard } from '@/shared/contexts/WizardContext';
 import { useToast } from '@/shared/ui/use-toast';
-import { generatePdfFromElement } from '@/shared/lib/export/pdf';
+import { generatePdfFromElement, generateFormattedPdf } from '@/shared/lib/export/pdf';
 import { generateDocx } from '@/shared/lib/export/docx';
 import ResumePreview from '@/features/resume-builder/components/preview/ResumePreview';
 import {
@@ -39,9 +39,7 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
 
       switch (format) {
         case 'pdf':
-          const previewElement = document.querySelector('.resume-preview') as HTMLElement;
-          if (!previewElement) throw new Error('Preview not found');
-          blob = await generatePdfFromElement(previewElement);
+          blob = await generateFormattedPdf(resumeData, template);
           filename += '.pdf';
           break;
         case 'docx':
