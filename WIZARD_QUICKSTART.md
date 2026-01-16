@@ -30,6 +30,7 @@ Write your "elevator pitch."
 
 ### 4. Work Experience
 Detail your professional history.
+- **⚡ Quick Add**: Press **`Ctrl + K`** to open the lightning-fast entry modal. Add roles in seconds.
 - **Achievements**: Focus on metrics. Use the **Bullet Enhancer** to turn simple sentences into high-impact achievements.
 
 ### 5. Education
@@ -44,14 +45,16 @@ Feature your best work. Link to GitHub or live demos.
 
 ### 8. Review & Export
 The final check.
-- **ATS Dashboard**: Review the detailed breakdown of your resume's performance.
-- **Download**: Export as **PDF** (printable), **DOCX** (editable), or **JSON** (data-backup).
+- **ATS Dashboard**: Click your score for a detailed breakdown of your resume's performance.
+- **LinkedIn Optimizer**: Click **"Optimize for LinkedIn"** in the Export modal to generate a social-ready profile in one click.
+- **Download**: Export as **PDF** (printable), **DOCX** (editable), **LaTeX**, or **JSON** (data-backup).
 
 ## ⚡ Power Features
 
 - **⌨️ Keyboard Shortcuts**: 
+  - `Ctrl + K`: **Quick Add** Work Experience
   - `Ctrl + S`: Save Draft
-  - `Ctrl + Z`: Undo last change
+  - `Ctrl + Z`: **Undo** last change (Works for deletions)
   - `Ctrl + Shift + P`: Toggle Preview Panel
 - **📂 Sample Data**: Not sure where to start? Click **"Load Sample"** in the top bar to see a complete engineer's resume.
 - **🔄 Auto-Save**: Don't worry about losing progress. The app saves to your browser every 2 seconds.
