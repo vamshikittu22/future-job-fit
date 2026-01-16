@@ -242,7 +242,7 @@ export const ExperienceStep: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="space-y-2">
               <Checkbox
                 id="current"
                 checked={formData.current}
@@ -250,21 +250,29 @@ export const ExperienceStep: React.FC = () => {
                   setFormData({ ...formData, current: checked as boolean })
                 }
               />
-              <Label htmlFor="current" className="cursor-pointer">
+              <Label htmlFor="current" className="cursor-pointer font-medium">
                 I currently work here
               </Label>
             </div>
 
-            <div className="space-y-2">
+            {/* Description Section with clearer header */}
+            <div className="space-y-3 pt-4 border-t">
               <div className="flex items-center justify-between">
-                <Label htmlFor="description">Description & Achievements *</Label>
+                <div>
+                  <Label htmlFor="description" className="text-base font-semibold">
+                    Description & Achievements *
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Use bullet points (•) to list your responsibilities and achievements
+                  </p>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsAIEnhanceModalOpen(true)}
-                  className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                  className="h-9 text-sm gap-2 shadow-sm hover:shadow-accent transition-all"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-4 h-4" />
                   Enhance with AI
                 </Button>
               </div>
@@ -276,7 +284,7 @@ export const ExperienceStep: React.FC = () => {
                   setIsEnhanced(false);
                 }}
                 placeholder="• Managed team of 5 developers&#10;• Increased efficiency by 30%&#10;• Led migration to microservices architecture"
-                className="min-h-[150px]"
+                className="min-h-[180px] text-base leading-relaxed"
                 maxLength={1000}
               />
               <p className="text-xs text-muted-foreground">

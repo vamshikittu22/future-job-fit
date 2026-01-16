@@ -120,26 +120,28 @@ export default function Results() {
     <div className="min-h-screen bg-background">
       <AppNavigation />
       <motion.div
-        className="container mx-auto px-6 py-8"
+        className="swiss-container swiss-section"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
         {/* Header */}
         <motion.div
-          className="mb-8"
+          className="mb-12 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <h1 className="text-3xl font-bold text-center">Analysis Results</h1>
-          <p className="text-center text-muted-foreground mt-2">
-            Your personalized resume analysis and optimization
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Analysis Results
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Your personalized resume analysis with AI-powered optimization
           </p>
         </motion.div>
 
         {/* Results Grid */}
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-10">
           {/* ATS Score Dashboard */}
           <div className="grid md:grid-cols-3 gap-6">
             <motion.div
@@ -150,7 +152,7 @@ export default function Results() {
               <Card className="p-6 shadow-swiss bg-gradient-card">
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${evaluation.atsScore >= 80 ? 'bg-green-100 text-green-600' :
-                      evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                    evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
                     }`}>
                     <Target className="w-5 h-5" />
                   </div>

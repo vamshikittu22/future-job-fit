@@ -348,17 +348,24 @@ export default function AIEnhanceModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
-            <Sparkles className="w-6 h-6 text-primary fill-primary/20" />
-            AI Resume Enhancement
-            {step && (
-              <Badge variant="secondary" className="ml-2 font-normal capitalize">
-                {step}
-              </Badge>
-            )}
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border-border shadow-xl">
+        <DialogHeader className="pb-6 border-b space-y-3">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-accent" />
+            </div>
+            <div className="flex-1">
+              AI Resume Enhancement
+              {step && (
+                <Badge variant="secondary" className="ml-3 font-normal capitalize">
+                  {step}
+                </Badge>
+              )}
+            </div>
           </DialogTitle>
+          <p className="text-sm text-muted-foreground ml-15">
+            Choose a strategy or customize your enhancement preferences
+          </p>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-1">

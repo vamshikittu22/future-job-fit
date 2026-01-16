@@ -8,15 +8,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Type definitions
+// --- Models & Config ---
+const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_API_VERSION = "v1beta"; // Using v1beta for JSON response mode support
+
+// --- Interface Definitions ---
 interface EnhancementRequest {
   section_type: 'summary' | 'experience' | 'skills' | 'projects' | 'education' | 'achievements' | 'certifications';
   original_text: string;
   quick_preset?: 'ATS Optimized' | 'Concise Professional' | 'Maximum Impact' | null;
   tone_style?: string[];
   highlight_areas?: string[];
-  industry_keywords?: string;
-  restrictions?: string;
   job_description?: string;
   target_role?: string;
 }
@@ -26,312 +28,179 @@ interface AnalysisRequest {
   content: string;
 }
 
+interface SkillsRequest {
+  skills: string[];
+}
+
+interface ProjectImpactRequest {
+  projectName: string;
+  description: string;
+  technologies: string[];
+}
+
 interface EvaluationRequest {
   resumeText: string;
   jobDescription?: string;
 }
 
-// System prompt for enhancement
-const getEnhancementSystemPrompt = (): string => {
-  return `You are an AI Resume Enhancement assistant. Your job is to rewrite resume text into improved versions.
-
-Rules:
-- Preserve factual information. Do not invent roles, companies, technologies, or metrics.
-- Use professional third-person language, no 'I' or 'we'.
-- Keep verb tenses consistent.
-- AVOID generic adverbs like "Expertly", "Consistently", "Efficiently" at sentence start.
-- Use strong action verbs: "Architected", "Spearheaded", "Negotiated", etc.
-- Focus on concrete actions and measurable outcomes.
-- Return 3-5 alternative improved versions.
-
-Quick Presets:
-- ATS Optimized: Focus on keyword compatibility and clear phrases.
-- Concise Professional: Shorten text, keep key achievements, easy to skim.
-- Maximum Impact: Emphasize results, metrics, and business value.
-
-Output EXACTLY one JSON object:
-{
-  "section_type": "string",
-  "preset_used": "string or null",
-  "applied_tone_style": ["string"],
-  "applied_highlight_areas": ["string"],
-  "variants": ["string"],
-  "notes": "string or null"
-}`;
-};
-
-// AI Provider Implementations
-async function callOpenAI(payload: EnhancementRequest): Promise<string> {
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: getEnhancementSystemPrompt() },
-        { role: 'user', content: JSON.stringify(payload) },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'OpenAI API call failed');
-  }
-
-  const result = await response.json();
-  return result.choices[0].message.content;
-}
-
-async function callGemini(payload: EnhancementRequest): Promise<string> {
+// --- AI Client Helper ---
+async function callGemini(prompt: string, temperature = 0.8): Promise<string> {
   const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
 
-  const prompt = `${getEnhancementSystemPrompt()}\n\nInput Data:\n${JSON.stringify(payload)}`;
+  const url = `https://generativelanguage.googleapis.com/${GEMINI_API_VERSION}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: 'application/json',
-        },
-      }),
-    }
-  );
+  console.log(`[Gemini Request] Model: ${GEMINI_MODEL}, Temp: ${temperature}`);
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Gemini API call failed');
-  }
-
-  const result = await response.json();
-  return result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-async function callGroq(payload: EnhancementRequest): Promise<string> {
-  const apiKey = Deno.env.get('GROQ_API_KEY');
-  if (!apiKey) throw new Error('GROQ_API_KEY not configured');
-
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: getEnhancementSystemPrompt() },
-        { role: 'user', content: JSON.stringify(payload) },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: temperature,
+      },
     }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Groq API call failed');
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('[Gemini API Error Status]:', response.status);
+    console.error('[Gemini API Error Body]:', JSON.stringify(errorBody));
+    throw new Error(errorBody.error?.message || `Gemini API failed with status ${response.status}`);
   }
 
   const result = await response.json();
-  return result.choices[0].message.content;
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  if (!text) {
+    console.warn('[Gemini Warning] No text in response. Full result:', JSON.stringify(result));
+    throw new Error('Gemini returned an empty response');
+  }
+
+  return text;
 }
 
-// Main handler
+const getEnhancementSystemPrompt = (payload: EnhancementRequest): string => {
+  return `You are a Career Expert & Resume Strategist. 
+Your task is to rewrite the following resume content into 3 distinct, high-quality variations.
+
+INPUT CONTENT:
+${payload.original_text}
+
+CONTEXT:
+- Section: ${payload.section_type}
+- Preset: ${payload.quick_preset || 'Standard'}
+- Tone: ${payload.tone_style?.join(', ') || 'Professional'}
+
+RULES:
+1. Preserve all factual data (dates, tech, metrics). NEVER hallucinate details.
+2. Use strong action verbs (Spearheaded, Architected, Orchestrated).
+3. Quantify achievements whenever possible.
+4. Ensure the 3 variations are DISTINCT from each other in structure and phrasing.
+5. Variation 1: Focus on Keywords & ATS.
+6. Variation 2: Focus on Leadership & Impact.
+7. Variation 3: Focus on Conciseness & Clarity.
+
+RESPONSE FORMAT (JSON ONLY):
+{
+  "variants": ["string", "string", "string"],
+  "notes": "string explaining the strategy used"
+}`;
+};
+
+// --- Main Handler ---
 Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { task, provider, ...data } = await req.json();
+    const body = await req.json();
+    const { task, provider } = body;
     const aiProvider = provider || Deno.env.get('AI_PROVIDER') || 'gemini';
 
-    console.log(`[AI Gateway] Task: ${task}, Provider: ${aiProvider}`);
+    console.log(`[AI Workflow] Task: ${task}, Provider: ${aiProvider}`);
 
-    let responseText: string;
+    // Currently focusing on Gemini for the "Clear Setup" rewrite as requested
+    if (aiProvider !== 'gemini') {
+      throw new Error(`This optimized handler currently supports Gemini. Provider '${aiProvider}' is not yet refactored.`);
+    }
 
-    // Route task types
+    let responseData: any;
+
     if (task === 'enhanceSection') {
-      const request = data as EnhancementRequest;
-
-      switch (aiProvider) {
-        case 'openai':
-          responseText = await callOpenAI(request);
-          break;
-        case 'gemini':
-          responseText = await callGemini(request);
-          break;
-        case 'groq':
-          responseText = await callGroq(request);
-          break;
-        default:
-          throw new Error(`Unsupported provider: ${aiProvider}`);
-      }
-
-      // Clean and parse response
-      const cleanedJson = responseText.replace(/```json|```/g, '').trim();
-      const result = JSON.parse(cleanedJson);
-
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      const payload = body as EnhancementRequest;
+      const prompt = getEnhancementSystemPrompt(payload);
+      const text = await callGemini(prompt, 1.0); // High temp for variations
+      responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 
     } else if (task === 'analyzeSection') {
-      const { sectionId, content } = data as AnalysisRequest;
-
-      const systemPrompt = `You are an expert Resume Analyst. Analyze the section and return JSON:
+      const { sectionId, content } = body as AnalysisRequest;
+      const prompt = `Analyze this resume section content and provide feedback in JSON:
 {
   "score": number (0-100),
   "strengths": string[],
   "weaknesses": string[],
   "suggestions": string[]
 }
-Focus on: impact, clarity, action verbs, metrics, industry standards.`;
-
-      let analysisResponse: string;
-
-      if (aiProvider === 'openai') {
-        const apiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: `Section: ${sectionId}\nContent: ${content}` },
-            ],
-            response_format: { type: 'json_object' },
-          }),
-        });
-
-        const result = await response.json();
-        analysisResponse = result.choices[0].message.content;
-      } else if (aiProvider === 'gemini') {
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: `${systemPrompt}\n\nSection: ${sectionId}\nContent: ${content}` }] }],
-              generationConfig: { responseMimeType: 'application/json' },
-            }),
-          }
-        );
-
-        const result = await response.json();
-        analysisResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      } else {
-        // Groq
-        const apiKey = Deno.env.get('GROQ_API_KEY');
-        if (!apiKey) throw new Error('GROQ_API_KEY not configured');
-
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: `Section: ${sectionId}\nContent: ${content}` },
-            ],
-            response_format: { type: 'json_object' },
-          }),
-        });
-
-        const result = await response.json();
-        analysisResponse = result.choices[0].message.content;
-      }
-
-      const cleanedJson = analysisResponse.replace(/```json|```/g, '').trim();
-      const result = JSON.parse(cleanedJson);
-
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+CONTENT: ${content}`;
+      const text = await callGemini(prompt, 0.4); // Lower temp for factual analysis
+      responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 
     } else if (task === 'evaluateResume') {
-      const { resumeText, jobDescription } = data as EvaluationRequest;
-
-      // Simple evaluation using Gemini (primary provider for this task)
-      const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('OPENAI_API_KEY');
-      if (!apiKey) throw new Error('No AI provider configured');
-
-      const prompt = `Evaluate this resume and provide an ATS score, missing keywords, and suggestions.
-Resume: ${resumeText}
-Job Description: ${jobDescription || 'N/A'}
-
-Return JSON:
+      const { resumeText, jobDescription } = body as EvaluationRequest;
+      const prompt = `Evaluate the following resume against the job description. Return JSON:
 {
-  "atsScore": number (0-100),
+  "atsScore": number,
   "missingKeywords": string[],
   "suggestions": string[],
-  "rewrittenResume": "string"
-}`;
+  "rewrittenResume": "A brief optimized version of the summary"
+}
+RESUME: ${resumeText}
+JOB: ${jobDescription || 'N/A'}`;
+      const text = await callGemini(prompt, 0.5);
+      responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 
-      // Use Gemini for simplicity
-      const geminiKey = Deno.env.get('GEMINI_API_KEY');
-      if (!geminiKey) throw new Error('GEMINI_API_KEY required for evaluation');
+    } else if (task === 'organizeSkills') {
+      const { skills } = body as SkillsRequest;
+      const prompt = `Organize these skills into categories (Technical, Tools, Soft, Languages). Detect duplicates and outdated tech. Return JSON:
+{
+  "technical": string[],
+  "tools": string[],
+  "soft": string[],
+  "languages": string[],
+  "duplicates": string[],
+  "outdated": Array<{skill: string, suggestion: string}>
+}
+SKILLS: ${skills.join(', ')}`;
+      const text = await callGemini(prompt, 0.3);
+      responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        }
-      );
-
-      const result = await response.json();
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      return new Response(JSON.stringify({
-        atsScore: 85,
-        missingKeywords: [],
-        suggestions: ['Add more action verbs', 'Include metrics'],
-        rewrittenResume: text
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    } else if (task === 'suggestProjectImpact') {
+      const { projectName, description, technologies } = body as ProjectImpactRequest;
+      const prompt = `Suggest quantifiable impact metrics for this project: ${projectName}. Return JSON:
+{
+  "suggestedMetrics": Array<{type: string, example: string}>,
+  "bullets": Array<{text: string, focus: string}>
+}
+DESC: ${description}
+TECH: ${technologies.join(', ')}`;
+      const text = await callGemini(prompt, 0.7);
+      responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 
     } else {
-      throw new Error(`Unknown task type: ${task}`);
+      throw new Error(`Unknown task: ${task}`);
     }
 
-  } catch (error) {
-    console.error('[AI Gateway Error]:', error);
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    }), {
+    return new Response(JSON.stringify(responseData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (err: any) {
+    console.error('[AI Handler Master Error]:', err.message);
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -17,55 +17,36 @@ The **AI Resume Builder** features a secure, server-side AI engine powered by **
 
 ## ⚙️ Configuration
 
-### 1. Choose Your AI Provider
+### 1. automated Setup (Recommended)
 
-Set `VITE_AI_PROVIDER` in your `.env` (client-side):
+Run the included PowerShell script to configure Supabase and deploy the secured AI backend in one step:
 
-| Provider | Model Used | Best For |
-| :--- | :--- | :--- |
-| `gemini` | `gemini-1.5-flash` | Speed & Free-tier availability |
-| `openai` | `gpt-4o-mini` | High quality & consistency |
-| `groq` | `llama-3.3-70b-versatile` | Performance and ultra-low latency |
-
-```env
-VITE_AI_PROVIDER=gemini
+```powershell
+./scripts/setup_ai_backend.ps1
 ```
 
-### 2. Configure Supabase (Required)
+This script will:
+- Sanitize your `.env` file
+- Log you into Supabase
+- Set your `GEMINI_API_KEY` securely as a server-side secret
+- Deploy the `resume-ai` Edge Function automatically
 
-Add your Supabase project credentials to `.env`:
+### 2. Manual Configuration (Advanced)
 
+If you prefer determining secrets manually:
+
+**Local Development**:
+Add keys to `.env` (without `VITE_` prefix):
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
-```
-
-### 3. Set Server-Side API Keys
-
-#### Local Development
-
-Add API keys to your local `.env` (WITHOUT `VITE_` prefix):
-
-```env
-GEMINI_API_KEY=your_actual_gemini_key
-OPENAI_API_KEY=your_actual_openai_key
-GROQ_API_KEY=your_actual_groq_key
+GEMINI_API_KEY=your_key
 AI_PROVIDER=gemini
 ```
 
-#### Production Deployment
-
-Set secrets in Supabase using the CLI or Dashboard:
-
+**Production**:
 ```bash
-# Using Supabase CLI
 supabase secrets set GEMINI_API_KEY=your_key
-supabase secrets set OPENAI_API_KEY=your_key
-supabase secrets set GROQ_API_KEY=your_key
 supabase secrets set AI_PROVIDER=gemini
 ```
-
-Or via **Supabase Dashboard** → Project Settings → Edge Functions → Secrets.
 
 ## 🛠️ How It Works
 

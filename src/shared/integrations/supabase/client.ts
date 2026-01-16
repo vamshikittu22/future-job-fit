@@ -2,16 +2,39 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/shared/integrations/supabase/types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key';
+
+// Safe localStorage check - returns storage or a dummy memory storage
+const safeStorage = (() => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      // Test if we can actually use it
+      const testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, testKey);
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    }
+  } catch {
+    // localStorage not available or access denied
+  }
+
+  // Return a dummy memory storage to prevent Supabase from defaulting to failing localStorage
+  const memoryStore: Record<string, string> = {};
+  return {
+    getItem: (key: string) => memoryStore[key] || null,
+    setItem: (key: string, value: string) => { memoryStore[key] = value; },
+    removeItem: (key: string) => { delete memoryStore[key]; },
+  };
+})();
 
 // Import the supabase client like this:
 // import { supabase } from "@/shared/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+    storage: safeStorage,
+    persistSession: !!safeStorage,
+    autoRefreshToken: !!safeStorage,
   }
 });

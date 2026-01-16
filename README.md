@@ -41,26 +41,13 @@ A professional, high-performance resume building platform powered by advanced AI
    npm install
    ```
 
-3. **Configure Environment Variables**
-   Create a `.env` file in the root:
-   ```env
-   # Client-side (public)
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
-   VITE_AI_PROVIDER=gemini # 'openai', 'gemini', or 'groq'
+3. **Configure Environment & AI**
    
-   # Server-side (secret - for local Edge Function dev)
-   GEMINI_API_KEY=your_gemini_api_key_here
-   OPENAI_API_KEY=your_openai_api_key_here
-   GROQ_API_KEY=your_groq_api_key_here
+   We have automated the entire backend setup. Run this script to configure Supabase and deploy the AI backend:
+   ```powershell
+   ./scripts/setup_ai_backend.ps1
    ```
-   
-   **Production**: Set secrets via Supabase Dashboard or CLI:
-   ```bash
-   supabase secrets set GEMINI_API_KEY=your_key
-   supabase secrets set OPENAI_API_KEY=your_key
-   supabase secrets set GROQ_API_KEY=your_key
-   ```
+   *This script handles login, setting API keys, and deploying the Edge Function.*
 
 4. **Start Development Server**
    ```bash

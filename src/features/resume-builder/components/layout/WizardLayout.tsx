@@ -74,38 +74,41 @@ const WizardLayoutContent: React.FC = () => {
     });
   };
 
+  const getSidebarWidth = () => {
+    if (isMobile) return 'hidden';
+    return isSidebarCollapsed ? 'w-16' : 'w-64';
+  };
+
   const getContentWidth = () => {
     if (isMobile) return 'w-full';
-    if (!isPreviewVisible) return isSidebarCollapsed ? 'w-[calc(100%-4rem)]' : 'w-[85%]';
-    return 'w-[45%]';
+    if (!isPreviewVisible) {
+      return isSidebarCollapsed ? 'w-[calc(100%-4rem)]' : 'w-[calc(100%-16rem)]';
+    }
+    return 'flex-1';
   };
 
   const getPreviewWidth = () => {
     if (!isPreviewVisible) return 'w-0';
-    if (isSidebarCollapsed) return 'w-[calc(100%-45%-4rem)]';
-    return 'w-[40%]';
-  };
-
-  const getSidebarWidth = () => {
-    if (isMobile) return 'hidden';
-    return isSidebarCollapsed ? 'w-16' : 'w-[15%]';
+    return 'w-[35%]'; // 35% of screen width for comfortable viewing
   };
 
   return (
     <>
       <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
-          {/* Preview Panel (Left Side) */}
-          {!isMobile && isPreviewVisible && (
+          {/* Sidebar Panel (Left Side) */}
+          {!isMobile && (
             <div
               className={cn(
-                'bg-muted/30 flex-shrink-0 overflow-y-auto scrollbar-hide border-r',
-                'transition-all duration-300',
-                getPreviewWidth(),
-                'flex flex-col min-w-0'
+                'transition-all duration-300 ease-in-out border-r bg-card h-full overflow-y-auto',
+                getSidebarWidth(),
+                'flex-shrink-0 z-10'
               )}
             >
-              <WizardPreview />
+              <WizardSidebar
+                isCollapsed={isSidebarCollapsed}
+                onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+              />
             </div>
           )}
 
@@ -183,21 +186,24 @@ const WizardLayoutContent: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar Panel (Right Side) */}
-          {!isMobile && (
-            <div
-              className={cn(
-                'transition-all duration-300 ease-in-out border-l bg-card h-full overflow-y-auto',
-                getSidebarWidth(),
-                'flex-shrink-0 z-10'
-              )}
-            >
-              <WizardSidebar
-                isCollapsed={isSidebarCollapsed}
-                onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
-              />
-            </div>
-          )}
+          {/* Preview Panel (Right Side) - Slides in from right */}
+          <AnimatePresence>
+            {!isMobile && isPreviewVisible && (
+              <motion.div
+                initial={{ opacity: 0, x: 300 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 300 }}
+                transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className={cn(
+                  'bg-muted/30 flex-shrink-0 overflow-y-auto scrollbar-hide border-l',
+                  getPreviewWidth(),
+                  'flex flex-col min-w-0'
+                )}
+              >
+                <WizardPreview />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <SampleDataLoader open={isSampleDataModalOpen} onOpenChange={setIsSampleDataModalOpen} />

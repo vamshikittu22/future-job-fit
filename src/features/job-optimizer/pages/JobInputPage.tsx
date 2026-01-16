@@ -8,7 +8,7 @@ import { Switch } from "@/shared/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { FileText, Briefcase, Settings, Eye, Zap } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import ModelSelector from "@/shared/components/common/ModelSelector";
@@ -159,21 +159,23 @@ PREFERRED:
     <div className="min-h-screen bg-background">
       <AppNavigation />
       <motion.div
-        className="container mx-auto px-6 py-8"
+        className="swiss-container swiss-section"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         {/* Header */}
         <motion.div
-          className="mb-8"
+          className="mb-10 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <h1 className="text-3xl font-bold text-center">Resume Analysis</h1>
-          <p className="text-center text-muted-foreground mt-2">
-            Paste your resume and job description to get started
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">
+            Job-Optimized Resume
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Paste your resume and job description to get an ATS-optimized, tailored version
           </p>
         </motion.div>
 
@@ -292,15 +294,15 @@ PREFERRED:
           </Card>
         </motion.div>
 
-        {/* Main Content Grid */}
+        {/* Main Content Grid - Preview takes 40% width */}
         <motion.div
-          className={`grid gap-8 max-w-7xl mx-auto ${showPreview ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
+          className="flex flex-col lg:flex-row gap-8 max-w-[1800px] mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          {/* Resume Input */}
-          <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
+          {/* Resume Input - 30% width */}
+          <Card className="lg:w-[30%] flex-shrink-0 p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-accent" />
@@ -324,8 +326,8 @@ PREFERRED:
             />
           </Card>
 
-          {/* Job Description Input */}
-          <Card className="p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
+          {/* Job Description Input - 30% width */}
+          <Card className="lg:w-[30%] flex-shrink-0 p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-accent" />
@@ -349,25 +351,43 @@ PREFERRED:
             />
           </Card>
 
-          {/* Import/Export Panel - Contextual */}
-          <div className="space-y-4">
-            <ImportExportPanel
-              resumeText={resumeText}
-              onResumeImport={handleResumeImport}
-              hasContent={!!resumeText || !!jobDescription}
-            />
-          </div>
-
-          {/* Preview Panel */}
-          {showPreview && (
-            <div className="lg:col-span-1">
-              <PreviewPanel
-                resumeText={resumeText}
-                jobDescription={jobDescription}
-                customInstructions={customInstructions}
-              />
-            </div>
-          )}
+          {/* Preview Panel - 40% width with smooth slide-in from right */}
+          <AnimatePresence mode="wait">
+            {showPreview ? (
+              <motion.div
+                key="preview"
+                className="lg:w-[40%] flex-shrink-0"
+                initial={{ opacity: 0, x: 300 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 300 }}
+                transition={{
+                  duration: 0.35,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+              >
+                <PreviewPanel
+                  resumeText={resumeText}
+                  jobDescription={jobDescription}
+                  customInstructions={customInstructions}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="import"
+                className="lg:w-[40%] flex-shrink-0 space-y-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ImportExportPanel
+                  resumeText={resumeText}
+                  onResumeImport={handleResumeImport}
+                  hasContent={!!resumeText || !!jobDescription}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Action Buttons */}

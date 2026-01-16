@@ -59,4 +59,4 @@ The final check.
 ## 💡 Troubleshooting
 - **Input Lag?**: Ensure you aren't in a loop with high-latency AI calls.
 - **Preview not updating?**: Sometimes a template switch requires a quick scroll to refresh the render.
-- **AI not responding?**: Check your API keys in the `.env` file and verify your internet connection.
+- **AI not responding?**: Ensure you have run the setup script: `./scripts/setup_ai_backend.ps1` to configure your keys.

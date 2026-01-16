@@ -51,7 +51,7 @@ Nested routes under `WizardLayout` component:
 ## AI Integration
 
 ### Architecture Overview
-**Current Status**: ✅ **Secure Server-Side** (as of STEP 1, 2026-01-06)
+**Current Status**: ✅ **Secure Server-Side** (Deployed 2026-01-15)
 
 AI functionality is centralized through a **Supabase Edge Function** gateway at `supabase/functions/resume-ai/index.ts`, ensuring all API keys remain server-side and never exposed to the browser.
 
@@ -345,8 +345,8 @@ interface ResumeData {
 **Impact**: Dead code accumulation; reduced code quality signals.
 
 ### 3. Security Issues
-- **Client-side API keys**: `VITE_GEMINI_API_KEY`, `VITE_OPENAI_API_KEY`, `VITE_GROQ_API_KEY` exposed in browser bundle
-- **Recommendation**: Implement server-side AI gateway (Supabase Edge Functions, Vercel Functions, or Netlify Functions)
+- **Client-side API keys**: ~~`VITE_GEMINI_API_KEY` exposed in browser~~ ✅ **RESOLVED** (2026-01-15)
+- **Solution Implemented**: Server-side AI gateway via Supabase Edge Function (`resume-ai`) is now the default. Keys are stored in Supabase Secrets.
 
 ### 4. UI Inconsistency
 **File**: `src/features/home/pages/NotFoundPage.tsx`

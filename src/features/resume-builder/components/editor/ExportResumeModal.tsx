@@ -127,12 +127,17 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] md:max-w-4xl max-h-[90vh] h-[80vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-6 border-b">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Printer className="h-6 w-6 text-primary" />
-            Print & Export Resume
+      <DialogContent className="max-w-[90vw] md:max-w-5xl max-h-[90vh] h-[85vh] flex flex-col p-0 overflow-hidden border-border shadow-xl">
+        <DialogHeader className="p-8 border-b bg-gradient-subtle">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
+              <Printer className="h-6 w-6 text-accent" />
+            </div>
+            Export Your Resume
           </DialogTitle>
+          <p className="text-sm text-muted-foreground mt-2 ml-15">
+            Preview and download your resume in multiple professional formats
+          </p>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -165,10 +170,12 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
           </TabsContent>
 
           <TabsContent value="download" className="flex-1 overflow-auto p-6 md:p-12 mt-0 ring-0">
-            <div className="max-w-2xl mx-auto space-y-8">
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold text-foreground">Select a format to download</h3>
-                <p className="text-sm text-muted-foreground">Download your resume in your preferred format for applications or academic use.</p>
+            <div className="max-w-3xl mx-auto space-y-10">
+              <div className="text-center space-y-3">
+                <h3 className="text-2xl font-bold text-foreground">Choose Export Format</h3>
+                <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                  Select the format that best suits your needs. All formats are ATS-compatible and ready for professional use.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,7 +188,7 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
                   <FileText className="h-8 w-8 text-red-500 mr-4 group-hover:scale-110 transition-transform" />
                   <div className="text-left">
                     <div className="font-bold text-base">PDF Document</div>
-                    <div className="text-xs text-muted-foreground">Best for protein & ATS (Formatted)</div>
+                    <div className="text-xs text-muted-foreground">Best for printing & ATS (Formatted)</div>
                   </div>
                 </Button>
 

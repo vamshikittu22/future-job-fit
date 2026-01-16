@@ -79,19 +79,19 @@ export const SummaryStep: React.FC = () => {
       <ProgressStepper />
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle>Your Professional Summary</CardTitle>
-                <CardDescription className="mt-1">
+                <CardTitle className="text-xl">Your Professional Summary</CardTitle>
+                <CardDescription className="mt-2 text-sm">
                   Aim for 100-150 words that capture your experience, skills, and career goals
                 </CardDescription>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 ml-4 shadow-sm hover:shadow-accent transition-all"
                 onClick={() => setIsAIEnhanceModalOpen(true)}
               >
                 <Sparkles className="h-4 w-4" />
@@ -107,47 +107,47 @@ export const SummaryStep: React.FC = () => {
                 setIsEnhanced(false);
               }}
               placeholder={examplePlaceholders[placeholderIndex]}
-              className="min-h-[200px] resize-none"
+              className="min-h-[220px] resize-none text-base leading-relaxed"
               maxLength={800}
             />
 
             {/* Word and Character Counter */}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between text-sm pt-2 border-t">
+              <div className="flex items-center gap-6">
                 <span className={cn('font-medium', getWordCountColor())}>
                   {wordCount} words
-                  <span className="text-muted-foreground ml-1">(100-150 recommended)</span>
+                  <span className="text-muted-foreground ml-1 font-normal">(100-150 recommended)</span>
                 </span>
                 <span className={cn('font-medium', getCharCountColor())}>
                   {charCount}/800 characters
                 </span>
               </div>
               {wordCount >= 100 && wordCount <= 150 && (
-                <Badge variant="default" className="bg-green-500">
-                  Optimal Length
+                <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                  ✓ Optimal Length
                 </Badge>
               )}
             </div>
 
             {/* Warnings */}
             {charCount > 800 && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-in slide-in-from-top-2">
                 <AlertDescription>
                   Your summary exceeds the maximum character limit. Please shorten it.
                 </AlertDescription>
               </Alert>
             )}
             {wordCount > 0 && wordCount < 50 && (
-              <Alert>
-                <AlertDescription>
+              <Alert className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
+                <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                   Your summary is quite short. Consider expanding it to 100-150 words for better impact.
                 </AlertDescription>
               </Alert>
             )}
 
             {isEnhanced && (
-              <div className="flex items-center gap-2 text-xs text-purple-600 font-medium animate-in fade-in slide-in-from-top-1">
-                <Sparkles className="w-3 h-3" />
+              <div className="flex items-center gap-2 text-sm text-primary font-medium animate-in fade-in slide-in-from-top-1 bg-primary/5 rounded-md px-3 py-2">
+                <Sparkles className="w-4 h-4" />
                 Enhanced with AI
               </div>
             )}
