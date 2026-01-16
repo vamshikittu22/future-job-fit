@@ -3,6 +3,7 @@ import { Button } from '@/shared/ui/button';
 import { Separator } from '@/shared/ui/separator';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useWizard } from '@/shared/contexts/WizardContext';
+import { useAPIKey } from '@/shared/contexts/APIKeyContext';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -18,6 +19,7 @@ import {
   Loader2,
   Moon,
   Sun,
+  Key,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -32,6 +34,7 @@ interface QuickActionsBarProps {
   onAIEnhance: () => void;
   onTogglePreview: () => void;
   onExport: () => void;
+  onAPIKeySettings?: () => void;
   isPreviewVisible: boolean;
   isSaving?: boolean;
 }
@@ -41,11 +44,13 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   onAIEnhance,
   onTogglePreview,
   onExport,
+  onAPIKeySettings,
   isPreviewVisible,
   isSaving = false,
 }) => {
   const { undo, redo, canUndo, canRedo, saveResume } = useResume();
   const { wizardState } = useWizard();
+  const { isUsingCustomKey, keyState } = useAPIKey();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -75,9 +80,9 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only process if we're not in an input/textarea/select
-      if (e.target instanceof HTMLInputElement || 
-          e.target instanceof HTMLTextAreaElement ||
-          e.target instanceof HTMLSelectElement) {
+      if (e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement) {
         return;
       }
 
@@ -192,6 +197,36 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
               <p>Enhance resume with AI</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* API Key Settings */}
+          {onAPIKeySettings && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onAPIKeySettings}
+                  className={cn(
+                    "h-9 px-3",
+                    isUsingCustomKey && "text-green-500 hover:text-green-600"
+                  )}
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  <span className="hidden md:inline">
+                    {isUsingCustomKey ? 'API Key ✓' : 'API Key'}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>
+                  {isUsingCustomKey
+                    ? `Using your ${keyState.provider.toUpperCase()} key`
+                    : 'Configure your own API key'
+                  }
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {/* Center - Auto-save Status */}

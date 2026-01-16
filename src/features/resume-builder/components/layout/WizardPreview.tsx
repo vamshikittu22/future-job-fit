@@ -16,6 +16,7 @@ const WizardPreview: React.FC = () => {
   const [zoom, setZoom] = useState(1);
   const [isAutoFit, setIsAutoFit] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewWrapperRef = useRef<HTMLDivElement>(null);
 
   const sectionOrder = [
     'personal',
@@ -61,9 +62,9 @@ const WizardPreview: React.FC = () => {
 
   // Scroll to page when currentPage changes
   useEffect(() => {
-    const previewContainer = document.getElementById('resume-preview-container');
-    if (previewContainer) {
-      const pageElements = previewContainer.getElementsByClassName('resume-page');
+    // Use the ref instead of getElementById to target the correct preview
+    if (previewWrapperRef.current) {
+      const pageElements = previewWrapperRef.current.getElementsByClassName('resume-page');
       if (pageElements[currentPage - 1]) {
         pageElements[currentPage - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -146,6 +147,7 @@ const WizardPreview: React.FC = () => {
       {/* Preview Area - Distraction Free */}
       <div className="flex-1 overflow-auto p-8 flex justify-center items-start scrollbar-hide selection:bg-primary/20">
         <div
+          ref={previewWrapperRef}
           className="origin-top transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
           style={{
             transform: `scale(${zoom})`,
@@ -159,6 +161,7 @@ const WizardPreview: React.FC = () => {
             manualScale={zoom}
             onScaleChange={(s) => isAutoFit && setZoom(s)}
             onTotalPagesChange={setTotalPages}
+            containerId="wizard-main-preview"
           />
         </div>
       </div>

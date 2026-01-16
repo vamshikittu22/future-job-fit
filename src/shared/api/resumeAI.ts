@@ -61,10 +61,107 @@ export class ResumeAIService {
   }
 
   /**
+   * Check if user has provided their own API key for this session
+   */
+  private getSessionAPIKey(): { provider: AIProvider; apiKey: string } | null {
+    try {
+      const stored = sessionStorage.getItem('user_api_key_config');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.apiKey) {
+          return { provider: parsed.provider, apiKey: parsed.apiKey };
+        }
+      }
+    } catch (e) {
+      // Session storage not available
+    }
+    return null;
+  }
+
+  /**
+   * Make direct API call to Gemini with user's API key
+   */
+  private async callGeminiDirect(apiKey: string, task: string, data: any): Promise<any> {
+    const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    let prompt = '';
+    if (task === 'enhanceSection') {
+      prompt = `You are a professional resume writer. Enhance the following ${data.section_type} section.
+Original text: ${data.original_text}
+${data.quick_preset ? `Style: ${data.quick_preset}` : ''}
+${data.tone_style?.length ? `Tone: ${data.tone_style.join(', ')}` : ''}
+${data.industry_keywords ? `Include keywords: ${data.industry_keywords}` : ''}
+
+Provide 3 enhanced variants. Return as JSON: {"variants": ["variant1", "variant2", "variant3"], "notes": "brief explanation"}`;
+    } else if (task === 'analyzeSection') {
+      prompt = `Analyze this resume section and provide feedback.
+Content: ${data.content}
+
+Return as JSON: {"score": 0-100, "strengths": ["..."], "weaknesses": ["..."], "suggestions": ["..."]}`;
+    } else if (task === 'evaluateResume') {
+      prompt = `Evaluate this resume for ATS compatibility.
+Resume: ${data.resumeText}
+${data.jobDescription ? `Job Description: ${data.jobDescription}` : ''}
+
+Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": ["..."]}`;
+    }
+
+    const response = await fetch(`${baseUrl}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7 }
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Gemini API call failed');
+    }
+
+    const result = await response.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Parse JSON from response
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.warn('[AI Service] Failed to parse Gemini response as JSON');
+    }
+
+    // Fallback response structure
+    if (task === 'enhanceSection') {
+      return { variants: [text], notes: 'Direct API response' };
+    }
+    return { message: text };
+  }
+
+  /**
    * Calls the Supabase Edge Function for AI operations
-   * All API keys are securely stored on the server
+   * Or uses user's API key for direct calls if available
    */
   private async callEdgeFunction(task: string, data: any): Promise<any> {
+    // Check for user-provided API key first
+    const sessionKey = this.getSessionAPIKey();
+    if (sessionKey) {
+      console.log(`[AI Service] Using user-provided ${sessionKey.provider} API key`);
+      try {
+        if (sessionKey.provider === 'gemini') {
+          return await this.callGeminiDirect(sessionKey.apiKey, task, data);
+        }
+        // Add other providers here (OpenAI, Groq) as needed
+        console.warn(`[AI Service] Direct API calls not yet implemented for: ${sessionKey.provider}`);
+      } catch (error: any) {
+        console.error('[AI Service] Direct API call failed:', error.message);
+        // Don't fall through to edge function, return error to user
+        throw error;
+      }
+    }
+
     // If demo mode is enabled, return mock responses
     if (this.demoMode) {
       console.log(`[AI Service] Demo mode - returning mock response for: ${task}`);

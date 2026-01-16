@@ -5,6 +5,7 @@ import { useResume } from '@/shared/contexts/ResumeContext';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Badge } from '@/shared/ui/badge';
+import { cn } from '@/shared/lib/utils';
 
 const GodModePanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     const { resumeData } = useResume();
@@ -125,7 +126,7 @@ const GodModePanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
                         </div>
                         <pre className="text-[10px] text-blue-300 leading-tight whitespace-pre-wrap break-all opacity-80">
                             {JSON.stringify({
-                                basics: resumeData.basics,
+                                personal: resumeData.personal,
                                 stats: { sections: Object.keys(resumeData).length },
                                 meta: 'Active'
                             }, null, 2)}

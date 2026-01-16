@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "@/shared/providers/theme-provider";
 import { ResumeProvider } from "@/shared/contexts/ResumeContext";
+import { APIKeyProvider } from "@/shared/contexts/APIKeyContext";
 import Home from "@/features/home/pages/HomePage";
 import ResumeInput from "@/features/job-optimizer/pages/JobInputPage";
 import Results from "@/features/job-optimizer/pages/AnalysisResultPage";
@@ -58,11 +59,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <ResumeProvider>
-          <Toaster />
-          <Sonner />
-          <RouterProvider router={router} />
-        </ResumeProvider>
+        <APIKeyProvider>
+          <ResumeProvider>
+            <Toaster />
+            <Sonner />
+            <RouterProvider router={router} />
+          </ResumeProvider>
+        </APIKeyProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>

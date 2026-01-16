@@ -181,6 +181,7 @@ interface ResumePreviewProps {
     onScaleChange?: (scale: number) => void;
     manualScale?: number;
     onTotalPagesChange?: (pages: number) => void;
+    containerId?: string; // Optional unique ID for the container (prevents duplicate IDs when multiple previews exist)
 }
 
 // Data structure for a "Render Block"
@@ -196,7 +197,8 @@ export default function ResumePreview({
     sectionOrder,
     onScaleChange,
     manualScale,
-    onTotalPagesChange
+    onTotalPagesChange,
+    containerId
 }: ResumePreviewProps) {
     const resumeDataString = JSON.stringify(resumeData);
 
@@ -605,7 +607,7 @@ export default function ResumePreview({
                     transformOrigin: 'top center',
                     width: `${A4_WIDTH_PX}px`,
                 }}
-                id="resume-preview-container"
+                id={containerId}
                 className="resume-preview"
             >
                 {pages.map((pageBlocks, pageIndex) => (

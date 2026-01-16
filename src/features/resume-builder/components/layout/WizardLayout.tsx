@@ -15,7 +15,9 @@ import WizardPreview from '@/features/resume-builder/components/layout/WizardPre
 import QuickActionsBar from '@/features/resume-builder/components/editor/QuickActionsBar';
 import SampleDataLoader from '@/features/resume-builder/components/editor/SampleDataLoader';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import APIKeySettingsModal from '@/features/resume-builder/components/modals/APIKeySettingsModal';
 import { ExportResumeModal } from '@/features/resume-builder/components/editor/ExportResumeModal';
+import GodModePanel from '@/features/resume-builder/components/editor/GodModePanel';
 
 const WizardLayoutContent: React.FC = () => {
   const { currentStep } = useWizard();
@@ -28,7 +30,12 @@ const WizardLayoutContent: React.FC = () => {
   const [isSampleDataModalOpen, setIsSampleDataModalOpen] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isAPIKeyModalOpen, setIsAPIKeyModalOpen] = useState(false);
   const [lastStepId, setLastStepId] = useState<string | undefined>(currentStep?.id);
+
+  // God Mode State
+  const [isGodMode, setIsGodMode] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
 
   useEffect(() => {
     if (currentStep?.id) {
@@ -39,6 +46,26 @@ const WizardLayoutContent: React.FC = () => {
   const { resumeData, setResumeData } = useResume();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Reset click count after delay
+  useEffect(() => {
+    if (logoClickCount === 0) return;
+    const timer = setTimeout(() => setLogoClickCount(0), 1000); // 1 second window
+    return () => clearTimeout(timer);
+  }, [logoClickCount]);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // Prevent default navigation if we are in the middle of a triple click
+    // But we need to allow navigation on single click.
+    // Actually, let's just use the badge as the trigger, so the main logo still navigates.
+  };
+
+  useEffect(() => {
+    setIsPreviewVisible(!isMobile);
+    if (!isMobile) {
+      setIsPreviewOpen(false);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     setIsPreviewVisible(!isMobile);
@@ -130,11 +157,29 @@ const WizardLayoutContent: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden md:flex items-center gap-2 font-semibold text-lg"
-                  onClick={() => navigate('/')}
+                  className="hidden md:flex items-center gap-2 font-semibold text-lg hover:bg-transparent"
+                  onClick={(e) => e.preventDefault()}
                 >
-                  <span className="bg-primary text-primary-foreground rounded-md px-2 py-1">Resume</span>
-                  <span>AI</span>
+                  <span className="bg-primary text-primary-foreground rounded-md px-2 py-1 cursor-pointer" onClick={() => navigate('/')}>Resume</span>
+                  <span
+                    className="cursor-pointer select-none hover:text-accent transition-colors font-black"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (logoClickCount >= 2) {
+                        setIsGodMode(prev => !prev);
+                        setLogoClickCount(0);
+                        toast({
+                          title: isGodMode ? "GOD MODE DISABLED" : "GOD MODE ENABLED",
+                          description: isGodMode ? "Developer Console Deactivated." : "Developer Console Active. Monitoring real-time engine stats.",
+                          className: "bg-black border-accent text-accent font-mono"
+                        });
+                      } else {
+                        setLogoClickCount(prev => prev + 1);
+                      }
+                    }}
+                  >
+                    AI
+                  </span>
                 </Button>
               </div>
 
@@ -163,6 +208,7 @@ const WizardLayoutContent: React.FC = () => {
                 onAIEnhance={() => setIsAIEnhanceModalOpen(true)}
                 onTogglePreview={() => setIsPreviewVisible((prev) => !prev)}
                 onExport={() => setIsExportModalOpen(true)}
+                onAPIKeySettings={() => setIsAPIKeyModalOpen(true)}
                 isPreviewVisible={isPreviewVisible}
                 isSaving={false}
               />
@@ -216,6 +262,8 @@ const WizardLayoutContent: React.FC = () => {
         />
 
         <ExportResumeModal open={isExportModalOpen} onOpenChange={setIsExportModalOpen} />
+
+        <APIKeySettingsModal open={isAPIKeyModalOpen} onOpenChange={setIsAPIKeyModalOpen} />
       </div>
 
       {isMobile && (
@@ -257,6 +305,7 @@ const WizardLayoutContent: React.FC = () => {
           </div>
         </>
       )}
+      <GodModePanel isOpen={isGodMode} onClose={() => setIsGodMode(false)} />
     </>
   );
 };

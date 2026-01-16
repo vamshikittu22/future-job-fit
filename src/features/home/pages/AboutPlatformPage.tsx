@@ -84,14 +84,14 @@ const AboutPlatformPage: React.FC = () => {
 
     const sections = [
         { id: 'blueprint', label: '00' },
-        { id: 'system-architecture', label: '01' },
-        { id: 'usecase-speed', label: '02' },
-        { id: 'usecase-impact', label: '03' },
-        { id: 'usecase-network', label: '04' },
-        { id: 'skills-intelligence', label: '05' },
-        { id: 'constraint-chronicle', label: '06' },
-        { id: 'system-architecture', label: '07' },
-        { id: 'tech-stack', label: '08' },
+        { id: 'tech-stack', label: '01' },
+        { id: 'decoupled-core', label: '02' },
+        { id: 'usecase-speed', label: '03' },
+        { id: 'usecase-impact', label: '04' },
+        { id: 'usecase-network', label: '05' },
+        { id: 'skills-intelligence', label: '06' },
+        { id: 'constraint-chronicle', label: '07' },
+        { id: 'system-architecture', label: '08' },
     ];
 
     useEffect(() => {
@@ -198,10 +198,104 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* PROTOCOL 01: SYSTEM ARCHITECTURE */}
+                {/* PROTOCOL 01: TECH STACK - THE FOUNDATION */}
                 <ProtocolSection
                     number="01"
-                    id="system-architecture"
+                    id="tech-stack"
+                    title="THE ARSENAL."
+                    subtitle="PRODUCTION-GRADE TECHNOLOGIES POWERING THIS PLATFORM"
+                    accentColor="text-cyan-400"
+                >
+                    <div className="space-y-16">
+                        {/* Hero Statement */}
+                        <div className="max-w-4xl">
+                            <p className="text-3xl md:text-4xl font-light text-muted-foreground leading-relaxed">
+                                Built with <span className="text-white font-bold">battle-tested</span> technologies.
+                                Every dependency chosen for <span className="text-cyan-400 italic">performance</span>,
+                                <span className="text-cyan-400 italic"> developer experience</span>, and
+                                <span className="text-cyan-400 italic"> scalability</span>.
+                            </p>
+                        </div>
+
+                        {/* Featured Stack Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 bg-cyan-400/10">
+                            {[
+                                { name: 'REACT 18', version: '18.2.0', category: 'UI FRAMEWORK', desc: 'Concurrent rendering with automatic batching. Suspense boundaries for async data fetching. Atomic component architecture.', highlight: true },
+                                { name: 'TYPESCRIPT', version: '5.3.0', category: 'TYPE SYSTEM', desc: 'Strict null checks. Interface contracts for resume data structures. Compile-time error prevention.', highlight: true },
+                                { name: 'VITE', version: '5.4.0', category: 'BUILD TOOL', desc: 'Sub-second HMR. ESBuild-powered bundling. Native ESM in development. Lightning-fast cold starts.', highlight: false },
+                                { name: 'GEMINI 1.5', version: 'PRO', category: 'AI ENGINE', desc: 'Multi-modal career intelligence. Context-aware resume enhancement. Real-time ATS optimization.', highlight: true },
+                            ].map((tech) => (
+                                <motion.div
+                                    key={tech.name}
+                                    className={cn(
+                                        "bg-black p-10 md:p-16 space-y-6 group relative overflow-hidden",
+                                        tech.highlight && "border-l-4 border-cyan-400"
+                                    )}
+                                    whileHover={{ scale: 1.02 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <div className="absolute top-0 right-0 p-6 font-mono text-[10px] text-cyan-400/30 uppercase">{tech.category}</div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase group-hover:text-cyan-400 transition-colors">{tech.name}</h3>
+                                        <div className="font-mono text-xs text-muted-foreground">v{tech.version}</div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed font-light">
+                                        {tech.desc}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Secondary Stack */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
+                            {[
+                                { name: 'TAILWINDCSS', desc: 'Utility-first CSS' },
+                                { name: 'FRAMER MOTION', desc: 'Animation library' },
+                                { name: 'RADIX UI', desc: 'Accessible primitives' },
+                                { name: 'LUCIDE', desc: 'Icon system' },
+                                { name: 'ZUSTAND', desc: 'State management' },
+                                { name: 'REACT HOOK FORM', desc: 'Form handling' },
+                                { name: 'ZOD', desc: 'Schema validation' },
+                                { name: 'SUPABASE', desc: 'Backend infrastructure' },
+                            ].map((tech) => (
+                                <div key={tech.name} className="bg-black p-8 space-y-3 hover:bg-white/5 transition-colors cursor-default group">
+                                    <h4 className="text-sm font-black uppercase tracking-tight group-hover:text-cyan-400 transition-colors">{tech.name}</h4>
+                                    <p className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">{tech.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Performance Badge */}
+                        <div className="flex items-center justify-center gap-8 pt-8">
+                            <div className="flex items-center gap-4 px-8 py-4 border border-cyan-400/20 bg-cyan-400/5">
+                                <Zap className="w-6 h-6 text-cyan-400" />
+                                <div>
+                                    <div className="text-2xl font-black">100</div>
+                                    <div className="text-[10px] font-mono uppercase text-muted-foreground">LIGHTHOUSE SCORE</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 px-8 py-4 border border-cyan-400/20 bg-cyan-400/5">
+                                <Activity className="w-6 h-6 text-cyan-400" />
+                                <div>
+                                    <div className="text-2xl font-black">&lt;2s</div>
+                                    <div className="text-[10px] font-mono uppercase text-muted-foreground">FIRST CONTENTFUL PAINT</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 px-8 py-4 border border-cyan-400/20 bg-cyan-400/5">
+                                <Cpu className="w-6 h-6 text-cyan-400" />
+                                <div>
+                                    <div className="text-2xl font-black">0</div>
+                                    <div className="text-[10px] font-mono uppercase text-muted-foreground">RUNTIME ERRORS</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ProtocolSection>
+
+                {/* PROTOCOL 02: DECOUPLED CORE */}
+                <ProtocolSection
+                    number="02"
+                    id="decoupled-core"
                     title="DECOUPLED CORE."
                     subtitle="ORCHESTRATING THREE-PANEL REAL-TIME SYNCHRONIZATION VIA REACT CONTEXT PIPELINES"
                 >
@@ -241,9 +335,9 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </ProtocolSection>
 
-                {/* PROTOCOL 02: USE CASE - THE SPEED CREATOR */}
+                {/* PROTOCOL 03: USE CASE - THE SPEED CREATOR */}
                 <ProtocolSection
-                    number="02"
+                    number="03"
                     id="usecase-speed"
                     title="THE SPEED CREATOR."
                     subtitle="MAXIMIZING EFFICIENCY VIA KEYBOARD-FIRST WORKFLOWS AND AI-ASSISTED BULLET GENERATION"
@@ -282,9 +376,9 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </ProtocolSection>
 
-                {/* PROTOCOL 03: USE CASE - THE IMPACT HUNTER */}
+                {/* PROTOCOL 04: USE CASE - THE IMPACT HUNTER */}
                 <ProtocolSection
-                    number="03"
+                    number="04"
                     id="usecase-impact"
                     title="THE IMPACT HUNTER."
                     subtitle="ATS OPTIMIZATION & KEYWORD ORCHESTRATION: BRIDGING THE GAP BETWEEN HUMAN EXPERIENCE AND ALGORITHMIC SCANNERS"
@@ -334,9 +428,9 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </ProtocolSection>
 
-                {/* PROTOCOL 04: USE CASE - THE NETWORKING EXPERT */}
+                {/* PROTOCOL 05: USE CASE - THE NETWORKING EXPERT */}
                 <ProtocolSection
-                    number="04"
+                    number="05"
                     id="usecase-network"
                     title="THE NETWORKER."
                     subtitle="LINKEDIN OPTIMIZATION & SOCIAL BRAND CONSISTENCY: UNIFYING PERSONAL BRANDING ACROSS PLATFORMS"
@@ -371,9 +465,9 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </ProtocolSection>
 
-                {/* PROTOCOL 05: SKILLS INTELLIGENCE */}
+                {/* PROTOCOL 06: SKILLS INTELLIGENCE */}
                 <ProtocolSection
-                    number="05"
+                    number="06"
                     id="skills-intelligence"
                     title="SKILLS MATRIX."
                     subtitle="SEMANTIC SKILL GROUPING & HIERARCHICAL MAPPING: REVOLUTIONIZING COMPETENCY VISUALIZATION"
@@ -417,9 +511,9 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </ProtocolSection>
 
-                {/* PROTOCOL 06: CONSTRAINT CHRONICLE */}
+                {/* PROTOCOL 07: CONSTRAINT CHRONICLE */}
                 <ProtocolSection
-                    number="06"
+                    number="07"
                     id="constraint-chronicle"
                     title="ENGINEERING JOURNAL."
                     subtitle="HARD CONSTRAINTS & TRADE-OFFS: THE DECISIONS THAT DEFINED THE ARCHITECTURE"
@@ -427,42 +521,14 @@ const AboutPlatformPage: React.FC = () => {
                     <ConstraintChronicle />
                 </ProtocolSection>
 
-                {/* PROTOCOL 07: SYSTEM ARCHITECTURE */}
+                {/* PROTOCOL 08: SYSTEM ARCHITECTURE MAP */}
                 <ProtocolSection
-                    number="07"
+                    number="08"
                     id="system-architecture"
-                    title="SYSTEM ARCHITECTURE."
+                    title="NEURAL MAP."
                     subtitle="VISUALIZING THE DECOUPLED CORE & DATA FLOW MATRICES"
                 >
                     <ArchitectureMap />
-                </ProtocolSection>
-
-                {/* PROTOCOL 08: TECH STACK */}
-                <ProtocolSection
-                    number="08"
-                    id="tech-stack"
-                    title="TECH STACK."
-                    subtitle="CORE TECHNOLOGY MATRICES & TECHNICAL IMPLEMENTATION"
-                >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10">
-                        {[
-                            { name: 'REACT 18', desc: 'Atomic design system with concurrent rendering optimization.' },
-                            { name: 'TYPESCRIPT 5', desc: 'Strict interface contracts for career data structures.' },
-                            { name: 'VITE', desc: 'Instant HMR developer experience for rapid prototyping.' },
-                            { name: 'TAILWINDCSS', desc: 'Constraint-based design system with custom HSL tokens.' },
-                            { name: 'GEMINI 1.5', desc: 'Multi-modal career logic for context-aware generation.' },
-                            { name: 'FRAMER MOTION', desc: 'Physics-based orchestration for layout transitions.' },
-                            { name: 'LUCIDE', desc: 'Brutalist iconography library for technical clarity.' },
-                            { name: 'RADIX UI', desc: 'Accessible primary primitives for complex dashboards.' }
-                        ].map((tech) => (
-                            <div key={tech.name} className="bg-black p-12 space-y-4 hover:bg-accent group transition-all duration-500 cursor-default">
-                                <h3 className="text-2xl font-black tracking-tighter uppercase group-hover:text-black">{tech.name}</h3>
-                                <p className="text-[10px] font-mono uppercase text-muted-foreground group-hover:text-black/80 leading-relaxed font-bold">
-                                    {tech.desc}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
                 </ProtocolSection>
 
                 {/* CALL TO ACTION */}
