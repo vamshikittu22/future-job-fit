@@ -13,6 +13,7 @@ import { CharacterCounter } from '@/shared/ui/character-counter';
 import { cn } from '@/shared/lib/utils';
 import { useUndo } from '@/shared/hooks/useUndo';
 import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
+import { AchievementTemplateSelector } from '@/features/resume-builder/components/editor/AchievementTemplateSelector';
 
 export const AchievementsStep: React.FC = () => {
     const { resumeData, updateResumeData, setResumeData } = useResume();
@@ -173,12 +174,23 @@ export const AchievementsStep: React.FC = () => {
                                                 <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
                                             )}
                                         </label>
-                                        <AIEnhanceButton
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={() => setIsAIEnhanceModalOpen(true)}
-                                            className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <AchievementTemplateSelector
+                                                onSelect={(template, titleSuggestion) => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        description: template,
+                                                        title: prev.title || titleSuggestion || ''
+                                                    }));
+                                                }}
+                                            />
+                                            <AIEnhanceButton
+                                                type="button"
+                                                variant="ghost"
+                                                onClick={() => setIsAIEnhanceModalOpen(true)}
+                                                className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                            />
+                                        </div>
                                     </div>
                                     <Textarea
                                         value={formData.description}

@@ -22,8 +22,10 @@ import {
 } from '@/shared/ui/dialog';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { QuickAddExperienceModal } from '@/features/resume-builder/components/modals/QuickAddExperienceModal';
 import { useUndo } from '@/shared/hooks/useUndo';
 import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
+import { Zap } from 'lucide-react';
 
 export const ExperienceStep: React.FC = () => {
   const { resumeData, addExperience, updateExperience, removeExperience, setResumeData } = useResume();
@@ -41,6 +43,7 @@ export const ExperienceStep: React.FC = () => {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -70,6 +73,19 @@ export const ExperienceStep: React.FC = () => {
       setDateError(null);
     }
   }, [formData.startDate, formData.endDate, formData.current]);
+
+  // Keyboard shortcut for Quick Add (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsQuickAddOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Helper to format date for display
   const formatDateDisplay = (dateStr: string): string => {
@@ -217,10 +233,25 @@ export const ExperienceStep: React.FC = () => {
           </Card>
         )}
 
-        <Button onClick={() => handleOpenDialog()} className="w-full" size="lg">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Work Experience
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={() => handleOpenDialog()}
+            size="lg"
+            className="flex-1 h-12 text-base gap-2 shadow-lg hover:shadow-primary/20 transition-all"
+          >
+            <Plus className="h-5 w-5" />
+            Add Detailed Experience
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setIsQuickAddOpen(true)}
+            className="flex-1 h-12 text-base gap-2 border-primary/20 hover:bg-primary/5 transition-all text-primary group"
+          >
+            <Zap className="h-5 w-5 fill-primary/10 group-hover:fill-primary/20" />
+            Quick Add <span className="ml-1 text-[10px] bg-primary/10 px-1.5 py-0.5 rounded text-primary font-mono opacity-60">Ctrl+K</span>
+          </Button>
+        </div>
       </div>
 
       {/* Experience Dialog */}
@@ -476,6 +507,22 @@ export const ExperienceStep: React.FC = () => {
         step="experience"
         targetItemIndex={editingIndex}
         targetField="description"
+      />
+
+      <QuickAddExperienceModal
+        open={isQuickAddOpen}
+        onOpenChange={setIsQuickAddOpen}
+        onAdd={(data) => {
+          addExperience(data);
+        }}
+        onExpand={(data) => {
+          setFormData({
+            ...formData,
+            ...data,
+          });
+          setEditingIndex(null);
+          setIsDialogOpen(true);
+        }}
       />
     </WizardStepContainer>
   );
