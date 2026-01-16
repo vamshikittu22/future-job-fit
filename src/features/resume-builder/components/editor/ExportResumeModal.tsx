@@ -14,6 +14,8 @@ import {
   generatePlainText,
   generateLaTeX
 } from '@/shared/lib/export/formats';
+import { LinkedInExportModal } from '@/features/resume-builder/components/modals/LinkedInExportModal';
+import { Linkedin } from 'lucide-react';
 
 import { saveAs } from 'file-saver';
 
@@ -28,6 +30,7 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('preview');
+  const [isLinkedInModalOpen, setIsLinkedInModalOpen] = useState(false);
 
   const template = wizardState?.selectedTemplate || 'modern';
 
@@ -258,6 +261,26 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
                 </Button>
               </div>
 
+              <div className="pt-6 border-t">
+                <div className="bg-[#0077b5]/5 border border-[#0077b5]/20 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
+                  <div className="bg-[#0077b5] p-3 rounded-lg shadow-lg">
+                    <Linkedin className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left space-y-1">
+                    <h4 className="text-xl font-bold text-[#0077b5]">Optimize for LinkedIn</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Don't just export—dominate your professional network. Format your resume data for a high-impact LinkedIn profile.
+                    </p>
+                  </div>
+                  <Button
+                    className="bg-[#0077b5] hover:bg-[#006097] text-white shadow-lg shadow-[#0077b5]/20 px-8 h-12 text-base font-semibold transition-all hover:scale-105 active:scale-95"
+                    onClick={() => setIsLinkedInModalOpen(true)}
+                  >
+                    Launch LinkedIn Optimizer
+                  </Button>
+                </div>
+              </div>
+
               {isExporting && (
                 <div className="flex justify-center items-center gap-2 text-primary animate-pulse py-4">
                   <Download className="h-5 w-5 animate-bounce" />
@@ -268,6 +291,10 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
           </TabsContent>
         </Tabs>
       </DialogContent>
+      <LinkedInExportModal
+        open={isLinkedInModalOpen}
+        onOpenChange={setIsLinkedInModalOpen}
+      />
     </Dialog>
   );
 }
