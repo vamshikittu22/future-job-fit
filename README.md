@@ -4,12 +4,15 @@ A professional, high-performance resume building platform powered by advanced AI
 
 ## 🌟 Key Features
 
-- **🤖 Multi-Model AI Engine**: Connect to OpenAI (GPT-4o), Google Gemini (1.5 Flash), or Groq (Llama 3) for high-speed resume enhancements.
-- **📊 Real-time ATS Scoring**: Get instant feedback on your resume's compatibility with Applicant Tracking Systems (ATS).
-- **📝 Intelligent Wizard**: A guided, multi-step experience that handles Personal Info, Summary, Experience, Education, Skills, Projects, and Certifications.
-- **👁️ Live Preview**: See your changes instantly in a high-fidelity, printable preview panel.
-- **📑 Premium Exports**: Download your resume in professional PDF, DOCX, and JSON formats.
-- **💾 Advanced Persistence**: Automatic 2-second debounced saving to LocalStorage with full Undo/Redo support.
+- **📊 Real-time ATS Scoring**: Get instant feedback on your resume's compatibility with Applicant Tracking Systems (ATS), with a detailed score breakdown (Keywords, Metrics, Readability).
+- **🚀 Productivity Power-ups**: 
+  - **Quick Add**: Add work experience in seconds with `Ctrl+K`.
+  - **Achievement Templates**: One-click professional achievement structures (e.g., "Led team of X", "Reduced costs by Y%").
+  - **LinkedIn Profile Optimizer**: Instantly generate professional headlines, AI-optimized "About" sections, and formatted experience snippets for your social presence.
+- **📝 Intelligent Wizard**: A guided, multi-step experience that handles Personal Info, Summary, Experience, Education, Skills, Projects, and Certifications with real-time visual validation indicators.
+- **👁️ Live Preview**: See your changes instantly in a high-fidelity, printable preview panel with responsive sidebar/drawer support.
+- **📑 Premium Exports**: Download your resume in professional PDF, DOCX, LaTeX, and JSON formats.
+- **💾 Advanced Persistence**: Automatic debounced saving to LocalStorage with full Undo support and visible saving indicators.
 - **🎨 Swiss Design System**: A clean, monochrome aesthetic with smooth Framer Motion animations and full Dark Mode support.
 
 ## 🛠️ Tech Stack

@@ -220,9 +220,10 @@ const WizardLayoutContent: React.FC = () => {
 
       {isMobile && (
         <Button
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
+          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-xl bg-primary text-primary-foreground hover:scale-110 active:scale-95 transition-all z-30"
           size="icon"
           onClick={() => setIsPreviewOpen(true)}
+          title="Full Preview"
         >
           <Eye className="h-6 w-6" />
         </Button>
