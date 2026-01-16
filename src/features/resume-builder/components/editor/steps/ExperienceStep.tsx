@@ -9,7 +9,8 @@ import { Textarea } from '@/shared/ui/textarea';
 import { Label } from '@/shared/ui/label';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Badge } from '@/shared/ui/badge';
-import { Plus, Trash2, GripVertical, Briefcase, Sparkles } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Briefcase, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Dialog,
@@ -191,22 +192,48 @@ export const ExperienceStep: React.FC = () => {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Job Title *</Label>
+                <Label htmlFor="title" className="flex items-center gap-2">
+                  Job Title <span className="text-destructive">*</span>
+                  {formData.title.trim().length >= 2 && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Senior Software Engineer"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.title.trim() && formData.company.trim() && "border-destructive",
+                    formData.title.trim().length >= 2 && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
                 />
+                {!formData.title.trim() && formData.company.trim() && (
+                  <p className="text-xs text-destructive animate-in fade-in slide-in-from-top-1">Job title is required</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="company">Company *</Label>
+                <Label htmlFor="company" className="flex items-center gap-2">
+                  Company <span className="text-destructive">*</span>
+                  {formData.company.trim().length >= 2 && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
                 <Input
                   id="company"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                   placeholder="Tech Corp"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.company.trim() && formData.title.trim() && "border-destructive",
+                    formData.company.trim().length >= 2 && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
                 />
+                {!formData.company.trim() && formData.title.trim() && (
+                  <p className="text-xs text-destructive animate-in fade-in slide-in-from-top-1">Company name is required</p>
+                )}
               </div>
             </div>
 
@@ -222,23 +249,47 @@ export const ExperienceStep: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date *</Label>
+                <Label htmlFor="startDate" className="flex items-center gap-2">
+                  Start Date <span className="text-destructive">*</span>
+                  {formData.startDate && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
                 <Input
                   id="startDate"
                   type="month"
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  placeholder="YYYY-MM"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.startDate && (formData.title.trim() || formData.company.trim()) && "border-amber-500",
+                    formData.startDate && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
                 />
+                <p className="text-xs text-muted-foreground">Format: YYYY-MM (e.g., 2023-01)</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate" className="flex items-center gap-2">
+                  End Date
+                  {(formData.endDate || formData.current) && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
                 <Input
                   id="endDate"
                   type="month"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   disabled={formData.current}
+                  placeholder="YYYY-MM"
+                  className={cn(
+                    "transition-colors duration-200",
+                    formData.current && "opacity-50",
+                    (formData.endDate || formData.current) && !formData.current && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
                 />
+                <p className="text-xs text-muted-foreground">Leave empty if currently working here</p>
               </div>
             </div>
 
@@ -259,8 +310,11 @@ export const ExperienceStep: React.FC = () => {
             <div className="space-y-3 pt-4 border-t">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="description" className="text-base font-semibold">
-                    Description & Achievements *
+                  <Label htmlFor="description" className="text-base font-semibold flex items-center gap-2">
+                    Description & Achievements <span className="text-destructive">*</span>
+                    {formData.description.trim().length >= 20 && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                    )}
                   </Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     Use bullet points (•) to list your responsibilities and achievements
@@ -284,12 +338,32 @@ export const ExperienceStep: React.FC = () => {
                   setIsEnhanced(false);
                 }}
                 placeholder="• Managed team of 5 developers&#10;• Increased efficiency by 30%&#10;• Led migration to microservices architecture"
-                className="min-h-[180px] text-base leading-relaxed"
+                className={cn(
+                  "min-h-[180px] text-base leading-relaxed transition-colors duration-200",
+                  !formData.description.trim() && (formData.title.trim() || formData.company.trim()) && "border-amber-500",
+                  formData.description.trim().length >= 20 && "border-green-500 focus-visible:ring-green-500/30"
+                )}
                 maxLength={1000}
               />
-              <p className="text-xs text-muted-foreground">
-                Use bullet points (•) to list your responsibilities and achievements. Include metrics where possible.
-              </p>
+              {/* Character counter with visual feedback */}
+              <div className="flex items-center justify-between text-xs">
+                <p className="text-muted-foreground">
+                  Use bullet points (•) to list your responsibilities and achievements. Include metrics where possible.
+                </p>
+                <span className={cn(
+                  "font-medium",
+                  formData.description.length === 0 && "text-muted-foreground",
+                  formData.description.length > 0 && formData.description.length < 50 && "text-amber-500",
+                  formData.description.length >= 50 && formData.description.length < 200 && "text-green-500",
+                  formData.description.length >= 200 && formData.description.length < 800 && "text-green-600",
+                  formData.description.length >= 800 && "text-amber-500"
+                )}>
+                  {formData.description.length}/1000
+                  {formData.description.length < 50 && formData.description.length > 0 && " (add more detail)"}
+                  {formData.description.length >= 50 && formData.description.length < 200 && " (good)"}
+                  {formData.description.length >= 200 && formData.description.length < 800 && " (great!)"}
+                </span>
+              </div>
               {isEnhanced && (
                 <div className="flex items-center gap-2 text-xs text-purple-600 font-medium animate-in fade-in slide-in-from-top-1 mt-2">
                   <Sparkles className="w-3 h-3" />

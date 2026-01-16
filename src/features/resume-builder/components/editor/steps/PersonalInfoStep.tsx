@@ -17,6 +17,8 @@ import {
 } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
 import { Card, CardContent } from '@/shared/ui/card';
+import { CheckCircle2 } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
 
 type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
 
@@ -82,17 +84,31 @@ export const PersonalInfoStep: React.FC = () => {
                     <FormField
                       control={form.control}
                       name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Full Name <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" {...field} className="h-11" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field, fieldState }) => {
+                        const isValid = !fieldState.error && field.value && field.value.length >= 2;
+                        return (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              Full Name <span className="text-destructive">*</span>
+                              {isValid && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="John Doe"
+                                {...field}
+                                className={cn(
+                                  "h-11 transition-colors duration-200",
+                                  fieldState.error && "border-destructive focus-visible:ring-destructive/30",
+                                  isValid && "border-green-500 focus-visible:ring-green-500/30"
+                                )}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
 
                     <FormField
@@ -123,47 +139,68 @@ export const PersonalInfoStep: React.FC = () => {
                     <FormField
                       control={form.control}
                       name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Email <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="john.doe@example.com"
-                              {...field}
-                              className="h-11"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field, fieldState }) => {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        const isValid = !fieldState.error && field.value && emailRegex.test(field.value);
+                        return (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              Email <span className="text-destructive">*</span>
+                              {isValid && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="john.doe@example.com"
+                                {...field}
+                                className={cn(
+                                  "h-11 transition-colors duration-200",
+                                  fieldState.error && "border-destructive focus-visible:ring-destructive/30",
+                                  isValid && "border-green-500 focus-visible:ring-green-500/30"
+                                )}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
 
                     <FormField
                       control={form.control}
                       name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Phone <span className="text-destructive">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="tel"
-                              placeholder="(555) 123-4567"
-                              {...field}
-                              className="h-11"
-                              onChange={(e) => {
-                                const formatted = formatPhoneNumber(e.target.value);
-                                field.onChange(formatted);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field, fieldState }) => {
+                        const isValid = !fieldState.error && field.value && field.value.replace(/\D/g, '').length >= 10;
+                        return (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              Phone <span className="text-destructive">*</span>
+                              {isValid && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="tel"
+                                placeholder="(555) 123-4567"
+                                {...field}
+                                className={cn(
+                                  "h-11 transition-colors duration-200",
+                                  fieldState.error && "border-destructive focus-visible:ring-destructive/30",
+                                  isValid && "border-green-500 focus-visible:ring-green-500/30"
+                                )}
+                                onChange={(e) => {
+                                  const formatted = formatPhoneNumber(e.target.value);
+                                  field.onChange(formatted);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
 

@@ -15,6 +15,7 @@ export interface WizardState {
   selectedTemplate: string;
   currentDraftId: string | null;
   autoSaveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  lastSavedAt: string | null;
   skippedSteps: string[];
 }
 
@@ -76,6 +77,7 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       selectedTemplate: '',
       currentDraftId: null,
       autoSaveStatus: 'idle',
+      lastSavedAt: null,
       skippedSteps: [],
     };
   });
@@ -97,20 +99,25 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       setWizardState(prev => ({ ...prev, autoSaveStatus: 'saving' }));
 
+      const timestamp = new Date().toISOString();
       const autoSaveData = {
         wizardState,
         resumeData,
-        timestamp: new Date().toISOString(),
+        timestamp,
       };
 
       localStorage.setItem(WIZARD_AUTOSAVE_KEY, JSON.stringify(autoSaveData));
 
-      setWizardState(prev => ({ ...prev, autoSaveStatus: 'saved' }));
+      setWizardState(prev => ({
+        ...prev,
+        autoSaveStatus: 'saved',
+        lastSavedAt: timestamp,
+      }));
 
-      // Reset status after 2 seconds
+      // Reset status to idle after 3 seconds (but keep lastSavedAt)
       setTimeout(() => {
         setWizardState(prev => ({ ...prev, autoSaveStatus: 'idle' }));
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error('Auto-save failed:', error);
       setWizardState(prev => ({ ...prev, autoSaveStatus: 'error' }));

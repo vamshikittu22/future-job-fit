@@ -6,10 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Input } from '@/shared/ui/input';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
-import { X, Plus, Sparkles, Code } from 'lucide-react';
+import { X, Plus, Sparkles, Code, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shared/ui/tooltip';
 
 export const SkillsStep: React.FC = () => {
   const { resumeData, updateResumeData, setResumeData } = useResume();
@@ -122,24 +128,86 @@ export const SkillsStep: React.FC = () => {
       <ProgressStepper />
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          {/* Total Skills Counter */}
-          {totalSkills > 0 && (
-            <Badge variant={totalSkills >= 5 ? 'default' : 'secondary'} className="text-lg px-4 py-2">
-              {totalSkills} Total Skills
-              {totalSkills < 5 && ' (Add at least 5)'}
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAIEnhanceModalOpen(true)}
-            className="gap-2 ml-auto"
-          >
-            <Sparkles className="h-4 w-4" />
-            Enhance with AI
-          </Button>
-        </div>
+        {/* Skills Summary Card */}
+        <Card className={cn(
+          "border-2 transition-colors duration-200",
+          totalSkills >= 5 ? "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20" : "border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20"
+        )}>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              {/* Skill Breakdown */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {totalSkills >= 5 ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <HelpCircle className="h-5 w-5 text-amber-500" />
+                  )}
+                  <span className="font-semibold text-lg">{totalSkills} Total Skills</span>
+                </div>
+
+                {/* Category Breakdown */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">|</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 cursor-help">
+                          <Badge variant="outline" className="gap-1">
+                            <Code className="h-3 w-3" />
+                            Languages: {skills.languages?.length || 0}
+                          </Badge>
+                          <Badge variant="outline" className="gap-1">
+                            Frameworks: {skills.frameworks?.length || 0}
+                          </Badge>
+                          <Badge variant="outline" className="gap-1">
+                            Tools: {skills.tools?.length || 0}
+                          </Badge>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-2 text-sm">
+                          <p className="font-semibold">How skills are categorized:</p>
+                          <ul className="space-y-1 text-xs">
+                            <li><strong>Languages:</strong> Programming languages (Python, JavaScript, Java, etc.)</li>
+                            <li><strong>Frameworks:</strong> Libraries & frameworks (React, Django, Spring, etc.)</li>
+                            <li><strong>Tools:</strong> Dev tools & platforms (Git, Docker, AWS, etc.)</li>
+                          </ul>
+                          <p className="text-xs text-muted-foreground italic">
+                            Skills are added to the category you select when typing.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+
+              {/* Status Message & AI Button */}
+              <div className="flex items-center gap-3">
+                {totalSkills < 5 && (
+                  <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                    Add {5 - totalSkills} more to meet minimum
+                  </span>
+                )}
+                {totalSkills >= 5 && (
+                  <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                    ✓ Minimum met
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAIEnhanceModalOpen(true)}
+                  className="gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Enhance with AI
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <AnimatedAccordion
           items={skillCategories.map((category) => ({

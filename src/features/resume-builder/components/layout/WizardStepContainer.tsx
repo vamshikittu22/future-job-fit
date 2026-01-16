@@ -1,15 +1,17 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useWizard } from '@/shared/contexts/WizardContext';
 import { Button } from '@/shared/ui/button';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
-import { ChevronLeft, ChevronRight, SkipForward, Save, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipForward, Save, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
+import { validateStep } from '@/shared/config/wizardSteps';
 import { useSectionAnalysis } from '@/shared/hooks/useSectionAnalysis';
 import { useResume } from '@/shared/contexts/ResumeContext';
+import { AutoSaveIndicator } from '@/features/resume-builder/components/layout/AutoSaveIndicator';
 
 interface WizardStepContainerProps {
   children: React.ReactNode;
@@ -73,6 +75,26 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
 
   const isFirstStep = wizardState.currentStepIndex === 0;
   const canSkip = !currentStep.isRequired;
+
+  // Real-time validation check for enabling/disabling Next button
+  const liveValidation = useMemo(() => {
+    // Build a data object that matches what validateStep expects
+    const dataForValidation = {
+      personal: resumeData.personal,
+      summary: resumeData.summary,
+      experience: resumeData.experience,
+      education: resumeData.education,
+      skills: resumeData.skills,
+      projects: resumeData.projects,
+      achievements: resumeData.achievements,
+      certifications: resumeData.certifications,
+      selectedTemplate: wizardState.selectedTemplate,
+    };
+    return validateStep(currentStep.id, dataForValidation);
+  }, [currentStep.id, resumeData, wizardState.selectedTemplate]);
+
+  // Determine if the Next button should be disabled
+  const isNextDisabled = isProcessing || (currentStep.isRequired && !liveValidation.isValid);
 
   useEffect(() => {
     // Clear validation errors when step changes
@@ -175,7 +197,7 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
         )}
       </motion.div>
 
-      {/* Validation Errors */}
+      {/* Validation Errors (shown on submit attempt) */}
       {validationErrors.length > 0 && (
         <div ref={errorRef} className="px-6 pt-4 flex-shrink-0 bg-background">
           <Alert variant="destructive">
@@ -187,6 +209,37 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
                   <li key={index}>{error}</li>
                 ))}
               </ul>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      {/* Live Validation Summary (shown when step has requirements not yet met) */}
+      {currentStep.isRequired && !liveValidation.isValid && validationErrors.length === 0 && (
+        <div className="px-6 pt-4 flex-shrink-0 bg-background">
+          <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <div className="font-medium flex items-center gap-2">
+                <span>Complete this step to continue</span>
+              </div>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+                {liveValidation.errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      {/* Success indicator when step is complete */}
+      {currentStep.isRequired && liveValidation.isValid && (
+        <div className="px-6 pt-4 flex-shrink-0 bg-background">
+          <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30">
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <AlertDescription className="text-green-800 dark:text-green-200 font-medium">
+              ✓ All required fields are complete. You can proceed to the next step.
             </AlertDescription>
           </Alert>
         </div>
@@ -237,7 +290,10 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
+              {/* Auto-save indicator */}
+              <AutoSaveIndicator />
+
               <Button
                 variant="outline"
                 onClick={handleSaveDraft}
@@ -248,7 +304,12 @@ export const WizardStepContainer: React.FC<WizardStepContainerProps> = ({
               </Button>
               <Button
                 onClick={handleNext}
-                disabled={isProcessing}
+                disabled={isNextDisabled}
+                className={cn(
+                  "transition-all duration-200",
+                  isNextDisabled && !isProcessing && "opacity-60"
+                )}
+                title={isNextDisabled && !isProcessing ? "Complete required fields to continue" : undefined}
               >
                 {isProcessing ? (
                   'Processing...'

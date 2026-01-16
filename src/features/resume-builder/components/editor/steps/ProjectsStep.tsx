@@ -7,9 +7,11 @@ import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
-import { Plus, Trash2, Edit, X, Save, Code, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Save, Code, Sparkles, CheckCircle2 } from 'lucide-react';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { CharacterCounter } from '@/shared/ui/character-counter';
+import { cn } from '@/shared/lib/utils';
 
 export const ProjectsStep: React.FC = () => {
   const { resumeData, addProject, updateProject, removeProject, setResumeData } = useResume();
@@ -156,7 +158,12 @@ export const ProjectsStep: React.FC = () => {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Description *</label>
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      Description <span className="text-destructive">*</span>
+                      {formData.description.length >= 100 && formData.description.length <= 300 && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                      )}
+                    </label>
                     <Button
                       type="button"
                       variant="ghost"
@@ -174,7 +181,23 @@ export const ProjectsStep: React.FC = () => {
                     placeholder="Describe the project, your role, and key achievements"
                     rows={4}
                     required
+                    maxLength={500}
+                    className={cn(
+                      "transition-colors duration-200",
+                      formData.description.length >= 100 && formData.description.length <= 300 && "border-green-500 focus-visible:ring-green-500/30",
+                      formData.description.length > 0 && formData.description.length < 100 && "border-amber-500"
+                    )}
                   />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Describe the project, your role, and key achievements with metrics.
+                    </p>
+                    <CharacterCounter
+                      current={formData.description.length}
+                      max={500}
+                      recommended={{ min: 100, max: 300 }}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

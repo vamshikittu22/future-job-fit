@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Button } from '@/shared/ui/button';
 import { Badge } from '@/shared/ui/badge';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
-import { Sparkles, Lightbulb } from 'lucide-react';
+import { Sparkles, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import {
@@ -107,7 +107,12 @@ export const SummaryStep: React.FC = () => {
                 setIsEnhanced(false);
               }}
               placeholder={examplePlaceholders[placeholderIndex]}
-              className="min-h-[220px] resize-none text-base leading-relaxed"
+              className={cn(
+                "min-h-[220px] resize-none text-base leading-relaxed transition-colors duration-200",
+                wordCount >= 100 && wordCount <= 150 && "border-green-500 focus-visible:ring-green-500/30",
+                wordCount > 0 && wordCount < 50 && "border-amber-500 focus-visible:ring-amber-500/30",
+                charCount > 800 && "border-destructive focus-visible:ring-destructive/30"
+              )}
               maxLength={800}
             />
 
