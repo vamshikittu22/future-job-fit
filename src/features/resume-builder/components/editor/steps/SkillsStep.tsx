@@ -10,6 +10,7 @@ import { X, Plus, Sparkles, Code, HelpCircle, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
 import {
   Tooltip,
   TooltipContent,
@@ -195,15 +196,9 @@ export const SkillsStep: React.FC = () => {
                     ✓ Minimum met
                   </span>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
+                <AIEnhanceButton
                   onClick={() => setIsAIEnhanceModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Enhance with AI
-                </Button>
+                />
               </div>
             </div>
           </CardContent>
@@ -219,18 +214,16 @@ export const SkillsStep: React.FC = () => {
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between mb-4">
                   <CardDescription>{category.description}</CardDescription>
-                  <Button
+                  <AIEnhanceButton
                     variant="ghost"
-                    size="sm"
                     onClick={() => {
                       setActiveCategory(category.id);
                       setIsAIEnhanceModalOpen(true);
                     }}
-                    className="h-7 text-[10px] text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1"
+                    className="h-7 text-[10px] text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                   >
-                    <Sparkles className="w-3 h-3" />
                     AI Enhance Category
-                  </Button>
+                  </AIEnhanceButton>
                 </div>
                 <div className="space-y-4">
                   <div className="flex gap-2">

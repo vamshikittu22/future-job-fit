@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Sparkles, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
 import {
   Accordion,
   AccordionContent,
@@ -88,15 +89,10 @@ export const SummaryStep: React.FC = () => {
                   Aim for 100-150 words that capture your experience, skills, and career goals
                 </CardDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 ml-4 shadow-sm hover:shadow-accent transition-all"
+              <AIEnhanceButton
+                className="ml-4"
                 onClick={() => setIsAIEnhanceModalOpen(true)}
-              >
-                <Sparkles className="h-4 w-4" />
-                Enhance with AI
-              </Button>
+              />
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

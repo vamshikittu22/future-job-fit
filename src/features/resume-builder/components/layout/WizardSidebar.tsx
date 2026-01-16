@@ -41,6 +41,7 @@ const SortableItem = ({ id, children, disabled }: { id: string; children: React.
 import { useWizard } from '@/shared/contexts/WizardContext';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useATS } from '@/shared/hooks/use-ats';
+import { resumeAI } from '@/shared/api/resumeAI';
 import { TEMPLATE_OPTIONS } from '@/shared/config/wizardSteps';
 import { TemplateCustomizer } from '@/features/resume-builder/components/editor/steps/TemplateCustomizer';
 import { Button } from '@/shared/ui/button';
@@ -61,6 +62,8 @@ import {
 import { cn } from '@/shared/lib/utils';
 import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
+import { SectionScoreInfoModal } from '@/features/resume-builder/components/modals/SectionScoreInfoModal';
+import { AIConnectionModal } from '@/features/resume-builder/components/modals/AIConnectionModal';
 import { useSectionAnalysis } from '@/shared/hooks/useSectionAnalysis';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 
@@ -75,6 +78,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState('');
   const [isAIAnalysisExpanded, setIsAIAnalysisExpanded] = useState(false);
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { atsScore, analysis: atsAnalysis } = useATS(resumeData);
 
@@ -564,7 +568,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           <Separator />
 
           {/* ATS Score Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 pt-4 border-t first:border-t-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground">ATS Score</h3>
               <Badge variant={atsScore >= 70 ? 'default' : 'destructive'} className="text-[10px] px-1.5 py-0 h-5">
@@ -645,25 +649,45 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           {showSectionAnalysis && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-purple-500" />
-                  <h3 className="text-sm font-medium text-muted-foreground">AI Content Score</h3>
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <Sparkles className="h-4 w-4 text-purple-500 shrink-0" />
+                  {!isCompact && (
+                    <h3 className="text-sm font-medium text-muted-foreground truncate">AI Content Score</h3>
+                  )}
                 </div>
                 {sectionAnalysis && (
-                  <Badge variant="outline" className={cn(
-                    "text-[10px] px-1.5 py-0 h-5 dark:border-opacity-20",
-                    sectionAnalysis.score >= 80 ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" :
-                      sectionAnalysis.score >= 60 ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800" :
-                        "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                  )}>
-                    {sectionAnalysis.score}/100
-                  </Badge>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0 h-5 dark:border-opacity-20 cursor-pointer hover:bg-muted transition-colors",
+                            sectionAnalysis.score >= 80 ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" :
+                              sectionAnalysis.score >= 60 ? "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800" :
+                                "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                          )}
+                          onClick={() => setShowScoreInfo(true)}
+                        >
+                          {sectionAnalysis.score}{!isCompact && "/100"}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="text-xs font-medium">Click to see score breakdown</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
 
-              <div className="bg-purple-500/10 dark:bg-purple-500/20 p-3 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
+              <div className={cn(
+                "bg-purple-500/10 dark:bg-purple-500/20 rounded-lg border border-purple-200/50 dark:border-purple-800/30 transition-all",
+                isCompact ? "p-2" : "p-3"
+              )}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-tighter">Current Section Quality</span>
+                  <span className={cn("font-bold text-purple-600 dark:text-purple-400 uppercase tracking-tighter", isCompact ? "text-[8px]" : "text-[10px]")}>
+                    {!isCompact ? "Current Section Quality" : "Quality"}
+                  </span>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -717,13 +741,17 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           <div className="space-y-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Layout className="h-4 w-4" />
-                  Template
-                </h3>
-                <Badge variant="outline" className="text-[10px]">
-                  {TEMPLATE_OPTIONS.length} Options
-                </Badge>
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <Layout className="h-4 w-4 shrink-0" />
+                  {!isCompact && (
+                    <h3 className="text-sm font-medium text-muted-foreground truncate">Template</h3>
+                  )}
+                </div>
+                {!isCompact && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {TEMPLATE_OPTIONS.length} Options
+                  </Badge>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {TEMPLATE_OPTIONS.map((template) => {
@@ -733,26 +761,28 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                       key={template.id}
                       onClick={() => setSelectedTemplate(template.id)}
                       className={cn(
-                        "group cursor-pointer p-2 rounded-lg border transition-all duration-200",
+                        "group cursor-pointer rounded-lg border transition-all duration-200",
                         isSelected
                           ? "bg-primary/5 border-primary shadow-sm"
-                          : "bg-background hover:border-muted-foreground/30 hover:bg-muted/10 border-muted"
+                          : "bg-background hover:border-muted-foreground/30 hover:bg-muted/10 border-muted",
+                        isCompact ? "p-1.5" : "p-2"
                       )}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 overflow-hidden">
                           <div className={cn(
-                            "h-2 w-2 rounded-full",
+                            "h-2 w-2 rounded-full shrink-0",
                             isSelected ? "bg-primary" : "bg-muted-foreground/30"
                           )} />
                           <span className={cn(
-                            "text-[12px] font-semibold",
-                            isSelected ? "text-primary" : "text-foreground"
+                            "font-semibold truncate",
+                            isSelected ? "text-primary" : "text-foreground",
+                            isCompact ? "text-[10px]" : "text-[12px]"
                           )}>
                             {template.name}
                           </span>
                         </div>
-                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                        {isSelected && <CheckCircle2 className={cn("text-primary shrink-0", isCompact ? "h-3 w-3" : "h-3.5 w-3.5")} />}
                       </div>
                     </div>
                   );
@@ -764,21 +794,67 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
           </div>
 
           {/* Footer Save Info */}
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <div className={cn(
-                "h-1.5 w-1.5 rounded-full transition-colors",
-                wizardState.autoSaveStatus === 'saved' ? 'bg-green-500' :
-                  wizardState.autoSaveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' : 'bg-muted'
-              )} />
-              <span>
-                {wizardState.autoSaveStatus === 'saved' ? 'All changes saved' :
-                  wizardState.autoSaveStatus === 'saving' ? 'Saving changes...' : 'Auto-save enabled'}
-              </span>
+          <div className="pt-4 border-t space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <div className={cn(
+                  "h-1.5 w-1.5 rounded-full transition-colors",
+                  wizardState.autoSaveStatus === 'saved' ? 'bg-green-500' :
+                    wizardState.autoSaveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' : 'bg-muted'
+                )} />
+                <span>
+                  {wizardState.autoSaveStatus === 'saved' ? 'All changes saved' :
+                    wizardState.autoSaveStatus === 'saving' ? 'Saving changes...' : 'Auto-save enabled'}
+                </span>
+              </div>
+
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={cn(
+                      "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded cursor-help transition-colors",
+                      resumeAI.isDemoMode
+                        ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                        : "bg-green-500/10 text-green-600 border border-green-500/20"
+                    )}>
+                      {resumeAI.isDemoMode ? (
+                        <>
+                          <AlertCircle className="h-2.5 w-2.5" />
+                          Demo
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          Live
+                        </>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[180px]">
+                    <p className="text-xs font-bold mb-1">{resumeAI.isDemoMode ? "Limited Demo Mode" : "Live AI Connection"}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
+                      {resumeAI.isDemoMode
+                        ? "Using offline lexical templates. Connect Supabase for real AI enhancement."
+                        : `Connected to ${resumeAI.currentProvider.toUpperCase()} via Supabase Edge Functions.`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
       </div>
+
+      <AIConnectionModal
+        open={showScoreInfo && resumeAI.isDemoMode}
+        onOpenChange={(open: boolean) => !open && setShowScoreInfo(false)}
+      />
+
+      <SectionScoreInfoModal
+        open={showScoreInfo && !resumeAI.isDemoMode}
+        onOpenChange={setShowScoreInfo}
+        score={sectionAnalysis?.score || 0}
+      />
     </div>
   );
 };

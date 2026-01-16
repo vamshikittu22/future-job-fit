@@ -52,6 +52,14 @@ export class ResumeAIService {
     console.log(`[AI Service] Using provider: ${this.provider} ${this.demoMode ? '(DEMO MODE)' : '(server-side via Supabase Edge Function)'}`);
   }
 
+  public get isDemoMode(): boolean {
+    return this.demoMode;
+  }
+
+  public get currentProvider(): AIProvider {
+    return this.provider;
+  }
+
   /**
    * Calls the Supabase Edge Function for AI operations
    * All API keys are securely stored on the server

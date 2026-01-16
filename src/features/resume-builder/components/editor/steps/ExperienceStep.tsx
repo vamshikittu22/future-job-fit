@@ -23,6 +23,7 @@ import {
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import { useUndo } from '@/shared/hooks/useUndo';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
 
 export const ExperienceStep: React.FC = () => {
   const { resumeData, addExperience, updateExperience, removeExperience, setResumeData } = useResume();
@@ -405,15 +406,10 @@ export const ExperienceStep: React.FC = () => {
                     Use bullet points (•) to list your responsibilities and achievements
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <AIEnhanceButton
                   onClick={() => setIsAIEnhanceModalOpen(true)}
-                  className="h-9 text-sm gap-2 shadow-sm hover:shadow-accent transition-all"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Enhance with AI
-                </Button>
+                  className="h-9 text-sm"
+                />
               </div>
               <Textarea
                 id="description"

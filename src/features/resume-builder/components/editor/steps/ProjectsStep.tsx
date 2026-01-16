@@ -13,6 +13,7 @@ import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanc
 import { CharacterCounter } from '@/shared/ui/character-counter';
 import { cn } from '@/shared/lib/utils';
 import { useUndo } from '@/shared/hooks/useUndo';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
 
 export const ProjectsStep: React.FC = () => {
   const { resumeData, addProject, updateProject, removeProject, setResumeData } = useResume();
@@ -187,16 +188,12 @@ export const ProjectsStep: React.FC = () => {
                         <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
                       )}
                     </label>
-                    <Button
+                    <AIEnhanceButton
                       type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={() => setIsAIEnhanceModalOpen(true)}
-                      className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Enhance with AI
-                    </Button>
+                      className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                    />
                   </div>
                   <Textarea
                     value={formData.description}

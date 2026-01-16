@@ -10,6 +10,7 @@ import { Award, Plus, Trash2, Edit, X, Save, Sparkles, ExternalLink } from 'luci
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import { useUndo } from '@/shared/hooks/useUndo';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
 
 export const CertificationsStep: React.FC = () => {
     const { resumeData, updateResumeData, setResumeData } = useResume();
@@ -178,16 +179,12 @@ export const CertificationsStep: React.FC = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-medium">Description</label>
-                                        <Button
+                                        <AIEnhanceButton
                                             type="button"
                                             variant="ghost"
-                                            size="sm"
                                             onClick={() => setIsAIEnhanceModalOpen(true)}
-                                            className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
-                                        >
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                            Enhance with AI
-                                        </Button>
+                                            className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                        />
                                     </div>
                                     <Textarea
                                         value={formData.description}

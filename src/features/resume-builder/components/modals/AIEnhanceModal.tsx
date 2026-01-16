@@ -10,6 +10,16 @@ import { Label } from "@/shared/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resumeAI, EnhancementResponse, EnhancementRequest } from "@/shared/api/resumeAI";
 import { cn } from "@/shared/lib/utils";
+import { FullPreviewModal } from '@/features/resume-builder/components/modals/FullPreviewModal';
+import { AIConnectionModal } from '@/features/resume-builder/components/modals/AIConnectionModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { HelpCircle, Info } from "lucide-react";
 
 interface AIEnhanceModalProps {
   open: boolean;
@@ -75,6 +85,7 @@ export default function AIEnhanceModal({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [aiNotes, setAiNotes] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState('presets');
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
 
   const { toast } = useToast();
 
@@ -354,10 +365,21 @@ export default function AIEnhanceModal({
             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-accent" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex items-center gap-3">
               AI Resume Enhancement
+              {resumeAI.isDemoMode ? (
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200 animate-pulse">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Demo Mode
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                  <Check className="w-3 h-3 mr-1" />
+                  Live Connected
+                </Badge>
+              )}
               {step && (
-                <Badge variant="secondary" className="ml-3 font-normal capitalize">
+                <Badge variant="secondary" className="font-normal capitalize">
                   {step}
                 </Badge>
               )}
@@ -366,6 +388,24 @@ export default function AIEnhanceModal({
           <p className="text-sm text-muted-foreground ml-15">
             Choose a strategy or customize your enhancement preferences
           </p>
+
+          {resumeAI.isDemoMode && (
+            <Alert className="bg-amber-50 border-amber-200 mt-4">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800 text-xs font-bold">Limited "Demo Mode" Active</AlertTitle>
+              <AlertDescription className="text-amber-700 text-[11px] leading-relaxed">
+                You are currently using <strong>lexical templates</strong> instead of real AI.
+                Connecting to Supabase and providing an API key unlocks GPT-4o powered context-aware improvements.
+                <Button
+                  variant="link"
+                  className="h-auto p-0 ml-1 text-[11px] font-bold text-amber-800 underline decoration-amber-400"
+                  onClick={() => setShowConnectionModal(true)}
+                >
+                  How to connect?
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-1">
@@ -509,32 +549,40 @@ export default function AIEnhanceModal({
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                       Cancel
                     </Button>
-                    <Button
-                      onClick={() => performEnhancement({ tone_style: selectedTone, highlight_areas: selectedFocus })}
-                      disabled={isEnhancing}
-                      className="px-8 gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Generate Variants
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => performEnhancement({ tone_style: selectedTone, highlight_areas: selectedFocus })}
+                            disabled={isEnhancing}
+                            className="px-8 gap-2 relative overflow-hidden group"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Generate Variants
+                            {resumeAI.isDemoMode && (
+                              <span className="absolute inset-0 bg-amber-500/10 pointer-events-none" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          {resumeAI.isDemoMode
+                            ? "Generate improvements using demo templates (Offline)"
+                            : `Enhance using ${resumeAI.currentProvider.toUpperCase()} (Live AI)`}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
           )}
         </div>
+
+        <AIConnectionModal
+          open={showConnectionModal}
+          onOpenChange={setShowConnectionModal}
+        />
       </DialogContent>
     </Dialog>
   );
 }
-
-// Helper to provide missing Alert components if not available
-const Alert = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={cn("flex items-start gap-3 p-4 rounded-lg bg-muted text-muted-foreground", className)}>
-    {children}
-  </div>
-);
-
-const AlertDescription = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={cn("text-xs", className)}>{children}</div>
-);
