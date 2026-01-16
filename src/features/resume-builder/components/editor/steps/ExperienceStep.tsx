@@ -22,9 +22,22 @@ import {
 } from '@/shared/ui/dialog';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { useUndo } from '@/shared/hooks/useUndo';
 
 export const ExperienceStep: React.FC = () => {
   const { resumeData, addExperience, updateExperience, removeExperience, setResumeData } = useResume();
+
+  // Undo functionality
+  const { registerDeletion } = useUndo({
+    onUndo: (action) => {
+      if (action.category === 'experience') {
+        // Restore the deleted experience at the original index
+        const experiences = [...(resumeData.experience || [])];
+        experiences.splice(action.index, 0, action.data);
+        setResumeData({ ...resumeData, experience: experiences });
+      }
+    },
+  });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -39,6 +52,34 @@ export const ExperienceStep: React.FC = () => {
   });
 
   const [isEnhanced, setIsEnhanced] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  // Validate date range
+  useEffect(() => {
+    if (formData.startDate && formData.endDate && !formData.current) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+
+      if (start > end) {
+        setDateError('Start date must be before end date');
+      } else {
+        setDateError(null);
+      }
+    } else {
+      setDateError(null);
+    }
+  }, [formData.startDate, formData.endDate, formData.current]);
+
+  // Helper to format date for display
+  const formatDateDisplay = (dateStr: string): string => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr + '-01');
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Removed useEffect that was auto-resetting isEnhanced
 
@@ -87,9 +128,13 @@ export const ExperienceStep: React.FC = () => {
   };
 
   const handleDelete = (index: number) => {
-    if (confirm('Are you sure you want to delete this experience?')) {
-      removeExperience(index);
-    }
+    const experienceToDelete = resumeData.experience[index];
+    registerDeletion(
+      'experience',
+      index,
+      experienceToDelete,
+      () => removeExperience(index)
+    );
   };
 
   const handleAIEnhance = (enhancedData: any) => {
@@ -251,7 +296,7 @@ export const ExperienceStep: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="startDate" className="flex items-center gap-2">
                   Start Date <span className="text-destructive">*</span>
-                  {formData.startDate && (
+                  {formData.startDate && !dateError && (
                     <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
                   )}
                 </Label>
@@ -264,15 +309,23 @@ export const ExperienceStep: React.FC = () => {
                   className={cn(
                     "transition-colors duration-200",
                     !formData.startDate && (formData.title.trim() || formData.company.trim()) && "border-amber-500",
-                    formData.startDate && "border-green-500 focus-visible:ring-green-500/30"
+                    formData.startDate && !dateError && "border-green-500 focus-visible:ring-green-500/30",
+                    dateError && "border-destructive"
                   )}
                 />
-                <p className="text-xs text-muted-foreground">Format: YYYY-MM (e.g., 2023-01)</p>
+                <p className="text-xs text-muted-foreground">
+                  Format: YYYY-MM
+                  {formData.startDate && (
+                    <span className="ml-2 text-foreground font-medium">
+                      → {formatDateDisplay(formData.startDate)}
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate" className="flex items-center gap-2">
                   End Date
-                  {(formData.endDate || formData.current) && (
+                  {(formData.endDate || formData.current) && !dateError && (
                     <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
                   )}
                 </Label>
@@ -285,20 +338,52 @@ export const ExperienceStep: React.FC = () => {
                   placeholder="YYYY-MM"
                   className={cn(
                     "transition-colors duration-200",
-                    formData.current && "opacity-50",
-                    (formData.endDate || formData.current) && !formData.current && "border-green-500 focus-visible:ring-green-500/30"
+                    formData.current && "opacity-50 bg-muted",
+                    (formData.endDate || formData.current) && !formData.current && !dateError && "border-green-500 focus-visible:ring-green-500/30",
+                    dateError && "border-destructive"
                   )}
                 />
-                <p className="text-xs text-muted-foreground">Leave empty if currently working here</p>
+                <p className="text-xs text-muted-foreground">
+                  {formData.current ? (
+                    <span className="text-green-600 dark:text-green-400 font-medium">Currently active</span>
+                  ) : (
+                    <>
+                      Format: YYYY-MM
+                      {formData.endDate && (
+                        <span className="ml-2 text-foreground font-medium">
+                          → {formatDateDisplay(formData.endDate)}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* Date Range Error */}
+            {dateError && (
+              <div className="flex items-center gap-2 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+                <AlertCircle className="h-4 w-4" />
+                <span>{dateError}</span>
+              </div>
+            )}
+
+            {/* Date Range Summary */}
+            {formData.startDate && (formData.endDate || formData.current) && !dateError && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 animate-in fade-in duration-200 bg-green-50 dark:bg-green-950/30 px-3 py-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="font-medium">
+                  Duration: {formatDateDisplay(formData.startDate)} – {formData.current ? 'Present' : formatDateDisplay(formData.endDate)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="current"
                 checked={formData.current}
                 onCheckedChange={(checked) =>
-                  setFormData({ ...formData, current: checked as boolean })
+                  setFormData({ ...formData, current: checked as boolean, endDate: checked ? '' : formData.endDate })
                 }
               />
               <Label htmlFor="current" className="cursor-pointer font-medium">

@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { useUndo } from '@/shared/hooks/useUndo';
 
 interface EducationFormData {
   id?: string;
@@ -26,6 +27,17 @@ interface EducationFormData {
 
 export const EducationStep: React.FC = () => {
   const { resumeData, addEducation, updateEducation, removeEducation, setResumeData } = useResume();
+
+  // Undo functionality
+  const { registerDeletion } = useUndo({
+    onUndo: (action) => {
+      if (action.category === 'education') {
+        const education = [...(resumeData.education || [])];
+        education.splice(action.index, 0, action.data);
+        setResumeData({ ...resumeData, education });
+      }
+    },
+  });
   const [isAdding, setIsAdding] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -112,12 +124,18 @@ export const EducationStep: React.FC = () => {
   };
 
   const handleDelete = (index: number) => {
-    if (window.confirm('Are you sure you want to delete this education entry?')) {
-      removeEducation(index);
-      if (editingIndex === index) {
-        resetForm();
+    const educationToDelete = resumeData.education[index];
+    registerDeletion(
+      'education',
+      index,
+      educationToDelete,
+      () => {
+        removeEducation(index);
+        if (editingIndex === index) {
+          resetForm();
+        }
       }
-    }
+    );
   };
 
   return (

@@ -52,10 +52,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/shared/ui/accordion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shared/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
 import { useSectionAnalysis } from '@/shared/hooks/useSectionAnalysis';
+import { useMediaQuery } from '@/shared/hooks/use-media-query';
 
 interface WizardSidebarProps {
   isCollapsed: boolean;
@@ -70,6 +77,11 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
   const [isAIAnalysisExpanded, setIsAIAnalysisExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { atsScore, analysis: atsAnalysis } = useATS(resumeData);
+
+  // Responsive breakpoints
+  const isMobile = useMediaQuery('(max-width: 640px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
+  const isCompact = useMediaQuery('(max-width: 1280px)');
 
   // AI Content Analysis Logic
   const analysisEnabledSteps = ['summary', 'experience', 'projects', 'achievements', 'education', 'skills'];
@@ -233,70 +245,147 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   if (isCollapsed) {
     return (
-      <div className="flex h-full flex-col items-center py-4 border-r">
-        <div className="relative w-full px-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="absolute right-0 top-0 transform translate-x-1/2"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <TooltipProvider delayDuration={100}>
+        <div className="flex h-full flex-col items-center py-4 border-r bg-card">
+          <div className="relative w-full px-2 mb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className="w-full hover:bg-accent"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                <p className="font-medium">Expand Sidebar</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="mb-4"
+                onClick={handleAddSection}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              <p className="font-medium">Add Custom Section</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="flex-1 w-full space-y-1 px-2">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              const isActive = currentStep.id === step.id;
+              const completion = getStepCompletion(step.id);
+              const isCustomStep = step.id.startsWith('custom:');
+              const sectionId = isCustomStep ? step.id.replace('custom:', '') : '';
+              const section = isCustomStep ? (resumeData.customSections || []).find(s => s.id === sectionId) : null;
+              const sectionName = isCustomStep ? (section?.title || 'Custom Section') : step.title;
+
+              return (
+                <Tooltip key={step.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        'w-full relative',
+                        isActive && 'bg-accent ring-1 ring-primary/20'
+                      )}
+                      onClick={() => canNavigateToStep(step.id) && goToStep(step.id)}
+                      disabled={!canNavigateToStep(step.id)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {/* Completion indicator */}
+                      <div
+                        className={cn(
+                          "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 rounded-full transition-all",
+                          completion === 100 ? "bg-green-500 w-4" :
+                            completion > 0 ? "bg-yellow-500 w-3" : "bg-muted w-2"
+                        )}
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={10} className="flex flex-col gap-1">
+                    <p className="font-medium">{sectionName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {completion === 100 ? '✓ Complete' :
+                        completion > 0 ? `${completion}% complete` : 'Not started'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+
+          {/* ATS Score Mini */}
+          <div className="mt-4 px-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors cursor-default",
+                  atsScore >= 70 ? "border-green-500 text-green-500" :
+                    atsScore >= 50 ? "border-yellow-500 text-yellow-500" : "border-red-500 text-red-500"
+                )}>
+                  {atsScore}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                <p className="font-medium">ATS Score: {atsScore}%</p>
+                <p className="text-xs text-muted-foreground">{getATSScoreLabel(atsScore)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="mb-3"
-          title="Add custom section"
-          onClick={handleAddSection}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-        {steps.map((step) => {
-          const Icon = step.icon;
-          const isActive = currentStep.id === step.id;
-          return (
-            <Button
-              key={step.id}
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'mb-2',
-                isActive && 'bg-accent'
-              )}
-              onClick={() => canNavigateToStep(step.id) && goToStep(step.id)}
-              disabled={!canNavigateToStep(step.id)}
-            >
-              <Icon className={cn('h-4 w-4', getStatusColor(step.id))} />
-            </Button>
-          );
-        })}
-      </div>
+      </TooltipProvider>
     );
   }
 
   return (
-    <div className="flex h-full flex-col border-r bg-card">
+    <div className="flex h-full flex-col border-r bg-card transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Resume Wizard</h2>
+        <div className="flex items-center gap-2 overflow-hidden">
+          <Sparkles className="h-5 w-5 text-primary shrink-0" />
+          {!isCompact && (
+            <h2 className="font-semibold truncate">Resume Wizard</h2>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={() => { }}
-          >
-            <Save className="h-3.5 w-3.5 mr-1.5" />
-            Save Draft
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onToggle}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-8 px-2", isCompact ? "w-8 p-0" : "text-xs")}
+                  onClick={() => { }}
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  {!isCompact && <span className="ml-1.5">Save Draft</span>}
+                </Button>
+              </TooltipTrigger>
+              {isCompact && <TooltipContent>Save Draft</TooltipContent>}
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggle}>
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Collapse Sidebar</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
@@ -365,9 +454,22 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
-                              <span className={cn('truncate text-sm', isActive ? 'font-semibold' : 'font-medium')}>
-                                {sectionName}
-                              </span>
+                              <TooltipProvider delayDuration={300}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className={cn('truncate text-sm block max-w-[120px] xl:max-w-[150px]', isActive ? 'font-semibold' : 'font-medium')}>
+                                      {sectionName}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right" sideOffset={8}>
+                                    <p className="font-medium">{sectionName}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {completion === 100 ? '✓ Complete' :
+                                        completion > 0 ? `${completion}% complete` : 'Click to start'}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                           </div>
 
@@ -420,30 +522,43 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
           {/* Navigation Buttons */}
           <div className="flex justify-between gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 text-xs h-8"
-              onClick={() => {
-                const currentIndex = steps.findIndex(step => step.id === currentStep.id);
-                if (currentIndex > 0) goToStep(steps[currentIndex - 1].id);
-              }}
-              disabled={steps.findIndex(step => step.id === currentStep.id) === 0}
-            >
-              <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 text-xs h-8"
-              onClick={() => {
-                const currentIndex = steps.findIndex(step => step.id === currentStep.id);
-                if (currentIndex < steps.length - 1) goToStep(steps[currentIndex + 1].id);
-              }}
-              disabled={steps.findIndex(step => step.id === currentStep.id) === steps.length - 1}
-            >
-              Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("flex-1 h-8", isCompact ? "w-8 px-0" : "text-xs")}
+                  onClick={() => {
+                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                    if (currentIndex > 0) goToStep(steps[currentIndex - 1].id);
+                  }}
+                  disabled={steps.findIndex(step => step.id === currentStep.id) === 0}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  {!isCompact && <span className="ml-1">Previous</span>}
+                </Button>
+              </TooltipTrigger>
+              {isCompact && <TooltipContent>Previous Step</TooltipContent>}
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("flex-1 h-8", isCompact ? "w-8 px-0" : "text-xs")}
+                  onClick={() => {
+                    const currentIndex = steps.findIndex(step => step.id === currentStep.id);
+                    if (currentIndex < steps.length - 1) goToStep(steps[currentIndex + 1].id);
+                  }}
+                  disabled={steps.findIndex(step => step.id === currentStep.id) === steps.length - 1}
+                >
+                  {!isCompact && <span className="mr-1">Next</span>}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              {isCompact && <TooltipContent>Next Step</TooltipContent>}
+            </Tooltip>
           </div>
 
           <Separator />
@@ -453,28 +568,44 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground">ATS Score</h3>
               <Badge variant={atsScore >= 70 ? 'default' : 'destructive'} className="text-[10px] px-1.5 py-0 h-5">
-                {getATSScoreLabel(atsScore)}
+                {!isCompact ? getATSScoreLabel(atsScore) : atsScore}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg border border-muted">
-              <div className="relative h-16 w-16 shrink-0">
-                <svg className="h-16 w-16 -rotate-90 transform">
-                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-muted" />
+            <div className={cn(
+              "flex items-center bg-muted/30 rounded-lg border border-muted transition-all",
+              isCompact ? "p-2 gap-2" : "p-4 gap-4"
+            )}>
+              <div className={cn("relative shrink-0", isCompact ? "h-12 w-12" : "h-16 w-16")}>
+                <svg className={cn("-rotate-90 transform", isCompact ? "h-12 w-12" : "h-16 w-16")}>
                   <circle
-                    cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent"
-                    strokeDasharray={175.9}
-                    strokeDashoffset={175.9 - (175.9 * atsScore) / 100}
+                    cx={isCompact ? "24" : "32"}
+                    cy={isCompact ? "24" : "32"}
+                    r={isCompact ? "20" : "28"}
+                    stroke="currentColor"
+                    strokeWidth={isCompact ? "3" : "4"}
+                    fill="transparent"
+                    className="text-muted"
+                  />
+                  <circle
+                    cx={isCompact ? "24" : "32"}
+                    cy={isCompact ? "24" : "32"}
+                    r={isCompact ? "20" : "28"}
+                    stroke="currentColor"
+                    strokeWidth={isCompact ? "3" : "4"}
+                    fill="transparent"
+                    strokeDasharray={isCompact ? 125.6 : 175.9}
+                    strokeDashoffset={(isCompact ? 125.6 : 175.9) - ((isCompact ? 125.6 : 175.9) * atsScore) / 100}
                     strokeLinecap="round"
                     className={cn("transition-all duration-1000", getATSScoreColor(atsScore))}
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={cn('text-lg font-bold', getATSScoreColor(atsScore))}>{atsScore}</span>
+                  <span className={cn('font-bold', isCompact ? 'text-sm' : 'text-lg', getATSScoreColor(atsScore))}>{atsScore}</span>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground mb-1">Resume Strength</p>
-                <p className="text-[10px] text-muted-foreground leading-tight">Your resume is {atsScore}% optimized for ATS systems.</p>
+                <p className={cn("font-semibold text-foreground mb-0.5", isCompact ? "text-[10px]" : "text-xs")}>Resume Strength</p>
+                {!isCompact && <p className="text-[10px] text-muted-foreground leading-tight">Your resume is {atsScore}% optimized for ATS systems.</p>}
               </div>
             </div>
 

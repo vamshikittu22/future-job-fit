@@ -11,9 +11,21 @@ import { AnimatedAccordion } from '@/features/resume-builder/components/editor/A
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import { CharacterCounter } from '@/shared/ui/character-counter';
 import { cn } from '@/shared/lib/utils';
+import { useUndo } from '@/shared/hooks/useUndo';
 
 export const AchievementsStep: React.FC = () => {
     const { resumeData, updateResumeData, setResumeData } = useResume();
+
+    // Undo functionality
+    const { registerDeletion } = useUndo({
+        onUndo: (action) => {
+            if (action.category === 'achievement') {
+                const achievements = [...(resumeData.achievements || [])];
+                achievements.splice(action.index, 0, action.data);
+                updateResumeData('achievements', achievements);
+            }
+        },
+    });
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
@@ -71,8 +83,16 @@ export const AchievementsStep: React.FC = () => {
     };
 
     const handleRemove = (index: number) => {
-        const achievements = (resumeData.achievements || []).filter((_, i) => i !== index);
-        updateResumeData('achievements', achievements);
+        const achievementToDelete = resumeData.achievements[index];
+        registerDeletion(
+            'achievement',
+            index,
+            achievementToDelete,
+            () => {
+                const achievements = (resumeData.achievements || []).filter((_, i) => i !== index);
+                updateResumeData('achievements', achievements);
+            }
+        );
     };
 
     return (

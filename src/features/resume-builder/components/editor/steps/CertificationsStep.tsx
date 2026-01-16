@@ -9,9 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/shared/u
 import { Award, Plus, Trash2, Edit, X, Save, Sparkles, ExternalLink } from 'lucide-react';
 import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { useUndo } from '@/shared/hooks/useUndo';
 
 export const CertificationsStep: React.FC = () => {
     const { resumeData, updateResumeData, setResumeData } = useResume();
+
+    // Undo functionality
+    const { registerDeletion } = useUndo({
+        onUndo: (action) => {
+            if (action.category === 'certification') {
+                const certifications = [...(resumeData.certifications || [])];
+                certifications.splice(action.index, 0, action.data);
+                updateResumeData('certifications', certifications);
+            }
+        },
+    });
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
@@ -72,8 +84,16 @@ export const CertificationsStep: React.FC = () => {
     };
 
     const handleRemove = (index: number) => {
-        const certifications = (resumeData.certifications || []).filter((_, i) => i !== index);
-        updateResumeData('certifications', certifications);
+        const certToDelete = resumeData.certifications?.[index];
+        registerDeletion(
+            'certification',
+            index,
+            certToDelete,
+            () => {
+                const certifications = (resumeData.certifications || []).filter((_, i) => i !== index);
+                updateResumeData('certifications', certifications);
+            }
+        );
     };
 
     return (

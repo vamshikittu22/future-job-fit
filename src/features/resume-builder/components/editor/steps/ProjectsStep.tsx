@@ -12,9 +12,22 @@ import { AnimatedAccordion } from '@/features/resume-builder/components/editor/A
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import { CharacterCounter } from '@/shared/ui/character-counter';
 import { cn } from '@/shared/lib/utils';
+import { useUndo } from '@/shared/hooks/useUndo';
 
 export const ProjectsStep: React.FC = () => {
   const { resumeData, addProject, updateProject, removeProject, setResumeData } = useResume();
+
+  // Undo functionality
+  const { registerDeletion } = useUndo({
+    onUndo: (action) => {
+      if (action.category === 'project') {
+        const projects = [...(resumeData.projects || [])];
+        projects.splice(action.index, 0, action.data);
+        setResumeData({ ...resumeData, projects });
+      }
+    },
+  });
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
@@ -96,6 +109,16 @@ export const ProjectsStep: React.FC = () => {
       ...formData,
       technologies: formData.technologies.filter(t => t !== tech)
     });
+  };
+
+  const handleDelete = (index: number) => {
+    const projectToDelete = resumeData.projects[index];
+    registerDeletion(
+      'project',
+      index,
+      projectToDelete,
+      () => removeProject(index)
+    );
   };
 
   return (
@@ -330,7 +353,7 @@ export const ProjectsStep: React.FC = () => {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => removeProject(index)}
+                        onClick={() => handleDelete(index)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
