@@ -2,6 +2,7 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { CheckCircle, Target, Zap, FileText, Briefcase, Upload, Sparkles, Download, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import Footer from "@/shared/components/layout/Footer";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 
@@ -39,6 +40,22 @@ export default function Home() {
               </Button>
             </Link>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8"
+          >
+            <Link to="/about-platform">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary gap-2 group">
+                <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+                <span className="border-b border-transparent group-hover:border-accent/40 transition-colors font-mono tracking-tighter uppercase text-[11px]">
+                  The Brain Behind the Tech — View Architecture Case Study
+                </span>
+              </Button>
+            </Link>
+          </motion.div>
         </div>
 
         {/* Features Grid */}

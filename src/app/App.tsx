@@ -24,10 +24,13 @@ import { CertificationsStep } from "@/features/resume-builder/components/editor/
 import { ReviewStep } from "@/features/resume-builder/components/editor/steps/ReviewStep";
 import CustomSectionStep from "@/features/resume-builder/components/editor/steps/CustomSectionStep";
 
+import AboutPlatform from "@/features/home/pages/AboutPlatformPage";
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
+  { path: "/about-platform", element: <AboutPlatform /> },
   { path: "/input", element: <ResumeInput /> },
   { path: "/results", element: <Results /> },
   {
