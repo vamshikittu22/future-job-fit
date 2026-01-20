@@ -80,8 +80,8 @@ const SystemVitals: React.FC = () => {
                 </div>
             </div>
 
-            {/* Compact Terminal */}
-            <div className="bg-muted/5 border border-muted/20 p-4 relative z-10 overflow-hidden h-28">
+            {/* Compact Terminal - Higher Contrast */}
+            <div className="bg-muted/10 border border-border/40 p-4 relative z-10 overflow-hidden h-28">
                 <div className="space-y-1.5">
                     <AnimatePresence mode='popLayout'>
                         {logs.map((log, i) => (
@@ -92,8 +92,8 @@ const SystemVitals: React.FC = () => {
                                 exit={{ opacity: 0 }}
                                 className="text-[10px] font-mono flex gap-3 items-center"
                             >
-                                <span className="text-muted-foreground/30 font-bold">{new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                                <span className="text-foreground/80">&gt; {log}</span>
+                                <span className="text-muted-foreground/60 font-bold">{new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                                <span className="text-foreground">&gt; {log}</span>
                             </motion.div>
                         ))}
                     </AnimatePresence>
