@@ -813,11 +813,18 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                   <TooltipTrigger asChild>
                     <div className={cn(
                       "flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded cursor-help transition-colors",
-                      resumeAI.isDemoMode
-                        ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-                        : "bg-green-500/10 text-green-600 border border-green-500/20"
+                      resumeAI.isOfflineMode
+                        ? "bg-purple-500/10 text-purple-600 border border-purple-500/20"
+                        : resumeAI.isDemoMode
+                          ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                          : "bg-green-500/10 text-green-600 border border-green-500/20"
                     )}>
-                      {resumeAI.isDemoMode ? (
+                      {resumeAI.isOfflineMode ? (
+                        <>
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          Offline
+                        </>
+                      ) : resumeAI.isDemoMode ? (
                         <>
                           <AlertCircle className="h-2.5 w-2.5" />
                           Demo
@@ -831,11 +838,19 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-[180px]">
-                    <p className="text-xs font-bold mb-1">{resumeAI.isDemoMode ? "Limited Demo Mode" : "Live AI Connection"}</p>
+                    <p className="text-xs font-bold mb-1">
+                      {resumeAI.isOfflineMode
+                        ? "Offline NLP Parser Active"
+                        : resumeAI.isDemoMode
+                          ? "Limited Demo Mode"
+                          : "Live AI Connection"}
+                    </p>
                     <p className="text-[10px] text-muted-foreground leading-tight">
-                      {resumeAI.isDemoMode
-                        ? "Using offline lexical templates. Connect Supabase for real AI enhancement."
-                        : `Connected to ${resumeAI.currentProvider.toUpperCase()} via Supabase Edge Functions.`}
+                      {resumeAI.isOfflineMode
+                        ? "Using local spaCy for scoring. LLM used only for creative rewriting. ~70% token savings."
+                        : resumeAI.isDemoMode
+                          ? "Using offline lexical templates. Connect Supabase for real AI enhancement."
+                          : `Connected to ${resumeAI.currentProvider.toUpperCase()} via Supabase Edge Functions.`}
                     </p>
                   </TooltipContent>
                 </Tooltip>

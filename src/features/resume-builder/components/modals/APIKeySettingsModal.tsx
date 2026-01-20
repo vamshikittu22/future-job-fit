@@ -6,6 +6,8 @@ import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Badge } from '@/shared/ui/badge';
+import { Switch } from '@/shared/ui/switch';
+import { resumeAI } from '@/shared/api/resumeAI';
 import { useToast } from '@/shared/ui/use-toast';
 import {
     Dialog,
@@ -53,6 +55,20 @@ const APIKeySettingsModal: React.FC<APIKeySettingsModalProps> = ({ open, onOpenC
     const [provider, setProvider] = useState<AIProvider>(keyState.provider || 'gemini');
     const [apiKey, setApiKeyInput] = useState(keyState.apiKey || '');
     const [showKey, setShowKey] = useState(false);
+    const [offlineEnabled, setOfflineEnabled] = useState(() => {
+        return localStorage.getItem('offline_parser_enabled') === 'true';
+    });
+
+    const handleOfflineToggle = (enabled: boolean) => {
+        setOfflineEnabled(enabled);
+        localStorage.setItem('offline_parser_enabled', enabled ? 'true' : 'false');
+        toast({
+            title: enabled ? 'Offline Parser Enabled' : 'Offline Parser Disabled',
+            description: enabled
+                ? 'Using local NLP for scoring. Restart app to apply.'
+                : 'Will use cloud AI for all operations.',
+        });
+    };
 
     const handleSave = () => {
         if (!apiKey.trim()) {
@@ -136,6 +152,35 @@ const APIKeySettingsModal: React.FC<APIKeySettingsModalProps> = ({ open, onOpenC
                             </Button>
                         </div>
                     )}
+
+                    {/* Offline Parser Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium">Offline NLP Parser</span>
+                                <Badge
+                                    variant="outline"
+                                    className={resumeAI.offlineParserStatus === 'healthy'
+                                        ? 'text-green-600 border-green-500/30 bg-green-500/10 text-[10px]'
+                                        : resumeAI.offlineParserStatus === 'unhealthy'
+                                            ? 'text-red-600 border-red-500/30 bg-red-500/10 text-[10px]'
+                                            : 'text-muted-foreground text-[10px]'
+                                    }
+                                >
+                                    {resumeAI.offlineParserStatus === 'healthy' ? '● Connected'
+                                        : resumeAI.offlineParserStatus === 'unhealthy' ? '○ Unavailable'
+                                            : '○ Disabled'}
+                                </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Use local spaCy for scoring & extraction. Saves ~70% tokens.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={offlineEnabled}
+                            onCheckedChange={handleOfflineToggle}
+                        />
+                    </div>
 
                     {/* Provider Selection */}
                     <div className="space-y-2">

@@ -1,16 +1,16 @@
 # Core dependencies
-fastapi==0.109.2
-uvicorn[standard]==0.27.1
-pydantic==2.6.1
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
 
-# NLP & ML
-spacy==3.7.4
-scikit-learn==1.4.0
+# NLP & ML - using versions with pre-built wheels
+spacy>=3.7.0
+scikit-learn>=1.4.0
 
 # Utilities
-python-multipart==0.0.9
+python-multipart>=0.0.9
 
 # Development
-httpx==0.26.0
-pytest==8.0.0
-pytest-asyncio==0.23.4
+httpx>=0.26.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
