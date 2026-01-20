@@ -40,6 +40,9 @@ interface ResumeEvaluationResponse {
 export class ResumeAIService {
   private provider: AIProvider;
   private demoMode: boolean = false;
+  private offlineMode: boolean = false;
+  private offlineParserUrl: string;
+  private offlineParserHealthy: boolean = false;
 
   constructor() {
     // Get provider from environment or default to gemini
@@ -49,7 +52,16 @@ export class ResumeAIService {
     // Check if demo mode is enabled (no real API calls)
     this.demoMode = import.meta.env.VITE_AI_DEMO_MODE === 'true';
 
-    console.log(`[AI Service] Using provider: ${this.provider} ${this.demoMode ? '(DEMO MODE)' : '(server-side via Supabase Edge Function)'}`);
+    // Check if offline parser mode is enabled
+    this.offlineMode = import.meta.env.VITE_OFFLINE_PARSER === 'true';
+    this.offlineParserUrl = import.meta.env.VITE_OFFLINE_PARSER_URL || 'http://localhost:8000';
+
+    console.log(`[AI Service] Using provider: ${this.provider} ${this.demoMode ? '(DEMO MODE)' : this.offlineMode ? '(OFFLINE PARSER MODE)' : '(server-side via Supabase Edge Function)'}`);
+
+    // Check offline parser health on startup if enabled
+    if (this.offlineMode) {
+      this.checkOfflineParserHealth();
+    }
   }
 
   public get isDemoMode(): boolean {
@@ -58,6 +70,57 @@ export class ResumeAIService {
 
   public get currentProvider(): AIProvider {
     return this.provider;
+  }
+
+  public get isOfflineMode(): boolean {
+    return this.offlineMode && this.offlineParserHealthy;
+  }
+
+  public get offlineParserStatus(): 'healthy' | 'unhealthy' | 'disabled' {
+    if (!this.offlineMode) return 'disabled';
+    return this.offlineParserHealthy ? 'healthy' : 'unhealthy';
+  }
+
+  /**
+   * Check if offline parser is available
+   */
+  private async checkOfflineParserHealth(): Promise<void> {
+    try {
+      const response = await fetch(`${this.offlineParserUrl}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      if (response.ok) {
+        const data = await response.json();
+        this.offlineParserHealthy = data.status === 'healthy';
+        console.log(`[AI Service] Offline parser health: ${data.status}`);
+      } else {
+        this.offlineParserHealthy = false;
+        console.warn('[AI Service] Offline parser health check failed');
+      }
+    } catch (error) {
+      this.offlineParserHealthy = false;
+      console.warn('[AI Service] Offline parser not available:', error);
+    }
+  }
+
+  /**
+   * Call the offline parser service
+   */
+  private async callOfflineParser(endpoint: string, data: any): Promise<any> {
+    const response = await fetch(`${this.offlineParserUrl}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(30000) // 30 second timeout
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(error.detail || `Offline parser request failed: ${response.status}`);
+    }
+
+    return response.json();
   }
 
   /**
@@ -257,13 +320,39 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   }
 
   async analyzeSection(sectionId: string, content: any): Promise<any> {
+    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+
+    // Try offline parser first if available
+    if (this.isOfflineMode) {
+      try {
+        console.log('[AI Service] Using offline parser for section analysis');
+        const scoreResult = await this.callOfflineParser('/score-ats', {
+          resumeText: contentStr
+        });
+
+        return {
+          score: scoreResult.score,
+          strengths: [
+            `Keyword match: ${scoreResult.breakdown.keywordMatch}%`,
+            `Format score: ${scoreResult.breakdown.formatScore}%`,
+            `Readability: ${scoreResult.breakdown.readability}%`
+          ],
+          weaknesses: scoreResult.suggestions.slice(0, 2),
+          suggestions: scoreResult.suggestions,
+          source: 'offline'
+        };
+      } catch (error) {
+        console.warn('[AI Service] Offline parser failed, falling back to LLM:', error);
+      }
+    }
+
     try {
       const result = await this.callEdgeFunction('analyzeSection', {
         sectionId,
-        content: typeof content === 'string' ? content : JSON.stringify(content),
+        content: contentStr,
       });
 
-      return result;
+      return { ...result, source: 'llm' };
     } catch (error) {
       console.error('[AI Service] Section analysis failed:', error);
 
@@ -273,18 +362,57 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         strengths: ['Content is present'],
         weaknesses: ['AI analysis failed/unavailable'],
         suggestions: ['Check your API settings or try again later'],
+        source: 'fallback'
       };
     }
   }
 
-  async evaluateResume(request: ResumeEvaluationRequest): Promise<ResumeEvaluationResponse> {
+  async evaluateResume(request: ResumeEvaluationRequest): Promise<ResumeEvaluationResponse & { source?: string }> {
+    // Try offline parser first if available
+    if (this.isOfflineMode) {
+      try {
+        console.log('[AI Service] Using offline parser for resume evaluation');
+
+        // Parse resume structure
+        const parseResult = await this.callOfflineParser('/parse-resume', {
+          text: request.resumeText
+        });
+
+        // Match keywords against job description
+        let matchResult = { matched: [], missing: [], matchRatio: 0 };
+        if (request.jobDescription) {
+          matchResult = await this.callOfflineParser('/match-keywords', {
+            resumeText: request.resumeText,
+            jobDescription: request.jobDescription
+          });
+        }
+
+        // Score ATS compatibility
+        const scoreResult = await this.callOfflineParser('/score-ats', {
+          parsedResume: parseResult,
+          resumeText: request.resumeText,
+          jobDescription: request.jobDescription
+        });
+
+        return {
+          atsScore: scoreResult.score,
+          missingKeywords: matchResult.missing,
+          suggestions: scoreResult.suggestions,
+          rewrittenResume: request.resumeText, // No rewrite in offline mode
+          source: 'offline'
+        };
+      } catch (error) {
+        console.warn('[AI Service] Offline parser failed, falling back to LLM:', error);
+      }
+    }
+
     try {
       const result = await this.callEdgeFunction('evaluateResume', {
         resumeText: request.resumeText,
         jobDescription: request.jobDescription,
       });
 
-      return result;
+      return { ...result, source: 'llm' };
     } catch (error) {
       console.error('[AI Service] Resume evaluation failed:', error);
 
@@ -294,6 +422,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         missingKeywords: [],
         suggestions: ['AI evaluation unavailable', 'Please try again later'],
         rewrittenResume: request.resumeText,
+        source: 'fallback'
       };
     }
   }
