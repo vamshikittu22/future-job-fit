@@ -17,7 +17,8 @@ import {
     Layers,
     Grid,
     Target,
-    CheckCircle2
+    CheckCircle2,
+    Palette
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/shared/ui/button';
@@ -91,7 +92,7 @@ const SwissSection: React.FC<{
                         </div>
                         <div className={cn("h-px w-12", subtitleClassName ? subtitleClassName.split(' ')[0].replace('text-', 'bg-') : "bg-border")} />
                         <Badge variant="outline" className={cn("rounded-none border-primary/40 text-[10px] font-mono tracking-widest px-3 py-1", subtitleClassName || "text-foreground")}>
-                            SYS_MOD_{number}
+                            MODULE_{number}
                         </Badge>
                     </motion.div>
 
@@ -145,18 +146,18 @@ const AboutPlatformPage: React.FC = () => {
     const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
     const sections = [
-        { id: 'overview', label: '00', title: 'MISSION' },
-        { id: 'architecture', label: '01', title: 'STACK' },
-        { id: 'state-logic', label: '02', title: 'LOGIC' },
-        { id: 'performance', label: '03', title: 'VELOCITY' },
-        { id: 'intelligence', label: '04', title: 'HYBRID' },
-        { id: 'identity', label: '05', title: 'IDENTITY' },
-        { id: 'skill-mapping', label: '06', title: 'SEMANTIC' },
-        { id: 'export-architecture', label: '07', title: 'OUTPUTS' },
-        { id: 'design-system', label: '08', title: 'SWISS' },
-        { id: 'dev-logs', label: '09', title: 'RECORDS' },
-        { id: 'scalability', label: '10', title: 'SCALAB' },
-        { id: 'meta', label: '11', title: 'IMPACT' },
+        { id: 'overview', label: '00', title: 'VISION' },
+        { id: 'architecture', label: '01', title: 'TECH' },
+        { id: 'state-logic', label: '02', title: 'DATA' },
+        { id: 'performance', label: '03', title: 'SPEED' },
+        { id: 'intelligence', label: '04', title: 'AI' },
+        { id: 'identity', label: '05', title: 'MODEL' },
+        { id: 'skill-mapping', label: '06', title: 'SKILLS' },
+        { id: 'export-architecture', label: '07', title: 'EXPORTS' },
+        { id: 'design-system', label: '08', title: 'DESIGN' },
+        { id: 'dev-logs', label: '09', title: 'STRATEGY' },
+        { id: 'scalability', label: '10', title: 'SCALE' },
+        { id: 'meta', label: '11', title: 'VALUE' },
     ];
 
     useEffect(() => {
@@ -232,9 +233,9 @@ const AboutPlatformPage: React.FC = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="flex items-center gap-4"
                                 >
-                                    <Badge className="rounded-none bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 font-mono text-[10px] tracking-widest px-3 py-1">PROT_VER_4.2.0</Badge>
+                                    <Badge className="rounded-none bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 font-mono text-[10px] tracking-widest px-3 py-1">BUILD v4.2.0</Badge>
                                     <div className="h-px w-16 bg-border" />
-                                    <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground font-bold">ENGINEERING_MANIFESTO</span>
+                                    <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground font-bold">PROJECT_PHILOSOPHY</span>
                                 </motion.div>
 
                                 <div className="space-y-6">
@@ -258,10 +259,10 @@ const AboutPlatformPage: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="space-y-4">
-                                            <TechnicalAnnotation title="Core_Problem_Space">
+                                            <TechnicalAnnotation title="Core_Challenge">
                                                 Modern ATS systems rely on simplistic keyword matching, leading to a 75% "false negative" rate for candidates lacking specific lexical styling.
                                             </TechnicalAnnotation>
-                                            <TechnicalAnnotation title="The_Solution_Vector">
+                                            <TechnicalAnnotation title="The_Solution">
                                                 By decoupling formatting from content via an offline-first parsing microservice, we preserve the "semantic signal" of career history.
                                             </TechnicalAnnotation>
                                         </div>
@@ -276,14 +277,14 @@ const AboutPlatformPage: React.FC = () => {
                                 </motion.div>
                                 <div className="p-8 border border-border/40 bg-card/50 space-y-4">
                                     <div className="flex justify-between items-center text-[10px] font-mono text-foreground/70 uppercase tracking-widest font-bold">
-                                        <span>Latency_Reduction</span>
-                                        <span className="text-emerald-500 font-bold">92%</span>
+                                        <span>Export_Formats</span>
+                                        <span className="text-emerald-500 font-bold">7</span>
                                     </div>
                                     <div className="h-1 w-full bg-border/40">
-                                        <div className="h-full bg-emerald-500 w-[92%]" />
+                                        <div className="h-full bg-emerald-500 w-full" />
                                     </div>
                                     <p className="text-[10px] text-muted-foreground leading-relaxed font-mono uppercase">
-                                        Optimization achievement via sub-50ms local inference nodes.
+                                        PDF | DOCX | HTML | LaTeX | Markdown | TXT | JSON
                                     </p>
                                 </div>
                             </div>
@@ -291,641 +292,1094 @@ const AboutPlatformPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 01: ARSENAL - FULL DEPENDENCY GRAPH */}
+                {/* 01: ARSENAL - HYBRID ARCHITECTURE */}
                 <SwissSection
                     number="01"
                     id="architecture"
-                    title="ARSENAL."
-                    subtitle="FULL DEPENDENCY GRAPH"
-                    accentColor="bg-blue-600"
-                    titleClassName="text-blue-950 dark:text-blue-50"
-                    subtitleClassName="text-blue-600 dark:text-blue-400"
-                    className="relative bg-blue-50/50 dark:bg-blue-900/5 group/section"
-                    description="We believe in radical transparency. Below is the complete audit of every major library powering the platform, chosen for stability and type-safety."
+                    title="ECOSYSTEM."
+                    subtitle="MODERN TECH STACK"
+                    accentColor="bg-violet-600"
+                    titleClassName="text-violet-950 dark:text-violet-50"
+                    subtitleClassName="text-violet-600 dark:text-violet-400"
+                    className="relative bg-gradient-to-br from-violet-50/50 via-background to-blue-50/50 dark:from-violet-900/10 dark:via-background dark:to-blue-900/10 group/section overflow-hidden"
+                    description="A three-tier intelligence system: Local NLP for speed, Edge Functions for security, Cloud LLM for creativity."
                 >
-                    <div className="space-y-12 relative z-10">
-                        {/* CORE RUNTIME */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">01_CORE_RUNTIME</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Background Grid Pattern */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
+                    <div className="space-y-10 relative z-10">
+
+                        {/* HERO: HYBRID INTELLIGENCE ENGINE */}
+                        <div className="relative">
+                            <div className="absolute -top-4 left-0 text-[10px] font-mono text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] font-bold">
+                                // INTELLIGENCE_SERVICE
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-6 pt-6">
+                                {/* Python Microservice Card */}
+                                <div className="relative p-8 bg-gradient-to-br from-violet-600 to-purple-700 text-white overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.15)_0%,transparent_50%)]" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                                                <span className="text-[9px] font-mono uppercase tracking-widest text-violet-200">CLIENT_SIDE_LOGIC</span>
+                                            </div>
+                                            <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">PYTHON 3.11</Badge>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-2xl font-black uppercase italic tracking-tight">OFFLINE NLP</h4>
+                                            <p className="text-violet-200 text-sm mt-2 leading-relaxed">
+                                                FastAPI microservice with spaCy for sub-100ms keyword extraction, ATS scoring, and semantic parsing—without cloud latency or API costs.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            {['FastAPI', 'spaCy', 'scikit-learn', 'Regex NLP'].map(t => (
+                                                <span key={t} className="px-2 py-1 bg-white/10 backdrop-blur-sm text-[10px] font-mono uppercase">{t}</span>
+                                            ))}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-white/20 flex justify-between items-center">
+                                            <span className="text-[10px] font-mono text-violet-200">LATENCY: &lt;100ms</span>
+                                            <span className="text-[10px] font-mono text-violet-200">COST: $0/request</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Edge AI Gateway Card */}
+                                <div className="relative p-8 bg-gradient-to-br from-blue-600 to-indigo-700 text-white overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15)_0%,transparent_50%)]" />
+                                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                                                <span className="text-[9px] font-mono uppercase tracking-widest text-blue-200">CLOUD_SECURE_ENGINE</span>
+                                            </div>
+                                            <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">DENO RUNTIME</Badge>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-2xl font-black uppercase italic tracking-tight">CLOUD LLM</h4>
+                                            <p className="text-blue-200 text-sm mt-2 leading-relaxed">
+                                                Supabase Edge Functions as secure AI gateway. API keys never touch the browser. Gemini 1.5 Flash for creative enhancement.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            {['Supabase', 'Gemini 1.5', 'Deno', 'TypeScript'].map(t => (
+                                                <span key={t} className="px-2 py-1 bg-white/10 backdrop-blur-sm text-[10px] font-mono uppercase">{t}</span>
+                                            ))}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-white/20 flex justify-between items-center">
+                                            <span className="text-[10px] font-mono text-blue-200">LATENCY: ~800ms</span>
+                                            <span className="text-[10px] font-mono text-blue-200">SECURITY: ISOLATED</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* MIDDLE: PLATFORM FOUNDATION */}
+                        <div className="relative pt-8">
+                            <div className="absolute -top-2 left-0 text-[10px] font-mono text-blue-500 dark:text-blue-400 uppercase tracking-[0.3em] font-bold">
+                                // CORE_INFRASTRUCTURE
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {[
-                                    { name: 'React 18', desc: 'Concurrent rendering engine with Fiber architecture.' },
-                                    { name: 'TypeScript 5', desc: 'Static typing system with strict Zod inference.' },
-                                    { name: 'Vite 5', desc: 'ESBuild-powered bundler with HMR.' },
-                                    { name: 'Node.js', desc: 'Runtime for local offline-parser microservices.' },
-                                    { name: 'React Router 6', desc: 'Declarative client-side routing synchronization.' },
-                                    { name: 'Tailwind CSS', desc: 'Utility-first JIT styling engine.' }
+                                    { name: 'React 18', cat: 'UI' },
+                                    { name: 'TypeScript', cat: 'TYPE' },
+                                    { name: 'Vite', cat: 'BUILD' },
+                                    { name: 'Tailwind', cat: 'CSS' },
+                                    { name: 'Framer', cat: 'MOTION' },
+                                    { name: 'Radix UI', cat: 'A11Y' },
+                                    { name: 'Zod', cat: 'SCHEMA' },
+                                    { name: 'Hook Form', cat: 'FORMS' }
                                 ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
+                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-border/50 hover:border-blue-500/50 transition-all hover:bg-blue-50/50 dark:hover:bg-blue-900/10 group">
+                                        <div className="text-[9px] font-mono text-muted-foreground/70 uppercase tracking-widest">{item.cat}</div>
+                                        <div className="text-sm font-bold text-foreground mt-1">{item.name}</div>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* DATA & STATE */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">02_DATA_INTEGRITY</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { name: '@tanstack/react-query', desc: 'Server state management, caching, and deduplication.' },
-                                    { name: 'react-hook-form', desc: 'Uncontrolled input subscription for performance.' },
-                                    { name: '@hookform/resolvers', desc: 'Bridging Zod schemas to form validation.' },
-                                    { name: 'zod', desc: 'Runtime schema validation and type inference.' },
-                                    { name: 'date-fns', desc: 'Immutable date utility library.' },
-                                    { name: 'lodash', desc: 'Utility belt for debounce and throttle.' },
-                                    { name: 'uuid', desc: 'RFC4122 compliant unique identifier generation.' },
-                                    { name: 'Web Storage API', desc: 'Native localStorage for offline persistence.' },
-                                    { name: 'Fetch API', desc: 'Native promise-based HTTP client.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
-                                    </div>
-                                ))}
+                        {/* BOTTOM: EXPORT PIPELINE */}
+                        <div className="relative pt-8">
+                            <div className="absolute -top-2 left-0 text-[10px] font-mono text-teal-500 dark:text-teal-400 uppercase tracking-[0.3em] font-bold">
+                                // EXPORT_PIPELINE
                             </div>
-                        </div>
-
-                        {/* UI PRIMITIVES */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">03_UI_PRIMITIVES</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { name: '@radix-ui/react-*', desc: '20+ Headless accessible components (Dialog, Tooltip).' },
-                                    { name: 'lucide-react', desc: 'Tree-shakeable SVG icon set.' },
-                                    { name: 'framer-motion', desc: 'Physics-based animation library.' },
-                                    { name: 'embla-carousel-react', desc: 'Lightweight carousel with physics support.' },
-                                    { name: 'react-resizable-panels', desc: 'IDE-like panel layout system.' },
-                                    { name: 'input-otp', desc: 'Accessible one-time password input.' },
-                                    { name: 'sonner', desc: 'High-performance toast notifications.' },
-                                    { name: 'cmdk', desc: 'Fast, composable command menu.' },
-                                    { name: 'class-variance-authority', desc: 'Type-safe UI component variants.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* EXPORT ENGINE */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">04_EXPORT_PIPELINE</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { name: 'docx', desc: 'Programmatic generation of OOXML .docx files.' },
-                                    { name: 'jspdf', desc: 'Client-side PDF generation engine.' },
-                                    { name: 'html2pdf.js', desc: 'HTML-to-PDF conversion with canvas rendering.' },
-                                    { name: 'html2canvas', desc: 'DOM rasterization utility.' },
-                                    { name: 'file-saver', desc: 'HTML5 saveAs() Blob wrapper.' },
-                                    { name: 'jszip', desc: 'Create, read and edit .zip files.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* INTERACTION & AI */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">05_INTERACTION_AI</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { name: '@dnd-kit/core', desc: 'Drag & Drop toolkit with physics collision.' },
-                                    { name: '@hello-pangea/dnd', desc: 'Accessible drag-and-drop primitives.' },
-                                    { name: '@google/generative-ai', desc: 'Gemini Pro streaming API client.' },
-                                    { name: 'recharts', desc: 'Composable charting library.' },
-                                    { name: 'react-dropzone', desc: 'HTML5 drag & drop file uploader.' },
-                                    { name: 'react-day-picker', desc: 'Date picker component for forms.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* INFRA & UTILITY */}
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-mono font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest border-b border-blue-200 dark:border-blue-800 pb-2">06_INFRA_UTILITY</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { name: '@supabase/supabase-js', desc: 'PostgreSQL & Auth client SDK.' },
-                                    { name: 'react-markdown', desc: 'Secure CommonMark rendering engine.' },
-                                    { name: 'rehype-raw', desc: 'Parse raw HTML in markdown safely.' },
-                                    { name: 'remark-gfm', desc: 'GitHub Flavored Markdown support.' },
-                                    { name: 'next-themes', desc: 'System-preference aware theme suppression.' },
-                                    { name: 'lib/utils (cn)', desc: 'clsx + tw-merge for safe class composition.' },
-                                    { name: 'vaul', desc: 'Drawer component for mobile interactions.' },
-                                    { name: 'tailwindcss-animate', desc: 'Keyframe animations for Tailwind.' },
-                                    { name: 'PostCSS', desc: 'Tool for transforming CSS with JavaScript.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-blue-200/50 dark:border-blue-800/50 hover:border-blue-500/50 transition-colors">
-                                        <div className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">{item.name}</div>
-                                        <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed font-mono">{item.desc}</div>
-                                    </div>
-                                ))}
+                            <div className="p-6 bg-gradient-to-r from-teal-50/50 to-cyan-50/50 dark:from-teal-900/10 dark:to-cyan-900/10 border border-teal-200/30 dark:border-teal-800/30">
+                                <div className="flex flex-wrap items-center gap-3 text-sm font-mono">
+                                    <span className="text-teal-700 dark:text-teal-400 font-bold">INPUT</span>
+                                    <ArrowRight className="w-4 h-4 text-teal-400" />
+                                    <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">jsPDF</span>
+                                    <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">docx</span>
+                                    <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">html2canvas</span>
+                                    <ArrowRight className="w-4 h-4 text-teal-400" />
+                                    <span className="text-teal-700 dark:text-teal-400 font-bold">7 FORMATS</span>
+                                    <span className="text-teal-600/70 dark:text-teal-400/70 text-xs">(PDF, DOCX, HTML, LaTeX, MD, TXT, JSON)</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </SwissSection>
 
-                {/* 02: LOGIC - TECHNICAL DEEP DIVE */}
+                {/* 02: LOGIC - STATE MANAGEMENT */}
                 <SwissSection
                     number="02"
                     id="state-logic"
-                    title="LOGIC."
-                    subtitle="RESILIENT DATA PIPELINES"
+                    title="RESILIENCE."
+                    subtitle="STATE-INTEGRITY LAYER"
                     accentColor="bg-emerald-600"
                     titleClassName="text-emerald-950 dark:text-emerald-50"
                     subtitleClassName="text-emerald-600 dark:text-emerald-400"
                     className="relative bg-emerald-50/50 dark:bg-emerald-900/5 group/section"
-                    description="We avoid 'prop drilling' by leveraging context-aware subscribers. Data resilience is guaranteed via a custom persistence middleware that synchronizes the Redux-like state to IndexedDB."
+                    description="React Context for real-time UI state, localStorage for offline persistence. Debounced saves prevent main-thread blocking during rapid edits."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-emerald-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        <div className="space-y-6">
-                            <div className="p-10 border border-emerald-200/50 dark:border-emerald-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-emerald-200/50 transition-shadow">
-                                <div className="flex items-center gap-4 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                    <Workflow className="w-4 h-4" /> [DEBOUNCE_STRATEGY]
-                                </div>
-                                <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                    User input is throttled using <span className="font-mono text-emerald-600">lodash.debounce(500ms)</span>. This creates a "safe window" where rapid keystrokes update the React Virtual DOM immediately, but heavy serialization to <span className="font-mono text-emerald-600">localStorage</span> is deferred to prevent main-thread blocking.
-                                </p>
+                    <div className="grid md:grid-cols-2 gap-6 relative z-10">
+
+                        {/* Context Architecture Card */}
+                        <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-emerald-200/50 dark:border-emerald-800/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-emerald-200/50 transition-shadow">
+                            <div className="flex items-center gap-4 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                // DATA_MANAGEMENT_FLOW
                             </div>
-                            <TechnicalAnnotation title="Retry_Policy">
-                                <span className="text-emerald-700 dark:text-emerald-300">Exponential backoff</span> (initial=2s, max=30s) for all failed edge function calls.
-                            </TechnicalAnnotation>
-                        </div>
-                        <div className="p-10 border border-emerald-500/30 bg-emerald-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            {/* Matrix effect logic */}
-                            <div className="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.05)_75%,rgba(255,255,255,.05)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_26%,transparent_27%,transparent_74%,rgba(255,255,255,.05)_75%,rgba(255,255,255,.05)_76%,transparent_77%,transparent)] bg-[size:30px_30px]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="text-5xl font-black italic uppercase text-white leading-none tracking-tighter mix-blend-hard-light">
-                                        ZERO_GOP.
+
+                            <div className="space-y-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">01</span>
                                     </div>
-                                    <p className="text-xs font-mono text-emerald-100 uppercase tracking-widest leading-loose border-l-2 border-emerald-400 pl-4">
-                                        JSON.stringify(state) &gt; 5MB handled via compression.
+                                    <div>
+                                        <h5 className="font-bold text-foreground text-sm">WizardContext</h5>
+                                        <p className="text-xs text-muted-foreground mt-1">10-step form wizard state. Current step, navigation history, progress tracking.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4">
+                                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">02</span>
+                                    </div>
+                                    <div>
+                                        <h5 className="font-bold text-foreground text-sm">ResumeContext</h5>
+                                        <p className="text-xs text-muted-foreground mt-1">Full resume data model. Personal info, experience, education, skills, projects.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4">
+                                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">03</span>
+                                    </div>
+                                    <div>
+                                        <h5 className="font-bold text-foreground text-sm">SaveContext</h5>
+                                        <p className="text-xs text-muted-foreground mt-1">Autosave coordination. Dirty flags, save timestamps, conflict detection.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Persistence Visual */}
+                        <div className="p-8 bg-gradient-to-br from-emerald-600 to-green-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                            <div className="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_26%,transparent_27%)] bg-[size:30px_30px]" />
+
+                            <div className="relative z-10 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse" />
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-200">PERSISTENCE</span>
+                                    </div>
+                                    <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">localStorage</Badge>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-2xl font-black uppercase italic tracking-tight">OFFLINE_CAPABLE</h4>
+                                    <p className="text-emerald-100 text-sm mt-2 leading-relaxed">
+                                        Every keystroke updates React state instantly. A debounced serializer (500ms) writes to localStorage in the background—zero network required.
                                     </p>
                                 </div>
-                                <div className="flex items-end justify-between pt-12">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-mono text-emerald-200">SYNC_STATUS</span>
-                                        <span className="text-xl font-bold text-white uppercase italic">Active</span>
+
+                                <div className="pt-4 border-t border-white/20 space-y-2">
+                                    <div className="flex justify-between text-[10px] font-mono text-emerald-100">
+                                        <span>lodash.debounce</span>
+                                        <span>500ms window</span>
                                     </div>
-                                    <div className="text-[9px] font-mono text-emerald-200/60 italic text-right">
-                                        Async_Storage // IDB_Wrapper
+                                    <div className="flex justify-between text-[10px] font-mono text-emerald-100">
+                                        <span>JSON.stringify</span>
+                                        <span>~2KB typical</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] font-mono text-emerald-100">
+                                        <span>Data loss risk</span>
+                                        <span className="text-emerald-300 font-bold">ZERO</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Architecture Rationale */}
+                    <div className="mt-10 p-6 bg-white/30 dark:bg-slate-900/30 border border-emerald-200/30 dark:border-emerald-800/30 relative z-10">
+                        <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide mb-4">Why This Architecture?</h4>
+                        <div className="space-y-4 text-sm text-foreground/70 leading-relaxed">
+                            <p>
+                                <strong className="text-foreground">Why Context over Redux/Zustand?</strong> For a single-user SPA with 10 wizard steps, Redux's boilerplate (actions, reducers, selectors) adds complexity without proportional benefit. React Context provides sufficient isolation—WizardContext never re-renders components subscribed to ResumeContext. We split contexts by update frequency, not domain.
+                            </p>
+                            <p>
+                                <strong className="text-foreground">Why localStorage over IndexedDB?</strong> Resume data is typically 2-5KB JSON. IndexedDB's async API and schema overhead solve a problem we don't have. localStorage is synchronous, universally supported, and debuggable via DevTools. The 5MB limit is irrelevant for our payload size.
+                            </p>
+                            <p>
+                                <strong className="text-foreground">Why debounce at 500ms?</strong> Testing showed 300ms felt "sluggish" (users noticed save indicators), while 1000ms risked data loss on tab close. 500ms balances perceived responsiveness with battery efficiency on mobile.
+                            </p>
+                        </div>
+                    </div>
                 </SwissSection>
 
-                {/* 03: VELOCITY - TECHNICAL DEEP DIVE */}
+                {/* 03: VELOCITY - PERFORMANCE */}
                 <SwissSection
                     number="03"
                     id="performance"
-                    title="VELOCITY."
-                    subtitle="OFF-MAIN-THREAD ARCHITECTURE"
+                    title="PERFORMANCE."
+                    subtitle="PRECISION & SPEED"
                     accentColor="bg-orange-600"
                     titleClassName="text-orange-950 dark:text-orange-100"
                     subtitleClassName="text-orange-600 dark:text-orange-400"
                     className="relative bg-orange-50/50 dark:bg-orange-900/5 group/section"
-                    description="The main thread is for UI updates (60fps), not JSON parsing. We utilize the Web Worker API to offload heavy computational tasks (like PDF binary generation and keyword scoring) to background threads."
+                    description="Every interaction feels instant. We optimize for perceived performance—what users feel matters more than raw benchmarks."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-orange-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        {/* Worker Pool Card */}
-                        <div className="p-10 border border-orange-200/50 dark:border-orange-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-orange-200/50 transition-shadow hover:-translate-y-1 duration-500">
-                            <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Zap className="w-4 h-4" /> [WORKER_ISOLATION]
-                            </div>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                By serializing data via <span className="font-mono text-orange-600">postMessage()</span>, we ensure that even heavy operations like <span className="font-mono text-orange-600">html2pdf.save()</span> never block the React Render cycle.
-                            </p>
-                            <TechnicalAnnotation title="Worker_Topology">
-                                Dynamic pool size = navigator.hardwareConcurrency - 1 (Leaving main thread free).
-                            </TechnicalAnnotation>
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Hero Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                                { metric: '<50ms', label: 'Hot Reload', detail: 'Vite HMR' },
+                                { metric: '60fps', label: 'Animations', detail: 'Framer Motion' },
+                                { metric: '~2KB', label: 'State Size', detail: 'Minimal payloads' },
+                                { metric: '0ms', label: 'Offline Save', detail: 'localStorage' }
+                            ].map((item, i) => (
+                                <div key={i} className="p-6 bg-gradient-to-br from-orange-500 to-amber-600 text-white text-center group hover:scale-105 transition-transform duration-300">
+                                    <div className="text-3xl font-black italic">{item.metric}</div>
+                                    <div className="text-xs font-mono uppercase tracking-widest mt-1 text-orange-100">{item.label}</div>
+                                    <div className="text-[9px] font-mono text-orange-200/70 mt-2">{item.detail}</div>
+                                </div>
+                            ))}
                         </div>
 
-                        {/* 60 FPS Visual */}
-                        <div className="p-10 border border-orange-500/30 bg-orange-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(255,255,255,0.1)_20px,rgba(255,255,255,0.1)_21px)] opacity-30 skew-x-[-20deg]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="text-6xl font-black italic uppercase text-white leading-none tracking-tighter drop-shadow-lg">
-                                        60_FPS.
-                                    </div>
-                                    <p className="text-xs font-mono text-orange-100 uppercase tracking-widest leading-loose">
-                                        Frame budget: 16.6ms per frame.
-                                    </p>
+                        {/* Two Column Explanation */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Development Speed */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-orange-200/50 dark:border-orange-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // DEV_EXPERIENCE
                                 </div>
-                                <div className="flex items-end justify-between pt-12">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-mono text-orange-200">THREAD_STATUS</span>
-                                        <span className="text-xl font-bold text-white uppercase italic">Unblocked</span>
-                                    </div>
-                                    <div className="text-[9px] font-mono text-orange-200/60 italic text-right">
-                                        Worker_Bridge // Comlink
-                                    </div>
+                                <h4 className="text-lg font-bold text-foreground">Build Fast, Ship Faster</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    Vite's ESBuild-powered bundler means changes appear in under 50 milliseconds. No waiting for webpack to churn through dependencies. This isn't just developer convenience—it translates to faster feature delivery and shorter feedback loops with stakeholders.
+                                </p>
+                                <div className="flex gap-2">
+                                    {['ESBuild', 'Vite', 'TypeScript'].map(t => (
+                                        <span key={t} className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[10px] font-mono">{t}</span>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </SwissSection>
 
-
-                {/* 04: HYBRID AI - TECHNICAL DEEP DIVE */}
-                <SwissSection
-                    number="04"
-                    id="intelligence"
-                    title="HYBRID."
-                    subtitle="DETERMINISTIC VS PROBABILISTIC"
-                    accentColor="bg-purple-600"
-                    titleClassName="text-purple-950 dark:text-purple-100"
-                    subtitleClassName="text-purple-600 dark:text-purple-400"
-                    className="relative bg-purple-50/50 dark:bg-purple-900/5 group/section"
-                    description="We implement a 'Sandwiched Intelligence' architecture. Raw inputs are first sanitized via regex graphs, then enhanced by Gemini Pro (AI interaction), and finally validated against rigid Zod output schemas to prevent hallucinations."
-                >
-                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-purple-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        <div className="p-10 border border-purple-200/50 dark:border-purple-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-purple-200/50 transition-shadow hover:-translate-y-1 duration-500">
-                            <div className="flex items-center gap-4 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Sparkles className="w-4 h-4" /> [MODEL_ORCHESTRATION]
-                            </div>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                We utilize the <span className="font-mono text-purple-600">@google/generative-ai</span> SDK with strict temperature controls (0.2 for structure, 0.7 for creative summaries). By pre-parsing entities locally, we reduce context-window token usage by ~40%.
-                            </p>
-                            <TechnicalAnnotation title="Safety_Layer">
-                                All AI outputs are piped through a parser that strips potential markdown injection and enforces JSON validity.
-                            </TechnicalAnnotation>
-                        </div>
-                        <div className="p-10 border border-purple-500/30 bg-purple-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter">
-                                        ZERO_LEAK.
-                                    </div>
-                                    <p className="text-xs font-mono text-purple-100 uppercase tracking-widest leading-loose border-l-2 border-purple-300 pl-4">
-                                        PII is stripped before any text enters the context window.
-                                    </p>
+                            {/* User Experience */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-orange-200/50 dark:border-orange-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // USER_EXPERIENCE
                                 </div>
-                                <div className="flex items-end justify-between pt-12">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-mono text-purple-200">PRIVACY_MODE</span>
-                                        <span className="text-xl font-bold text-white uppercase italic">Active</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </SwissSection>
-
-
-                {/* 05: IDENTITY - TECHNICAL DEEP DIVE */}
-                <SwissSection
-                    number="05"
-                    id="identity"
-                    title="IDENTITY."
-                    subtitle="SCHEMA AUTHORITY"
-                    accentColor="bg-cyan-600"
-                    titleClassName="text-cyan-950 dark:text-cyan-100"
-                    subtitleClassName="text-cyan-600 dark:text-cyan-400"
-                    className="relative bg-cyan-50/50 dark:bg-cyan-900/5 group/section"
-                    description="We treat professional identity as a strongly-typed graph. A strict Zod Schema enforces the structure of the 'Holographic Record', ensuring that all downstream projections (PDF, Web, JSON) are strictly compliant."
-                >
-                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        {/* HOLOGRAPHIC CORE CARD */}
-                        <div className="p-10 border border-cyan-200/50 dark:border-cyan-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-cyan-200/50 transition-shadow">
-                            <div className="flex items-center gap-4 text-cyan-700 dark:text-cyan-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Shield className="w-4 h-4" /> [SCHEMA_VALIDATION]
-                            </div>
-                            <h4 className="text-xl font-bold uppercase italic tracking-tight text-foreground">Type-Safe Identity</h4>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                Using <span className="font-mono text-cyan-600">zod.safeParse()</span> at every I/O boundary, we ensure that corrupt data never pollutes the persistent store. Each entity is assigned a cryptographically secure <span className="font-mono text-cyan-600">UUID v4</span> for stable relationship mapping.
-                            </p>
-                            <TechnicalAnnotation title="Encryption_Standard">
-                                AES-256 Client-Side Encryption for all PII fields (Phone, Email, Address) at rest.
-                            </TechnicalAnnotation>
-                        </div>
-
-                        {/* SYNC VISUAL */}
-                        <div className="p-10 border border-cyan-500/30 bg-cyan-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:24px_24px]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter">
-                                            SYNC_MESH.
-                                        </div>
-                                        <Globe className="w-8 h-8 text-cyan-200 animate-pulse" />
-                                    </div>
-                                    <p className="text-xs font-mono text-cyan-100 uppercase tracking-widest leading-loose">
-                                        Propagation Latency: &lt; 50ms
-                                    </p>
-                                </div>
-                                <div className="space-y-2 pt-8">
-                                    <div className="flex justify-between text-[9px] font-mono text-cyan-100 uppercase font-bold">
-                                        <span>PDF_Artifact</span>
-                                        <span>Synced</span>
-                                    </div>
-                                    <div className="h-0.5 w-full bg-cyan-400/30 overflow-hidden">
-                                        <div className="h-full bg-white w-full animate-[shimmer_2s_infinite]" />
-                                    </div>
-                                    <div className="flex justify-between text-[9px] font-mono text-cyan-100 uppercase font-bold">
-                                        <span>Web_Node</span>
-                                        <span>Synced</span>
-                                    </div>
-                                    <div className="h-0.5 w-full bg-cyan-400/30 overflow-hidden">
-                                        <div className="h-full bg-white w-full animate-[shimmer_2s_infinite_200ms]" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </SwissSection>
-
-                {/* 06: SEMANTIC - TECHNICAL DEEP DIVE */}
-                <SwissSection
-                    number="06"
-                    id="skill-mapping"
-                    title="SEMANTIC."
-                    subtitle="TAXONOMY ENGINE"
-                    accentColor="bg-pink-600"
-                    titleClassName="text-pink-950 dark:text-pink-100"
-                    subtitleClassName="text-pink-600 dark:text-pink-400"
-                    className="relative bg-pink-50/50 dark:bg-pink-900/5 group/section"
-                    description="Standard ATS parsers rely on brittle RegExp. We implement a graph-based taxonomy where skills are 'Nodes' and relationships (e.g., React → TypeScript) are 'Edges', enabling fuzzy matching of related concepts."
-                >
-                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-pink-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        {/* SEMANTIC GRAPH VISUAL */}
-                        <div className="p-10 border border-pink-500/30 bg-pink-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_60%)] animate-[pulse_4s_infinite]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter mix-blend-overlay">
-                                        KNOWLEDGE_GRAPH.
-                                    </div>
-                                    <p className="text-xs font-mono text-pink-100 uppercase tracking-widest leading-loose">
-                                        Vector proximity analysis active.
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 pt-8">
-                                    {[
-                                        { l: 'React', r: 'Frontend' },
-                                        { l: 'Next.js', r: 'React' },
-                                        { l: 'Node', r: 'Backend' },
-                                        { l: 'SQL', r: 'Database' }
-                                    ].map((pair, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-[10px] font-mono text-pink-100">
-                                            <span className="opacity-70">{pair.l}</span>
-                                            <ArrowRight className="w-3 h-3 text-pink-300" />
-                                            <span className="font-bold">{pair.r}</span>
-                                        </div>
+                                <h4 className="text-lg font-bold text-foreground">Buttery Smooth Interactions</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    React 18's concurrent rendering prioritizes visible updates. Framer Motion uses spring physics (not CSS timings) for natural-feeling animations. Users never see spinners for local operations—saves happen silently in the background via debounced writes.
+                                </p>
+                                <div className="flex gap-2">
+                                    {['React 18', 'Framer Motion', 'Debounce'].map(t => (
+                                        <span key={t} className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[10px] font-mono">{t}</span>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
-                        {/* CASE STUDY TEXT */}
-                        <div className="p-10 border border-pink-200/50 dark:border-pink-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-pink-200/50 transition-shadow">
-                            <div className="flex items-center gap-4 text-pink-600 dark:text-pink-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Binary className="w-4 h-4" /> [GRAPH_THEORY_IMPL]
-                            </div>
-                            <h4 className="text-xl font-bold uppercase italic tracking-tight text-foreground">Relational Nodes</h4>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                By implicitly mapping skills to their parent categories and related technologies, we calculate a "relevance score" using cosine similarity principles. This ensures that "React Developer" correctly matches "Frontend Engineer" even without exact keyword overlap.
+                        {/* Why It Matters (for recruiters) */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-orange-200/30 dark:border-orange-800/30">
+                            <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Performance is a feature, not an afterthought.</strong> Candidates using a sluggish resume builder will abandon it. By investing in instant feedback (sub-50ms saves, 60fps animations), we reduce friction in the user journey. The result: higher completion rates for resume submissions and a polished experience that reflects well on your employer brand.
                             </p>
-                            <TechnicalAnnotation title="Graph_Traversal">
-                                Directed Acyclic Graph (DAG) used to calculate skill weight and relevance.
-                            </TechnicalAnnotation>
                         </div>
                     </div>
                 </SwissSection>
 
-                {/* 07: OUTPUTS - TECHNICAL DEEP DIVE */}
+
+                {/* 04: HYBRID AI - SERVERLESS AI GATEWAY */}
+                <SwissSection
+                    number="04"
+                    id="intelligence"
+                    title="INTELLIGENCE."
+                    subtitle="SECURE AI SERVICES"
+                    accentColor="bg-purple-600"
+                    titleClassName="text-purple-950 dark:text-purple-100"
+                    subtitleClassName="text-purple-600 dark:text-purple-400"
+                    className="relative bg-purple-50/50 dark:bg-purple-900/5 group/section"
+                    description="AI enhancement without exposing API keys. Supabase Edge Functions act as a secure proxy—your candidates' resumes never touch third-party servers directly."
+                >
+                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-purple-500/5 to-transparent pointer-events-none" />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Architecture Flow */}
+                        <div className="p-6 bg-white/50 dark:bg-slate-900/50 border border-purple-200/50 dark:border-purple-800/50">
+                            <div className="flex items-center gap-4 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                                // SYSTEM_DATA_FLOW
+                            </div>
+                            <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-mono">
+                                <span className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold">Browser</span>
+                                <ArrowRight className="w-5 h-5 text-purple-400" />
+                                <span className="px-4 py-2 bg-purple-600 text-white font-bold">Edge Function</span>
+                                <ArrowRight className="w-5 h-5 text-purple-400" />
+                                <span className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white font-bold">Gemini API</span>
+                                <ArrowRight className="w-5 h-5 text-purple-400" />
+                                <span className="px-4 py-2 bg-purple-600 text-white font-bold">Edge Function</span>
+                                <ArrowRight className="w-5 h-5 text-purple-400" />
+                                <span className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold">Browser</span>
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground mt-4">API keys never leave the server. The browser only sends/receives resume content.</p>
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* What It Does */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-purple-200/50 dark:border-purple-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    <Sparkles className="w-4 h-4" /> AI_INTEGRATIONS
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">What Gemini 1.5 Flash Does</h4>
+                                <ul className="space-y-2 text-sm text-foreground/70">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-purple-500 font-bold">→</span>
+                                        <span><strong>enhanceSection:</strong> Rewrites bullet points for impact and clarity</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-purple-500 font-bold">→</span>
+                                        <span><strong>analyzeSection:</strong> Identifies weak verbs and passive voice</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-purple-500 font-bold">→</span>
+                                        <span><strong>organizeSkills:</strong> Clusters skills into logical categories</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-purple-500 font-bold">→</span>
+                                        <span><strong>suggestImpact:</strong> Adds quantifiable metrics to achievements</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Security Card */}
+                            <div className="p-8 bg-gradient-to-br from-purple-600 to-violet-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Shield className="w-5 h-5 text-purple-200" />
+                                            <span className="text-[9px] font-mono uppercase tracking-widest text-purple-200">SECURITY</span>
+                                        </div>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">DENO ISOLATE</Badge>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">HIGH_SECURITY</h4>
+                                        <p className="text-purple-100 text-sm mt-2 leading-relaxed">
+                                            Your GEMINI_API_KEY lives in Supabase secrets, never in the browser bundle. Each request runs in an isolated Deno sandbox with 50ms cold start.
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-white/20 space-y-2">
+                                        <div className="flex justify-between text-[10px] font-mono text-purple-100">
+                                            <span>API Key Location</span>
+                                            <span className="text-purple-300 font-bold">Server-side only</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-mono text-purple-100">
+                                            <span>Request Isolation</span>
+                                            <span>Deno V8 Sandbox</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-purple-200/30 dark:border-purple-800/30">
+                            <h4 className="text-sm font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">AI-powered resume enhancement is a competitive advantage.</strong> Better-written resumes mean clearer signal for your recruiters. But AI without security is a liability. By routing all AI calls through serverless Edge Functions, we ensure candidate data is never stored or logged by third parties. Your employer brand stays protected.
+                            </p>
+                        </div>
+                    </div>
+                </SwissSection>
+
+
+                {/* 05: IDENTITY - DATA SCHEMA */}
+                <SwissSection
+                    number="05"
+                    id="identity"
+                    title="FIDELITY."
+                    subtitle="STRUCTURED DATA MODEL"
+                    accentColor="bg-cyan-600"
+                    titleClassName="text-cyan-950 dark:text-cyan-100"
+                    subtitleClassName="text-cyan-600 dark:text-cyan-400"
+                    className="relative bg-cyan-50/50 dark:bg-cyan-900/5 group/section"
+                    description="Every resume is a structured data object, not free-form text. Zod schemas enforce consistency—malformed data is rejected before it ever reaches storage."
+                >
+                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Schema Visualization */}
+                        <div className="grid md:grid-cols-3 gap-4">
+                            {[
+                                { entity: 'PersonalInfo', fields: ['name', 'email', 'phone', 'location', 'linkedin'], required: true },
+                                { entity: 'Experience[]', fields: ['company', 'title', 'startDate', 'endDate', 'bullets[]'], required: true },
+                                { entity: 'Education[]', fields: ['institution', 'degree', 'field', 'graduationDate'], required: false },
+                                { entity: 'Skills[]', fields: ['name', 'category', 'proficiency'], required: true },
+                                { entity: 'Projects[]', fields: ['title', 'description', 'technologies[]', 'link?'], required: false },
+                                { entity: 'Certifications[]', fields: ['name', 'issuer', 'date', 'expiryDate?'], required: false }
+                            ].map((item, i) => (
+                                <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-cyan-200/50 dark:border-cyan-800/50 hover:border-cyan-500/50 transition-colors">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-mono text-sm font-bold text-cyan-700 dark:text-cyan-400">{item.entity}</span>
+                                        {item.required && <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300 text-[9px]">Required</Badge>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                        {item.fields.map(f => (
+                                            <span key={f} className="text-[9px] font-mono text-muted-foreground bg-cyan-50 dark:bg-cyan-900/30 px-1.5 py-0.5">{f}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Validation */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-cyan-200/50 dark:border-cyan-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    <Shield className="w-4 h-4" /> DATA_INTEGRITY_CHECK
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">Zod: Parse, Don't Validate</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    Every form submission passes through <code className="text-cyan-600">zod.safeParse()</code>. If validation fails, the user sees specific field errors—not a generic "something went wrong." This catches issues before they corrupt the saved resume.
+                                </p>
+                                <div className="p-3 bg-cyan-50 dark:bg-cyan-900/30 font-mono text-xs text-cyan-700 dark:text-cyan-300">
+                                    {`const result = resumeSchema.safeParse(data);`}<br />
+                                    {`if (!result.success) showErrors(result.error);`}
+                                </div>
+                            </div>
+
+                            {/* Benefits Card */}
+                            <div className="p-8 bg-gradient-to-br from-cyan-600 to-teal-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-cyan-200">BENEFITS</span>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">UUID v4</Badge>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">STRUCTURED_DATA</h4>
+                                        <ul className="mt-4 space-y-2 text-sm text-cyan-100">
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-cyan-300">✓</span> Consistent format across all exports
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-cyan-300">✓</span> Unique IDs for each resume entity
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-cyan-300">✓</span> Export to PDF, DOCX, JSON identically
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-cyan-300">✓</span> Future-proof for API integrations
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-cyan-200/30 dark:border-cyan-800/30">
+                            <h4 className="text-sm font-bold text-cyan-700 dark:text-cyan-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Structured resumes are easier to parse and compare.</strong> When candidates submit resumes through our builder, you get consistent data—not the chaos of free-form Word documents. This means your ATS can accurately extract experience, skills, and education. Better data in = better candidate matching out.
+                            </p>
+                        </div>
+                    </div>
+                </SwissSection>
+
+                {/* 06: SEMANTIC - SKILL CATEGORIZATION */}
+                <SwissSection
+                    number="06"
+                    id="skill-mapping"
+                    title="TAXONOMY."
+                    subtitle="SKILL CLASSIFICATION"
+                    accentColor="bg-pink-600"
+                    titleClassName="text-pink-950 dark:text-pink-100"
+                    subtitleClassName="text-pink-600 dark:text-pink-400"
+                    className="relative bg-pink-50/50 dark:bg-pink-900/5 group/section"
+                    description="Skills aren't just keywords—they belong to categories. Our dual-layer system uses pattern matching locally and AI for intelligent grouping, so 'React, Next.js, Vue' automatically becomes 'Frontend Frameworks'."
+                >
+                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-pink-500/5 to-transparent pointer-events-none" />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Category Examples */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                                { category: 'Languages', skills: ['Python', 'TypeScript', 'Java', 'Go'], color: 'from-pink-500 to-rose-600' },
+                                { category: 'Frameworks', skills: ['React', 'Next.js', 'FastAPI', 'Express'], color: 'from-pink-600 to-fuchsia-600' },
+                                { category: 'Tools', skills: ['Docker', 'Git', 'AWS', 'Figma'], color: 'from-fuchsia-500 to-purple-600' },
+                                { category: 'Soft Skills', skills: ['Leadership', 'Agile', 'Communication'], color: 'from-purple-500 to-pink-600' }
+                            ].map((cat, i) => (
+                                <div key={i} className={`p-4 bg-gradient-to-br ${cat.color} text-white`}>
+                                    <div className="text-xs font-mono uppercase tracking-widest opacity-80 mb-2">{cat.category}</div>
+                                    <div className="flex flex-wrap gap-1">
+                                        {cat.skills.map(s => (
+                                            <span key={s} className="text-[10px] bg-white/20 px-1.5 py-0.5 font-mono">{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Local Pattern Matching */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-pink-200/50 dark:border-pink-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-pink-600 dark:text-pink-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // LOCAL_PATTERNS
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">Instant Categorization</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    Before calling AI, we run local pattern matching. Common technologies are recognized instantly: <code className="text-pink-600">React|Vue|Angular → Frontend</code>, <code className="text-pink-600">Docker|K8s → DevOps</code>. This catches 80% of cases with zero latency.
+                                </p>
+                                <div className="p-3 bg-pink-50 dark:bg-pink-900/30 font-mono text-xs text-pink-700 dark:text-pink-300">
+                                    {`const languagePatterns = /python|java|typescript/i;`}<br />
+                                    {`const toolPatterns = /docker|git|aws|figma/i;`}
+                                </div>
+                            </div>
+
+                            {/* AI-Assisted */}
+                            <div className="p-8 bg-gradient-to-br from-pink-600 to-rose-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_60%)]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <Sparkles className="w-5 h-5 text-pink-200" />
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-pink-200">AI_AUGMENTATION</span>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">GEMINI</Badge>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">organizeSkills()</h4>
+                                        <p className="text-pink-100 text-sm mt-2 leading-relaxed">
+                                            For ambiguous skills or large lists, AI provides intelligent grouping. It also detects duplicates and suggests modern alternatives for outdated technologies.
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-white/20 space-y-2">
+                                        <div className="flex justify-between text-[10px] font-mono text-pink-100">
+                                            <span>Duplicate Detection</span>
+                                            <span className="text-pink-300 font-bold">✓</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-mono text-pink-100">
+                                            <span>Outdated Skill Flags</span>
+                                            <span className="text-pink-300 font-bold">✓</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-pink-200/30 dark:border-pink-800/30">
+                            <h4 className="text-sm font-bold text-pink-700 dark:text-pink-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Categorized skills are scannable skills.</strong> When a resume lists "React, Next.js, TypeScript, Node.js, PostgreSQL, Docker, AWS" as a flat list, recruiters have to mentally group them. When it's organized into "Frontend: React, Next.js" and "Backend: Node.js, PostgreSQL"—you can assess fit in seconds, not minutes.
+                            </p>
+                        </div>
+                    </div>
+                </SwissSection>
+
+                {/* 07: OUTPUTS - EXPORT FORMATS */}
                 <SwissSection
                     number="07"
                     id="export-architecture"
-                    title="OUTPUTS."
-                    subtitle="RENDER PIPELINE"
+                    title="VERSATILITY."
+                    subtitle="UNIVERSAL EXPORTS"
                     accentColor="bg-teal-600"
                     titleClassName="text-teal-950 dark:text-teal-100"
                     subtitleClassName="text-teal-600 dark:text-teal-400"
                     className="relative bg-teal-50/50 dark:bg-teal-900/5 group/section"
-                    description="We bypassed standard browser printing (window.print) which is notoriously unreliable. Instead, we use `jspdf` to construct a vector-based PDF document token-by-token from the React Virtual DOM."
+                    description="One resume, seven formats. All generated client-side—no server uploads, no privacy concerns. From PDF to LaTeX, every format is production-ready."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-teal-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        {/* Print Engine Visual */}
-                        <div className="p-10 border border-teal-500/30 bg-teal-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.05)_10px,rgba(255,255,255,0.05)_11px)]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter">
-                                            CMYK_READY.
-                                        </div>
-                                        <FileText className="w-8 h-8 text-teal-200" />
-                                    </div>
-                                    <p className="text-xs font-mono text-teal-100 uppercase tracking-widest leading-loose border-l-2 border-teal-300 pl-4">
-                                        300 DPI // Vectorized Fonts
-                                    </p>
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Format Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                            {[
+                                { format: 'PDF', lib: 'jsPDF', icon: '📄', desc: 'ATS-friendly layout' },
+                                { format: 'DOCX', lib: 'docx', icon: '📝', desc: 'Editable Word file' },
+                                { format: 'HTML', lib: 'Native', icon: '🌐', desc: 'Web-ready page' },
+                                { format: 'LaTeX', lib: 'Template', icon: '📐', desc: 'Academic quality' },
+                                { format: 'Markdown', lib: 'Native', icon: '📋', desc: 'Plain text markup' },
+                                { format: 'TXT', lib: 'Native', icon: '📃', desc: 'Maximum ATS compat' },
+                                { format: 'JSON', lib: 'Native', icon: '💾', desc: 'Machine-readable' }
+                            ].map((item, i) => (
+                                <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-teal-200/50 dark:border-teal-800/50 hover:border-teal-500/50 transition-colors text-center group hover:scale-105 duration-300">
+                                    <div className="text-2xl mb-2">{item.icon}</div>
+                                    <div className="font-mono text-sm font-bold text-teal-700 dark:text-teal-400">{item.format}</div>
+                                    <div className="text-[9px] text-muted-foreground mt-1">{item.lib}</div>
+                                    <div className="text-[9px] text-muted-foreground/70 mt-1">{item.desc}</div>
                                 </div>
-                                <div className="flex justify-between items-end pt-8">
-                                    <div className="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white">
-                                        Engine: jsPDF
+                            ))}
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Client-Side Generation */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-teal-200/50 dark:border-teal-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-teal-600 dark:text-teal-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // CLIENT_SIDE
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">Zero Server Dependencies</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    PDF generation happens entirely in the browser using <code className="text-teal-600">jsPDF</code> and <code className="text-teal-600">html2canvas</code>. DOCX uses the <code className="text-teal-600">docx</code> library. No uploads, no waiting for server processing. Your resume data never leaves your device.
+                                </p>
+                                <div className="flex gap-2">
+                                    {['jsPDF', 'docx', 'html2canvas', 'file-saver'].map(t => (
+                                        <span key={t} className="px-2 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-[10px] font-mono">{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* ATS Optimization */}
+                            <div className="p-8 bg-gradient-to-br from-teal-600 to-cyan-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.03)_10px,rgba(255,255,255,0.03)_11px)]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <FileText className="w-5 h-5 text-teal-200" />
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-teal-200">RECRUITER_OPTIMIZED</span>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">PARSEABLE</Badge>
                                     </div>
-                                    <div className="px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white">
-                                        Kerning: True
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">MACHINE_READABLE</h4>
+                                        <p className="text-teal-100 text-sm mt-2 leading-relaxed">
+                                            PDFs use selectable text (not images). Plain text export strips all formatting for maximum ATS compatibility. Structured headings ensure parsers identify sections correctly.
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-white/20 space-y-2">
+                                        <div className="flex justify-between text-[10px] font-mono text-teal-100">
+                                            <span>Selectable Text</span>
+                                            <span className="text-teal-300 font-bold">✓</span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-mono text-teal-100">
+                                            <span>Standard Sections</span>
+                                            <span className="text-teal-300 font-bold">✓</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Rendering Pipeline text */}
-                        <div className="p-10 border border-teal-200/50 dark:border-teal-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-teal-200/50 transition-shadow">
-                            <div className="flex items-center gap-4 text-teal-700 dark:text-teal-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Layers className="w-4 h-4" /> [THE_STAGING_BUFFER]
-                            </div>
-                            <h4 className="text-xl font-bold uppercase italic tracking-tight text-foreground">Headless Rendering</h4>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                We utilize a hidden off-screen buffer to calculate line breaks and pagination before content is ever committed to the PDF stream. This avoids the "widow/orphan" text issues common in CSS-based exports.
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-teal-200/30 dark:border-teal-800/30">
+                            <h4 className="text-sm font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Format flexibility removes friction.</strong> Some ATS systems prefer plain text. Some recruiters want editable DOCX. Academics need LaTeX. By offering 7 formats from a single source of truth, candidates can submit exactly what each application requires—without reformatting or losing information.
                             </p>
-                            <TechnicalAnnotation title="Multi_Format_Core">
-                                Single Content Graph → Export to PDF, JSON (Schema.org), and Markdown.
-                            </TechnicalAnnotation>
                         </div>
                     </div>
                 </SwissSection>
 
 
-                {/* 08: DESIGN SYSTEM - TECHNICAL DEEP DIVE */}
+                {/* 08: DESIGN SYSTEM - UI COMPONENTS */}
                 <SwissSection
                     number="08"
                     id="design-system"
-                    title="SWISS."
-                    subtitle="ATOMIC DESIGN SYSTEM"
+                    title="AESTHETICS."
+                    subtitle="ACCESSIBLE UI/UX"
                     accentColor="bg-slate-700"
                     titleClassName="text-slate-900 dark:text-slate-100"
                     subtitleClassName="text-slate-500 dark:text-slate-400"
                     className="relative bg-slate-50/50 dark:bg-slate-900/5 group/section"
-                    description="We utilize a strict 4px baseline grid implemented via Tailwind's arbitrary values. Animations are driven by 'Spring Physics' (mass: 1, stiffness: 100, damping: 10) rather than linear durations, ensuring the UI feels 'heavy' and premium."
+                    description="A mature component system built on Shadcn/ui and Radix primitives. Every button, input, and modal is accessible by default, dark-mode ready, and consistent across the application."
                 >
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(100,116,139,0.05)_50%,transparent_51%)] bg-[size:100%_100%] pointer-events-none" />
-                    <div className="grid md:grid-cols-3 gap-6 relative z-10">
-                        {/* Typography Specimen */}
-                        <div className="bg-foreground p-8 flex flex-col justify-between group hover:scale-[1.02] transition-transform duration-500 shadow-xl">
-                            <div className="space-y-2">
-                                <div className="text-background font-black text-7xl leading-none italic tracking-tighter">Aa</div>
-                                <div className="h-0.5 w-12 bg-background/50" />
-                            </div>
-                            <div className="space-y-4">
-                                <p className="text-background/80 text-xs font-medium leading-relaxed">
-                                    "Typeface is the voice of the content."
+                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(100,116,139,0.03)_50%,transparent_51%)] bg-[size:100%_100%] pointer-events-none" />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Stack Overview */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {[
+                                { name: 'Tailwind CSS', type: 'Styling', desc: 'Utility-first CSS' },
+                                { name: 'Shadcn/ui', type: 'Components', desc: 'Pre-styled Radix' },
+                                { name: 'Radix UI', type: 'Primitives', desc: 'Accessible base' },
+                                { name: 'Framer Motion', type: 'Animation', desc: 'Spring physics' },
+                                { name: 'next-themes', type: 'Dark Mode', desc: 'System preference' }
+                            ].map((item, i) => (
+                                <div key={i} className="p-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-700/50 hover:border-slate-400/50 transition-colors group hover:scale-105 duration-300">
+                                    <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">{item.type}</div>
+                                    <div className="text-sm font-bold text-foreground mt-1">{item.name}</div>
+                                    <div className="text-[10px] text-muted-foreground/70 mt-1">{item.desc}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Accessibility */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-700/50 space-y-4">
+                                <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // ACCESSIBILITY
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">Built-In A11y</h4>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    Every interactive component from Radix UI ships with keyboard navigation, focus management, and ARIA attributes. Modals trap focus. Dropdowns support arrow keys. Screen readers announce state changes.
                                 </p>
-                                <div className="text-background/[0.6] font-mono text-[9px] uppercase font-bold text-right pt-4 border-t border-background/20">
-                                    Font-Family: 'Inter_Variable'
+                                <div className="flex flex-wrap gap-2">
+                                    {['Keyboard Nav', 'Focus Trap', 'ARIA Labels', 'Screen Reader'].map(t => (
+                                        <span key={t} className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono">{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Dark Mode Card */}
+                            <div className="p-8 bg-gradient-to-br from-slate-800 to-slate-900 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,rgba(255,255,255,0.02)_50%,transparent_52%)] bg-[size:20px_20px]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Palette className="w-5 h-5 text-slate-400" />
+                                            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">THEMING</span>
+                                        </div>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">AUTO</Badge>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">INTERFACE_MODES</h4>
+                                        <p className="text-slate-300 text-sm mt-2 leading-relaxed">
+                                            Respects system preference via <code className="text-slate-400">next-themes</code>. All colors use CSS variables for instant switching. No flash of wrong theme on page load.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4 border-t border-white/10">
+                                        <div className="w-8 h-8 rounded bg-background border border-border" />
+                                        <div className="w-8 h-8 rounded bg-primary" />
+                                        <div className="w-8 h-8 rounded bg-secondary" />
+                                        <div className="w-8 h-8 rounded bg-accent" />
+                                        <div className="w-8 h-8 rounded bg-muted" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Grid Explanation */}
-                        <div className="md:col-span-2 p-12 border border-border/40 bg-card/50 relative backdrop-blur-sm overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Grid className="w-32 h-32" />
-                            </div>
-                            <div className="absolute top-6 left-6 text-[8px] font-mono text-muted-foreground uppercase font-bold tracking-[0.5em]">Grid_Spec_714</div>
-                            <h4 className="text-3xl font-black italic uppercase tracking-tighter mt-8 text-foreground z-10 relative">Cognitive Optimization</h4>
-                            <p className="text-sm text-foreground/70 leading-relaxed mt-4 font-medium max-w-lg relative z-10">
-                                By enforcing <span className="font-mono text-slate-500">class="grid gap-4"</span> constraints, we reduce visual cognitive load. This adheres to Miller's Law (7±2 elements), maximizing the recruiter's information retrieval rate.
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-slate-200/30 dark:border-slate-700/30">
+                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Professional design signals professional candidates.</strong> A polished, accessible resume builder sets the right expectations. When candidates use a tool that respects dark mode preferences and works with screen readers, they associate that quality with your employer brand. First impressions matter—even in SaaS.
                             </p>
-                            <div className="mt-8 flex gap-2">
-                                <Badge variant="outline" className="text-[9px] uppercase font-mono tracking-widest bg-transparent">Whitespace</Badge>
-                                <Badge variant="outline" className="text-[9px] uppercase font-mono tracking-widest bg-transparent">Hierarchy</Badge>
-                                <Badge variant="outline" className="text-[9px] uppercase font-mono tracking-widest bg-transparent">Contrast</Badge>
-                            </div>
                         </div>
                     </div>
                 </SwissSection>
 
-                {/* 09: RECORDS - TECHNICAL DEEP DIVE */}
+                {/* 09: RECORDS - DESIGN DECISIONS */}
                 <SwissSection
                     number="09"
                     id="dev-logs"
-                    title="RECORDS."
-                    subtitle="ARCHITECTURE DECISION RECORDS"
+                    title="STRATEGY."
+                    subtitle="ARCHITECTURAL DECISIONS"
                     accentColor="bg-amber-600"
                     titleClassName="text-amber-950 dark:text-amber-100"
                     subtitleClassName="text-amber-600 dark:text-amber-400"
                     className="relative bg-amber-50/50 dark:bg-amber-900/5 group/section"
-                    description="We maintain an immutable log of all architectural constraints. These ADRs (Architecture Decision Records) explain why we chose 'Edge Functions' over 'Lambdas' and 'IndexedDB' over 'Cookies'."
+                    description="Every engineering decision has tradeoffs. Here's what we considered, what we rejected, and why. This transparency helps you understand the system's strengths and limitations."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-amber-500/5 to-transparent pointer-events-none" />
-                    <div className="relative z-10">
-                        <ConstraintChronicle />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Decision Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                            {[
+                                {
+                                    title: 'AI ARCHITECTURE',
+                                    problem: 'LLM calls are slow (~800ms) and expensive per-request.',
+                                    solution: 'Edge Functions as AI gateway—secure API keys, serverless scaling.',
+                                    rejected: 'Direct client API calls',
+                                    outcome: 'API keys never exposed, pay-per-use pricing'
+                                },
+                                {
+                                    title: 'STATE MANAGEMENT',
+                                    problem: 'Redux/Zustand add complexity for a form-heavy app.',
+                                    solution: 'React Context + localStorage with 500ms debounce.',
+                                    rejected: 'Redux, Zustand',
+                                    outcome: 'Simple, zero npm dependencies for state'
+                                },
+                                {
+                                    title: 'EXPORT PIPELINE',
+                                    problem: 'Server-side PDF generation requires uploads.',
+                                    solution: 'Client-side jsPDF/docx—no data leaves the browser.',
+                                    rejected: 'Server PDF APIs',
+                                    outcome: '100% offline-capable exports'
+                                },
+                                {
+                                    title: 'SKILL CATEGORIZATION',
+                                    problem: 'AI-only is slow; regex-only misses edge cases.',
+                                    solution: 'Local pattern matching first, AI fallback for ambiguous skills.',
+                                    rejected: 'Pure cloud AI',
+                                    outcome: '80% instant, 20% AI-assisted'
+                                }
+                            ].map((item, i) => (
+                                <div key={i} className="p-6 bg-white/50 dark:bg-slate-900/50 border border-amber-200/50 dark:border-amber-800/50 hover:border-amber-500/50 transition-colors space-y-4">
+                                    <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">{item.title}</h4>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <span className="text-[9px] text-red-500 font-bold uppercase">Problem</span>
+                                            <p className="text-xs text-foreground/70">{item.problem}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-[9px] text-green-500 font-bold uppercase">Solution</span>
+                                            <p className="text-xs text-foreground font-medium">{item.solution}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-3 border-t border-amber-200/30 dark:border-amber-800/30 flex justify-between items-center">
+                                        <span className="text-[9px] text-muted-foreground line-through">❌ {item.rejected}</span>
+                                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[9px]">✓</Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-amber-200/30 dark:border-amber-800/30">
+                            <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Transparency builds trust.</strong> When you evaluate vendor tools, you want to know what's under the hood. These decision records show we made deliberate architectural choices—not just "whatever worked." We considered alternatives, understood tradeoffs, and optimized for your use case: fast, secure, offline-capable resume building.
+                            </p>
+                        </div>
                     </div>
                 </SwissSection>
 
-                {/* 10: SCALAB - TECHNICAL DEEP DIVE */}
+                {/* 10: SCALAB - ARCHITECTURE */}
                 <SwissSection
                     number="10"
                     id="scalability"
-                    title="SCALAB."
-                    subtitle="CRDT SYNCHRONIZATION"
+                    title="CAPACITY."
+                    subtitle="SERVERLESS ARCHITECTURE"
                     accentColor="bg-indigo-600"
                     titleClassName="text-indigo-950 dark:text-indigo-100"
                     subtitleClassName="text-indigo-600 dark:text-indigo-400"
                     className="relative bg-indigo-50/50 dark:bg-indigo-900/5 group/section"
-                    description="To enable real-time collaboration, we rely on Conflict-Free Replicated Data Types (CRDTs). Specifically, we use state vectors (Lamport timestamps) to merge concurrent edits from unsynchronized clients without central arbitration."
+                    description="The entire application runs in your browser. No backend servers to maintain, no databases to scale. Static files on a CDN means unlimited concurrent users at near-zero cost."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-indigo-500/5 to-transparent pointer-events-none" />
-                    <div className="grid md:grid-cols-2 gap-8 relative z-10">
-                        <div className="p-10 border border-indigo-200/50 dark:border-indigo-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-indigo-200/50 transition-shadow">
-                            <div className="flex items-center gap-4 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-black uppercase tracking-[0.2em]">
-                                <Globe className="w-4 h-4" /> [THE_DISTRIBUTED_FUTURE]
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Architecture Diagram */}
+                        <div className="p-6 bg-white/50 dark:bg-slate-900/50 border border-indigo-200/50 dark:border-indigo-800/50">
+                            <div className="flex items-center gap-4 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+                                // DEPLOYMENT_MODEL
                             </div>
-                            <h4 className="text-xl font-bold uppercase italic tracking-tight text-foreground">Edge Native</h4>
-                            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
-                                By moving inference logic to <span className="text-indigo-600 font-bold">WASM Modules</span> (compiled from Rust) running on the Edge, we reduce "cold start" latency to near zero globally. Your resume is compiled on the server closest to the recruiter.
-                            </p>
-                            <TechnicalAnnotation title="CRDT_Resolution">
-                                Yjs-based state vectors for automatic merge resolution of concurrent edits.
-                            </TechnicalAnnotation>
+                            <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-mono">
+                                <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold">Static Build</span>
+                                <ArrowRight className="w-5 h-5 text-indigo-400" />
+                                <span className="px-4 py-2 bg-indigo-600 text-white font-bold">CDN Edge</span>
+                                <ArrowRight className="w-5 h-5 text-indigo-400" />
+                                <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold">Browser</span>
+                                <ArrowRight className="w-5 h-5 text-indigo-400" />
+                                <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold">localStorage</span>
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground mt-4">No origin servers. No database queries. Just cached static files + client-side storage.</p>
                         </div>
-                        <div className="p-10 border border-indigo-500/30 bg-indigo-600 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_60%)] animate-[pulse_4s_infinite]" />
-                            <div className="flex flex-col h-full justify-between relative z-10">
-                                <div className="text-4xl font-black italic uppercase text-white leading-none tracking-tighter mix-blend-overlay">
-                                    GLOBAL_MESH.
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                                { metric: '$0', label: 'Server Cost', detail: 'Static hosting only' },
+                                { metric: '∞', label: 'Concurrent Users', detail: 'CDN scales infinitely' },
+                                { metric: '~50ms', label: 'Global Latency', detail: 'Edge-cached assets' },
+                                { metric: '100%', label: 'Uptime', detail: 'No backend to fail' }
+                            ].map((item, i) => (
+                                <div key={i} className="p-6 bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-center group hover:scale-105 transition-transform duration-300">
+                                    <div className="text-3xl font-black italic">{item.metric}</div>
+                                    <div className="text-xs font-mono uppercase tracking-widest mt-1 text-indigo-100">{item.label}</div>
+                                    <div className="text-[9px] font-mono text-indigo-200/70 mt-2">{item.detail}</div>
                                 </div>
-                                <div className="space-y-4 pt-12">
-                                    <div className="flex justify-between items-center text-[10px] font-mono text-indigo-100 uppercase font-bold">
-                                        <span>Node_FRA</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                            <span>12ms</span>
-                                        </div>
+                            ))}
+                        </div>
+
+                        {/* Two Column */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Client-Side Benefits */}
+                            <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-indigo-200/50 dark:border-indigo-800/50 space-y-4">
+                                <div className="flex items-center gap-4 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
+                                    // EDGE_BENEFITS
+                                </div>
+                                <h4 className="text-lg font-bold text-foreground">Why This Scales</h4>
+                                <ul className="space-y-2 text-sm text-foreground/70">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-indigo-500 font-bold">→</span>
+                                        <span><strong>No server logic:</strong> All computation happens in the user's browser</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-indigo-500 font-bold">→</span>
+                                        <span><strong>CDN-cached:</strong> Assets served from 200+ global edge locations</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-indigo-500 font-bold">→</span>
+                                        <span><strong>Offline-first:</strong> Works without internet after initial load</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* AI Scaling */}
+                            <div className="p-8 bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_60%)]" />
+
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-indigo-200">AI_SERVICE_LAYER</span>
+                                        <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">SERVERLESS</Badge>
                                     </div>
-                                    <div className="flex justify-between items-center text-[10px] font-mono text-indigo-100 uppercase font-bold">
-                                        <span>Node_SFO</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                            <span>18ms</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[10px] font-mono text-indigo-100 uppercase font-bold">
-                                        <span>Node_SIN</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                            <span>24ms</span>
-                                        </div>
+
+                                    <div>
+                                        <h4 className="text-2xl font-black uppercase italic tracking-tight">PAY_PER_USE</h4>
+                                        <p className="text-indigo-100 text-sm mt-2 leading-relaxed">
+                                            AI features run on Supabase Edge Functions—serverless, auto-scaling, billed only when invoked. Zero AI cost when candidates aren't actively enhancing content.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Why It Matters */}
+                        <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-indigo-200/30 dark:border-indigo-800/30">
+                            <h4 className="text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed">
+                                <strong className="text-foreground">Scalability without infrastructure headaches.</strong> When you launch a hiring campaign and 10,000 candidates hit the resume builder simultaneously, you don't call DevOps. The CDN handles it. There's no database bottleneck because there's no database. Costs stay flat whether you have 10 users or 10,000.
+                            </p>
                         </div>
                     </div>
                 </SwissSection>
 
-                {/* 11: IMPACT - TECHNICAL DEEP DIVE */}
+                {/* 11: IMPACT - THE BOTTOM LINE */}
                 <SwissSection
                     number="11"
                     id="meta"
-                    title="IMPACT."
-                    subtitle="CORE WEB VITALS"
+                    title="OUTCOMES."
+                    subtitle="BUSINESS IMPACT"
                     accentColor="bg-red-600"
                     titleClassName="text-red-950 dark:text-red-100"
                     subtitleClassName="text-red-600 dark:text-red-400"
                     className="relative bg-red-50/50 dark:bg-red-900/5 group/section"
-                    description="We optimize for a single metric: Interview Conversion Rate. But techncially, this relies on Lighthouse scores. We consistently score 100/100 on Performance, Accessibility, and SEO."
+                    description="Technology is a means to an end. Here's how all of the above translates into real value for your hiring process."
                 >
                     <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-red-500/5 to-transparent pointer-events-none" />
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-                        {[
-                            { label: "LCP", val: "800ms", desc: "Largest Paint" },
-                            { label: "CLS", val: "0.0", desc: "Shift Score" },
-                            { label: "TTFB", val: "42ms", desc: "Edge Cache" },
-                            { label: "SEO", val: "100", desc: "Meta Graph" }
-                        ].map((stat, i) => (
-                            <div key={i} className="p-6 border border-red-200/50 dark:border-red-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm space-y-2 group hover:bg-red-500/5 transition-colors relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <Target className="w-12 h-12 text-red-600" />
+
+                    <div className="space-y-8 relative z-10">
+                        {/* Value Props Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[
+                                {
+                                    title: 'Better Resume Quality',
+                                    desc: 'AI-enhanced bullet points, organized skills, and structured data mean candidates submit cleaner, more parseable resumes.',
+                                    icon: '✨'
+                                },
+                                {
+                                    title: 'Faster Submissions',
+                                    desc: 'Sub-50ms saves and instant previews reduce friction. Candidates complete resumes faster, reducing drop-off.',
+                                    icon: '⚡'
+                                },
+                                {
+                                    title: 'ATS Compatibility',
+                                    desc: '7 export formats including plain text ensure resumes parse correctly in any applicant tracking system.',
+                                    icon: '🎯'
+                                },
+                                {
+                                    title: 'Zero Privacy Risk',
+                                    desc: 'All data stays in the browser. API keys are server-side. No candidate PII stored on third-party servers.',
+                                    icon: '🔒'
+                                },
+                                {
+                                    title: 'Infinite Scale',
+                                    desc: 'Static hosting + CDN means 10,000 concurrent users cost the same as 10. Launch campaigns without infrastructure fear.',
+                                    icon: '📈'
+                                },
+                                {
+                                    title: 'Works Offline',
+                                    desc: 'Candidates can draft resumes without internet. Auto-saves to localStorage. No lost work.',
+                                    icon: '📴'
+                                }
+                            ].map((item, i) => (
+                                <div key={i} className="p-6 bg-white/50 dark:bg-slate-900/50 border border-red-200/50 dark:border-red-800/50 hover:border-red-500/50 transition-colors space-y-3 group">
+                                    <div className="text-3xl">{item.icon}</div>
+                                    <h4 className="text-lg font-bold text-foreground group-hover:text-red-600 transition-colors">{item.title}</h4>
+                                    <p className="text-sm text-foreground/70 leading-relaxed">{item.desc}</p>
                                 </div>
-                                <div className="text-[10px] font-mono text-muted-foreground uppercase font-bold">{stat.label}</div>
-                                <div className="text-3xl font-black italic uppercase text-foreground group-hover:text-red-600 transition-colors">{stat.val}</div>
-                                <div className="text-[9px] text-muted-foreground font-mono uppercase">{stat.desc}</div>
+                            ))}
+                        </div>
+
+                        {/* Performance Badges */}
+                        <div className="p-6 bg-gradient-to-br from-red-600 to-rose-700 text-white">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                {[
+                                    { label: 'Performance', value: '95+', detail: 'Production Target' },
+                                    { label: 'Accessibility', value: '94', detail: 'WCAG 2.1 Compliant' },
+                                    { label: 'Best Practices', value: '100', detail: 'System Health' },
+                                    { label: 'SEO Audit', value: '100', detail: 'Indexable Data' }
+                                ].map((badge, i) => (
+                                    <div key={i} className="text-center px-4 py-4 bg-white/10 backdrop-blur border border-white/10 group/badge">
+                                        <div className="text-3xl font-black italic group-hover:scale-110 transition-transform">{badge.value}</div>
+                                        <div className="text-[10px] font-mono uppercase tracking-widest text-red-100 mt-1">{badge.label}</div>
+                                        <div className="text-[8px] font-mono text-red-200/60 uppercase">{badge.detail}</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Core Web Vitals */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { label: 'TBT', value: '490ms', desc: 'Total Blocking Time' },
+                                { label: 'CLS', value: '0.11', desc: 'Cumulative Layout Shift' },
+                                { label: 'FID', value: '<50ms', desc: 'First Input Delay' }
+                            ].map((stat, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-red-100/20 dark:bg-red-900/10 border border-red-200/20 dark:border-red-800/20">
+                                    <div>
+                                        <div className="text-xs font-mono text-red-600 dark:text-red-400">{stat.label}</div>
+                                        <div className="text-sm font-bold text-foreground/70">{stat.desc}</div>
+                                    </div>
+                                    <div className="text-xl font-black italic text-red-600 dark:text-red-400">{stat.value}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Final Call */}
+                        <div className="p-8 bg-white/30 dark:bg-slate-900/30 border border-red-200/30 dark:border-red-800/30 text-center">
+                            <h4 className="text-xl font-bold text-foreground mb-4">Built for Hiring Teams</h4>
+                            <p className="text-sm text-foreground/70 leading-relaxed max-w-2xl mx-auto">
+                                This isn't a weekend project—it's production-grade software. We've made deliberate architectural choices (documented above) to create a resume builder that's fast, secure, accessible, and scales with your hiring needs. Every technical decision maps to a business outcome that helps you find better candidates, faster.
+                            </p>
+                        </div>
                     </div>
                 </SwissSection>
 

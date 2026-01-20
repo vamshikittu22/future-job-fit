@@ -80,8 +80,8 @@ function NavigationContent({ builderTools }: AppNavigationProps) {
   const isHome = location.pathname === "/";
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-nav">
-      <div className="container mx-auto px-4 py-3">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 py-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0">
@@ -189,9 +189,9 @@ function NavigationContent({ builderTools }: AppNavigationProps) {
           <div className="flex items-center gap-2 ml-auto">
             <ThemeToggle />
             {!isHome && (
-              <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/">
-                  <ArrowLeft className="w-4 h-4 mr-1" /> Home
+                  <ArrowLeft className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">Home</span>
                 </Link>
               </Button>
             )}
