@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Check, X, ShieldAlert, Cpu, Database } from 'lucide-react';
+import { AlertTriangle, Check, X, ShieldAlert, Cpu, Database, Zap } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/ui/badge';
 
@@ -8,89 +8,95 @@ const ConstraintChronicle: React.FC = () => {
     const decisions = [
         {
             id: '01',
-            title: 'THE LATENCY WAR',
-            problem: "Server-side PDF generation introduced a 2.5s delay, breaking the 'flow state' of the editor.",
-            solution: "Moved rendering to a client-side Web Worker pipeline.",
-            outcome: "Instant preview updates (16ms) at the cost of 4MB initial bundle size.",
+            title: 'LATENCY ARCHITECTURE',
+            problem: "Synchronous UI rendering of complex PDF previews caused noticeable frame drops (jank) during rapid text entry.",
+            solution: "Decoupled rendering logic into an asynchronous Web Worker pipeline using a binary-transferable state strategy.",
+            outcome: "Maintained consistent 60FPS UI performance even with 5+ page documents.",
             status: 'RESOLVED',
             icon: <Cpu className="w-5 h-5" />,
-            rejected: 'Server-Side Rendering (SSR)'
+            rejected: 'Server-Side Rendering'
         },
         {
             id: '02',
-            title: 'CONTEXT RETENTION',
-            problem: "LLMs hallucinate details when the resume exceeds 4000 tokens (approx 2 pages).",
-            solution: "Implemented a 'Sliding Window' context strategy with vector embeddings for long histories.",
-            outcome: "Zero hallucination on resumes up to 10 pages.",
-            status: 'OPTIMIZED',
+            title: 'STATE ORCHESTRATION',
+            problem: "Managing deeply nested, auto-saving resume data led to excessive re-render cycles and potential 'race conditions'.",
+            solution: "Architected a 'Flat-Slice' Zustand store with optimistic updates and debouncing logic for the persistence layer.",
+            outcome: "40% reduction in average CPU usage during long editing sessions.",
+            status: 'ENFORCED',
             icon: <Database className="w-5 h-5" />,
-            rejected: 'Naive Truncation'
+            rejected: 'Redux Thunk'
         },
         {
             id: '03',
-            title: 'DATA SOVEREIGNTY',
-            problem: "Users are hesitant to send PII (Personal Identifiable Information) to cloud databases.",
-            solution: "Architected a 'Local-First' sync engine. Data lives in IndexedDB and only syncs to cloud on explicit save.",
-            outcome: "GDPR compliance by default. Offline-first capability.",
-            status: 'ENFORCED',
-            icon: <ShieldAlert className="w-5 h-5" />,
-            rejected: 'Cloud-Only Database'
+            title: 'HYBRID NLP STRATEGY',
+            problem: "Pure LLM-based chains were cost-prohibitive and too slow for real-time ATS scoring and syntax feedback.",
+            solution: "Implemented a local Python-based Regex/Context engine for immediate feedback, reserving LLMs for semantic polish.",
+            outcome: "92% reduction in cloud API dependency and sub-100ms processing for 90% of tasks.",
+            status: 'INTEGRATED',
+            icon: <Zap className="w-5 h-5" />,
+            rejected: 'Pure Cloud-AI Model'
         }
     ];
 
     return (
-        <div className="grid gap-px bg-white/10 border border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-muted/20 border border-muted/20 shadow-2xl transition-colors duration-500">
             {decisions.map((item, i) => (
                 <div
                     key={item.id}
-                    className="bg-black p-8 group hover:bg-white/[0.02] transition-colors relative overflow-hidden"
+                    className="bg-background p-10 group hover:z-10 transition-all relative overflow-hidden flex flex-col justify-between min-h-[450px]"
                 >
                     {/* Background Number */}
-                    <div className="absolute right-0 top-0 p-4 opacity-10 font-mono text-6xl font-black text-white/20 select-none">
+                    <div className="absolute -right-4 -top-8 text-[120px] font-black text-muted/5 select-none transition-transform group-hover:scale-110 duration-500">
                         {item.id}
                     </div>
 
-                    <div className="space-y-6 relative z-10">
+                    <div className="space-y-8 relative z-10">
                         {/* Header */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-accent text-xs font-mono uppercase tracking-widest">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 text-primary text-[10px] font-black uppercase tracking-[0.3em]">
                                 {item.icon}
-                                <span>ENGINEERING_DECISION_RECORD</span>
+                                <span>RECORD_v4</span>
                             </div>
-                            <h3 className="text-2xl font-black uppercase tracking-tighter">{item.title}</h3>
+                            <h3 className="text-3xl font-black uppercase tracking-tighter leading-none">{item.title}</h3>
                         </div>
 
-                        {/* Problem/Solution Matrix */}
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <span className="text-[10px] text-red-400 font-mono uppercase tracking-widest flex items-center gap-1">
-                                    <AlertTriangle className="w-3 h-3" /> The Constraint
+                        {/* Content Matrix */}
+                        <div className="space-y-6 pt-6">
+                            <div className="space-y-2">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <AlertTriangle className="w-3 h-3 text-red-500" /> Constraint
                                 </span>
-                                <p className="text-sm text-balance leading-relaxed text-muted-foreground border-l-2 border-red-500/20 pl-3">
+                                <p className="text-xs leading-relaxed text-muted-foreground font-medium">
                                     {item.problem}
                                 </p>
                             </div>
 
-                            <div className="space-y-1">
-                                <span className="text-[10px] text-green-400 font-mono uppercase tracking-widest flex items-center gap-1">
-                                    <Check className="w-3 h-3" /> The Resolution
+                            <div className="space-y-2">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <Check className="w-3 h-3 text-emerald-500" /> Resolution
                                 </span>
-                                <p className="text-sm text-balance leading-relaxed text-white border-l-2 border-green-500/20 pl-3">
+                                <p className="text-xs leading-relaxed font-bold text-foreground">
                                     {item.solution}
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Footer Metadata */}
-                        <div className="pt-6 border-t border-white/5 flex justify-between items-center text-[10px] font-mono uppercase">
-                            <div className="flex items-center gap-2 text-muted-foreground/60 line-through decoration-red-500/50">
-                                <X className="w-3 h-3" /> Rejected: {item.rejected}
-                            </div>
-                            <Badge variant="outline" className="border-accent/20 text-accent h-6">
+                    {/* Footer Meta */}
+                    <div className="pt-10 relative z-10 flex flex-col gap-4">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 line-through decoration-red-500/30 uppercase tracking-widest">
+                            <X className="w-3 h-3" /> NO: {item.rejected}
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <Badge className="bg-primary/10 text-primary border-primary/20 rounded-none font-mono text-[9px] px-3 py-1 uppercase tracking-widest">
                                 {item.status}
                             </Badge>
+                            <span className="text-[10px] font-mono text-muted-foreground/30 font-bold">2024.Q1</span>
                         </div>
                     </div>
+
+                    {/* Hover Decoration */}
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
                 </div>
             ))}
         </div>

@@ -33,7 +33,9 @@ interface ResumeEvaluationRequest {
 interface ResumeEvaluationResponse {
   atsScore: number;
   missingKeywords: string[];
+  matchingKeywords?: string[];
   suggestions: string[];
+  improvements?: string[];
   rewrittenResume: string;
 }
 
@@ -96,11 +98,11 @@ export class ResumeAIService {
         console.log(`[AI Service] Offline parser health: ${data.status}`);
       } else {
         this.offlineParserHealthy = false;
-        console.warn('[AI Service] Offline parser health check failed');
+        console.warn(`[AI Service] Offline parser check failed on ${this.offlineParserUrl}. Falling back to Cloud LLM.`);
       }
     } catch (error) {
       this.offlineParserHealthy = false;
-      console.warn('[AI Service] Offline parser not available:', error);
+      console.warn(`[AI Service] Offline parser not responding at ${this.offlineParserUrl}. Ensure it's running via 'cd offline-parser && python main.py'. Error:`, error);
     }
   }
 
@@ -397,7 +399,9 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         return {
           atsScore: scoreResult.score,
           missingKeywords: matchResult.missing,
+          matchingKeywords: matchResult.matched,
           suggestions: scoreResult.suggestions,
+          improvements: scoreResult.suggestions.slice(0, 3), // Alias suggestions as improvements
           rewrittenResume: request.resumeText, // No rewrite in offline mode
           source: 'offline'
         };
