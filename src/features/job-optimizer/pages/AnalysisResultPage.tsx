@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Separator } from "@/shared/ui/separator";
 import { Progress } from "@/shared/ui/progress";
-import { ArrowLeft, Download, Copy, RefreshCw, Target, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, Copy, RefreshCw, Target, AlertCircle, CheckCircle, TrendingUp, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -12,6 +12,7 @@ import LoadingSpinner from "@/shared/components/common/LoadingSpinner";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import { resumeAI } from "@/shared/api/resumeAI";
+import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 
 interface EvaluationResult {
   atsScore: number;
@@ -27,6 +28,8 @@ export default function Results() {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [keywordModalOpen, setKeywordModalOpen] = useState(false);
+  const [selectedKeyword, setSelectedKeyword] = useState<string>("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -77,6 +80,31 @@ export default function Results() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleKeywordClick = (keyword: string) => {
+    setSelectedKeyword(keyword);
+    setKeywordModalOpen(true);
+  };
+
+  const handleKeywordApply = (updatedResume: string) => {
+    if (evaluation) {
+      // Remove the injected keyword from missing and add to matching
+      const updatedMissingKeywords = evaluation.missingKeywords.filter(
+        k => k.toLowerCase() !== selectedKeyword.toLowerCase()
+      );
+      const updatedMatchingKeywords = [
+        ...(evaluation.matchingKeywords || []),
+        selectedKeyword
+      ];
+
+      setEvaluation({
+        ...evaluation,
+        rewrittenResume: updatedResume,
+        missingKeywords: updatedMissingKeywords,
+        matchingKeywords: updatedMatchingKeywords
+      });
+    }
   };
 
   if (isLoading) {
@@ -252,16 +280,22 @@ export default function Results() {
                       <AlertCircle className="w-5 h-5 text-red-600" />
                       <h4 className="font-semibold">Missing Keywords ({evaluation.missingKeywords.length})</h4>
                     </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Click a keyword to add it to your resume
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {evaluation.missingKeywords.map((keyword, index) => (
-                        <Badge key={index} variant="destructive" className="bg-red-100 text-red-800">
+                        <Badge
+                          key={index}
+                          variant="destructive"
+                          className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200 hover:scale-105 transition-all flex items-center gap-1"
+                          onClick={() => handleKeywordClick(keyword)}
+                        >
+                          <Plus className="w-3 h-3" />
                           {keyword}
                         </Badge>
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Consider adding these keywords to improve your ATS score
-                    </p>
                   </div>
                 )}
 
@@ -400,6 +434,15 @@ export default function Results() {
         </motion.div>
       </motion.div>
       <Footer />
+
+      {/* Keyword Integration Modal */}
+      <KeywordIntegrationModal
+        open={keywordModalOpen}
+        onOpenChange={setKeywordModalOpen}
+        keyword={selectedKeyword}
+        resumeText={evaluation?.rewrittenResume || ""}
+        onApply={handleKeywordApply}
+      />
     </div>
   );
 }

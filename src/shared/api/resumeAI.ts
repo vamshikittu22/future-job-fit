@@ -453,6 +453,95 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
       notes: errorMessage || 'AI Service is currently unavailable. Please check your connection and try again.',
     };
   }
+
+  /**
+   * Rewrite a single bullet point to incorporate a specific keyword
+   */
+  async rewriteBulletWithKeyword(request: {
+    originalBullet: string;
+    keyword: string;
+    context?: string;
+  }): Promise<{ rewrittenBullet: string }> {
+    console.log(`[AI Service] Rewriting bullet with keyword: ${request.keyword}`);
+
+    // Check for user-provided API key first
+    const sessionKey = this.getSessionAPIKey();
+    if (sessionKey && sessionKey.provider === 'gemini') {
+      try {
+        const prompt = `You are a professional resume writer. Rewrite this resume bullet point to naturally incorporate the keyword "${request.keyword}".
+
+Original bullet point: "${request.originalBullet}"
+
+Rules:
+1. Keep the same meaning and achievements
+2. Naturally integrate the keyword - don't just append it
+3. Maintain professional tone
+4. Keep similar length
+5. Use strong action verbs
+
+Return ONLY the rewritten bullet point, nothing else.`;
+
+        const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const response = await fetch(`${baseUrl}?key=${sessionKey.apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7 }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+          if (text) {
+            return { rewrittenBullet: text };
+          }
+        }
+      } catch (error) {
+        console.warn('[AI Service] Direct Gemini call failed for bullet rewrite:', error);
+      }
+    }
+
+    // Try edge function
+    if (!this.demoMode) {
+      try {
+        const result = await this.callEdgeFunction('rewriteBullet', {
+          originalBullet: request.originalBullet,
+          keyword: request.keyword,
+          context: request.context
+        });
+        if (result?.rewrittenBullet) {
+          return result;
+        }
+      } catch (error) {
+        console.warn('[AI Service] Edge function failed for bullet rewrite:', error);
+      }
+    }
+
+    // Fallback: Simple intelligent insertion
+    const bullet = request.originalBullet;
+    const keyword = request.keyword;
+
+    // Try to insert keyword naturally
+    let rewritten = bullet;
+
+    // If bullet mentions "experience" or "expertise", add keyword there
+    if (bullet.toLowerCase().includes('experience')) {
+      rewritten = bullet.replace(/experience/i, `experience in ${keyword}`);
+    } else if (bullet.toLowerCase().includes('worked')) {
+      rewritten = bullet.replace(/worked/i, `worked with ${keyword}`);
+    } else if (bullet.toLowerCase().includes('developed')) {
+      rewritten = bullet.replace(/developed/i, `developed ${keyword}-focused`);
+    } else if (bullet.toLowerCase().includes('managed')) {
+      rewritten = bullet.replace(/managed/i, `managed ${keyword}-related`);
+    } else {
+      // Append naturally at the end
+      rewritten = `${bullet.replace(/\.$/, '')} utilizing ${keyword}.`;
+    }
+
+    return { rewrittenBullet: rewritten };
+  }
 }
 
 export const resumeAI = new ResumeAIService();
