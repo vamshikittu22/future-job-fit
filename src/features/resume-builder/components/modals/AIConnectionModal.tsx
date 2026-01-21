@@ -51,7 +51,7 @@ export const AIConnectionModal: React.FC<AIConnectionModalProps> = ({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl overflow-hidden p-0 border-none shadow-2xl">
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white relative">
+                <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 p-8 text-white relative">
                     <div className="absolute top-4 right-4 opacity-10">
                         <Shield className="w-32 h-32" />
                     </div>

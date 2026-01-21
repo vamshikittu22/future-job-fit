@@ -14,7 +14,7 @@ export const FinalCTA: React.FC = () => {
                     className="space-y-16"
                 >
                     <h2 className="text-8xl md:text-[160px] font-black tracking-tighter leading-none text-foreground italic py-4">
-                        BUILD THE <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">FUTURE.</span>
+                        BUILD THE <br /> <span className="text-transparent bg-clip-text bg-gradient-vibrant">FUTURE.</span>
                     </h2>
                     <div className="flex flex-col md:flex-row justify-center gap-8">
                         <Link to="/resume-wizard">

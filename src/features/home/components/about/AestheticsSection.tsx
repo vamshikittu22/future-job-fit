@@ -55,7 +55,7 @@ export const AestheticsSection: React.FC = () => {
                     </div>
 
                     {/* Dark Mode Card */}
-                    <div className="p-8 bg-gradient-to-br from-slate-800 to-slate-900 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
+                    <div className="p-8 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white relative overflow-hidden group hover:scale-[1.01] transition-transform duration-500">
                         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,rgba(255,255,255,0.02)_50%,transparent_52%)] bg-[size:20px_20px]" />
 
                         <div className="relative z-10 space-y-6">

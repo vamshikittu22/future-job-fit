@@ -273,7 +273,7 @@ ${htmlContent}
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="p-6 border-b bg-gradient-to-r from-accent/5 to-transparent">
+                <DialogHeader className="p-6 border-b bg-gradient-to-r from-accent/10 via-accent/5 to-transparent">
                     <DialogTitle className="flex items-center gap-3 text-xl">
                         <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
                             <Download className="h-5 w-5 text-accent" />

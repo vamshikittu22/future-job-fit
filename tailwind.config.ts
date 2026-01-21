@@ -66,7 +66,8 @@ export default {
 			backgroundImage: {
 				'gradient-accent': 'var(--gradient-accent)',
 				'gradient-subtle': 'var(--gradient-subtle)',
-				'gradient-card': 'var(--gradient-card)'
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-vibrant': 'var(--gradient-vibrant)'
 			},
 			boxShadow: {
 				'swiss': 'var(--shadow-swiss)',
