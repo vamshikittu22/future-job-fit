@@ -8,13 +8,13 @@ export const VersatilitySection: React.FC = () => {
         <SwissSection
             number="07"
             id="export-architecture"
-            title="VERSATILITY."
-            subtitle="UNIVERSAL EXPORTS"
+            title="ADAPTABILITY."
+            subtitle="MULTIPLE FORMATS"
             accentColor="bg-teal-600"
             titleClassName="text-teal-950 dark:text-teal-100"
             subtitleClassName="text-teal-600 dark:text-teal-400"
             className="relative bg-teal-50/50 dark:bg-teal-900/5 group/section"
-            description="One resume, seven formats. All generated client-side—no server uploads, no privacy concerns. From PDF to LaTeX, every format is production-ready."
+            description="One resume, seven professional formats. Whether you need an ATS-ready TXT file or a beautifully styled PDF, our platform adjusts to any recruitment standard instantly."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-teal-500/5 to-transparent pointer-events-none" />
 

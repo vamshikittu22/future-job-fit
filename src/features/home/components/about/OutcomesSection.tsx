@@ -6,13 +6,13 @@ export const OutcomesSection: React.FC = () => {
         <SwissSection
             number="11"
             id="meta"
-            title="OUTCOMES."
-            subtitle="BUSINESS IMPACT"
+            title="RESULTS."
+            subtitle="RECRUITMENT SUCCESS"
             accentColor="bg-red-600"
             titleClassName="text-red-950 dark:text-red-100"
             subtitleClassName="text-red-600 dark:text-red-400"
             className="relative bg-red-50/50 dark:bg-red-900/5 group/section"
-            description="Technology is a means to an end. Here's how all of the above translates into real value for your hiring process."
+            description="Our architecture isn't just about code—it's about results. Every feature is engineered to remove friction from the application process, leading to higher-quality candidates and faster hiring cycles."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-red-500/5 to-transparent pointer-events-none" />
 

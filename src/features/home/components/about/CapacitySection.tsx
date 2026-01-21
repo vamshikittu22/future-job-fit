@@ -8,13 +8,13 @@ export const CapacitySection: React.FC = () => {
         <SwissSection
             number="10"
             id="scalability"
-            title="CAPACITY."
-            subtitle="SERVERLESS ARCHITECTURE"
+            title="SCALE."
+            subtitle="GLOBAL DELIVERY MODEL"
             accentColor="bg-indigo-600"
             titleClassName="text-indigo-950 dark:text-indigo-100"
             subtitleClassName="text-indigo-600 dark:text-indigo-400"
             className="relative bg-indigo-50/50 dark:bg-indigo-900/5 group/section"
-            description="The entire application runs in your browser. No backend servers to maintain, no databases to scale. Static files on a CDN means unlimited concurrent users at near-zero cost."
+            description="Our infrastructure is built for massive candidate volume. Whether you're hiring for one role or one thousand, our globally distributed model ensures 100% uptime and zero slowdowns."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-indigo-500/5 to-transparent pointer-events-none" />
 

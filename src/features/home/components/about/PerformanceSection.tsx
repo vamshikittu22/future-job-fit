@@ -6,13 +6,13 @@ export const PerformanceSection: React.FC = () => {
         <SwissSection
             number="03"
             id="performance"
-            title="PERFORMANCE."
-            subtitle="PRECISION & SPEED"
+            title="EFFICIENCY."
+            subtitle="INSTANT PERFORMANCE"
             accentColor="bg-orange-600"
             titleClassName="text-orange-950 dark:text-orange-100"
             subtitleClassName="text-orange-600 dark:text-orange-400"
             className="relative bg-orange-50/50 dark:bg-orange-900/5 group/section"
-            description="Every interaction feels instant. We optimize for perceived performance—what users feel matters more than raw benchmarks."
+            description="Every second saved during the resume building process is a second earned in recruitment speed. We optimize for a frictionless, high-velocity experience."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-orange-500/5 to-transparent pointer-events-none" />
 
@@ -20,10 +20,10 @@ export const PerformanceSection: React.FC = () => {
                 {/* Hero Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { metric: '<50ms', label: 'Hot Reload', detail: 'Vite HMR' },
-                        { metric: '60fps', label: 'Animations', detail: 'Framer Motion' },
-                        { metric: '~2KB', label: 'State Size', detail: 'Minimal payloads' },
-                        { metric: '0ms', label: 'Offline Save', detail: 'localStorage' }
+                        { metric: '<50ms', label: 'Response', detail: 'Zero Wait Time' },
+                        { metric: '60fps', label: 'Fluidity', detail: 'Buttery Smooth' },
+                        { metric: '100%', label: 'Uptime', detail: 'Offline Ready' },
+                        { metric: '0ms', label: 'Auto-Save', detail: 'Instant Memory' }
                     ].map((item, i) => (
                         <div key={i} className="p-6 bg-gradient-to-br from-orange-500 to-amber-600 text-white text-center group hover:scale-105 transition-transform duration-300">
                             <div className="text-3xl font-black italic">{item.metric}</div>
@@ -38,9 +38,9 @@ export const PerformanceSection: React.FC = () => {
                     {/* Development Speed */}
                     <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-orange-200/50 dark:border-orange-800/50 space-y-4">
                         <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
-                            // DEV_EXPERIENCE
+                            // SHIPPING_VELOCITY
                         </div>
-                        <h4 className="text-lg font-bold text-foreground">Build Fast, Ship Faster</h4>
+                        <h4 className="text-lg font-bold text-foreground">Rapid Feature Delivery</h4>
                         <p className="text-sm text-foreground/70 leading-relaxed">
                             Vite's ESBuild-powered bundler means changes appear in under 50 milliseconds. No waiting for webpack to churn through dependencies. This isn't just developer convenience—it translates to faster feature delivery and shorter feedback loops with stakeholders.
                         </p>
@@ -54,9 +54,9 @@ export const PerformanceSection: React.FC = () => {
                     {/* User Experience */}
                     <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-orange-200/50 dark:border-orange-800/50 space-y-4">
                         <div className="flex items-center gap-4 text-orange-600 dark:text-orange-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
-                            // USER_EXPERIENCE
+                            // CANDIDATE_JOURNEY
                         </div>
-                        <h4 className="text-lg font-bold text-foreground">Buttery Smooth Interactions</h4>
+                        <h4 className="text-lg font-bold text-foreground">A Premium Candidate Experience</h4>
                         <p className="text-sm text-foreground/70 leading-relaxed">
                             React 18's concurrent rendering prioritizes visible updates. Framer Motion uses spring physics (not CSS timings) for natural-feeling animations. Users never see spinners for local operations—saves happen silently in the background via debounced writes.
                         </p>

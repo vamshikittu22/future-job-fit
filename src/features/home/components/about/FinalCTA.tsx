@@ -19,12 +19,12 @@ export const FinalCTA: React.FC = () => {
                     <div className="flex flex-col md:flex-row justify-center gap-8">
                         <Link to="/resume-wizard">
                             <Button className="h-24 px-20 rounded-none font-mono bg-foreground text-background hover:bg-primary hover:text-primary-foreground text-2xl font-black tracking-tighter uppercase transition-all shadow-2xl">
-                                START_BUILDING &gt;
+                                OPTIMIZE_TALENT &gt;
                             </Button>
                         </Link>
                         <Link to="/">
                             <Button variant="outline" className="h-24 px-16 rounded-none font-mono border-border/40 hover:bg-muted/10 text-xl tracking-widest uppercase transition-all text-foreground">
-                                EXIT_SESSION
+                                VIEW_HOME
                             </Button>
                         </Link>
                     </div>

@@ -7,13 +7,13 @@ export const ResilienceSection: React.FC = () => {
         <SwissSection
             number="02"
             id="state-logic"
-            title="RESILIENCE."
-            subtitle="STATE-INTEGRITY LAYER"
+            title="RELIABILITY."
+            subtitle="DATA SECURITY LAYER"
             accentColor="bg-emerald-600"
             titleClassName="text-emerald-950 dark:text-emerald-50"
             subtitleClassName="text-emerald-600 dark:text-emerald-400"
             className="relative bg-emerald-50/50 dark:bg-emerald-900/5 group/section"
-            description="React Context for real-time UI state, localStorage for offline persistence. Debounced saves prevent main-thread blocking during rapid edits."
+            description="Built-in data integrity ensures that candidate progress is never lost. We use browser-native storage to keep resumes secure and accessible, even during network drops."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-emerald-500/5 to-transparent pointer-events-none" />
             <div className="grid md:grid-cols-2 gap-6 relative z-10">
@@ -21,7 +21,7 @@ export const ResilienceSection: React.FC = () => {
                 {/* Context Architecture Card */}
                 <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-emerald-200/50 dark:border-emerald-800/50 backdrop-blur-sm space-y-6 shadow-sm hover:shadow-emerald-200/50 transition-shadow">
                     <div className="flex items-center gap-4 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
-                        // DATA_MANAGEMENT_FLOW
+                        // DATA_PROTECTION_LAYER
                     </div>
 
                     <div className="space-y-4">
@@ -50,8 +50,8 @@ export const ResilienceSection: React.FC = () => {
                                 <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">03</span>
                             </div>
                             <div>
-                                <h5 className="font-bold text-foreground text-sm">SaveContext</h5>
-                                <p className="text-xs text-muted-foreground mt-1">Autosave coordination. Dirty flags, save timestamps, conflict detection.</p>
+                                <h5 className="font-bold text-foreground text-sm">Pyodide NLP Core</h5>
+                                <p className="text-xs text-muted-foreground mt-1">Python engine cached via Service Worker. Enables offline resume parsing and ATS scoring.</p>
                             </div>
                         </div>
                     </div>
@@ -71,23 +71,23 @@ export const ResilienceSection: React.FC = () => {
                         </div>
 
                         <div>
-                            <h4 className="text-2xl font-black uppercase italic tracking-tight">OFFLINE_CAPABLE</h4>
+                            <h4 className="text-2xl font-black uppercase italic tracking-tight">ALWAYS_SAVED</h4>
                             <p className="text-emerald-100 text-sm mt-2 leading-relaxed">
-                                Every keystroke updates React state instantly. A debounced serializer (500ms) writes to localStorage in the background—zero network required.
+                                Not just data, but the engine itself. Pyodide allows the full Python NLP suite to be cached locally. Analyze, parse, and score—all without an active connection.
                             </p>
                         </div>
 
                         <div className="pt-4 border-t border-white/20 space-y-2">
                             <div className="flex justify-between text-[10px] font-mono text-emerald-100">
-                                <span>lodash.debounce</span>
-                                <span>500ms window</span>
+                                <span>Offline Layer</span>
+                                <span>Service Worker</span>
                             </div>
                             <div className="flex justify-between text-[10px] font-mono text-emerald-100">
-                                <span>JSON.stringify</span>
-                                <span>~2KB typical</span>
+                                <span>Intelligence</span>
+                                <span>Pyodide WASM</span>
                             </div>
                             <div className="flex justify-between text-[10px] font-mono text-emerald-100">
-                                <span>Data loss risk</span>
+                                <span>Data Loss Risk</span>
                                 <span className="text-emerald-300 font-bold">ZERO</span>
                             </div>
                         </div>

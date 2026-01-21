@@ -18,7 +18,7 @@ export const VisionHero: React.FC = () => {
                         >
                             <Badge className="rounded-none bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 font-mono text-[10px] tracking-widest px-3 py-1">BUILD v4.2.0</Badge>
                             <div className="h-px w-16 bg-border" />
-                            <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground font-bold">PROJECT_PHILOSOPHY</span>
+                            <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground font-bold">CORE_PRINCIPLES</span>
                         </motion.div>
 
                         <div className="space-y-6">
@@ -42,11 +42,11 @@ export const VisionHero: React.FC = () => {
                                     </p>
                                 </div>
                                 <div className="space-y-4">
-                                    <TechnicalAnnotation title="Core_Challenge">
-                                        Modern ATS systems rely on simplistic keyword matching, leading to a 75% "false negative" rate for candidates lacking specific lexical styling.
+                                    <TechnicalAnnotation title="The_Challenge">
+                                        Most recruitment systems rely on simplistic keyword matching, leading to a 75% "false negative" rate for highly qualified candidates.
                                     </TechnicalAnnotation>
                                     <TechnicalAnnotation title="The_Solution">
-                                        By decoupling formatting from content via an offline-first parsing microservice, we preserve the "semantic signal" of career history.
+                                        By decoupling formatting from content via a browser-native parsing engine, we preserve the "semantic signal" of career history.
                                     </TechnicalAnnotation>
                                 </div>
                             </div>

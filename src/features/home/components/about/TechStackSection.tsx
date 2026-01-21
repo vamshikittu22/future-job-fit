@@ -8,13 +8,13 @@ export const TechStackSection: React.FC = () => {
         <SwissSection
             number="01"
             id="architecture"
-            title="ECOSYSTEM."
-            subtitle="MODERN TECH STACK"
+            title="THE ENGINE."
+            subtitle="BUILT FOR SPEED"
             accentColor="bg-violet-600"
             titleClassName="text-violet-950 dark:text-violet-50"
             subtitleClassName="text-violet-600 dark:text-violet-400"
             className="relative bg-gradient-to-br from-violet-50/50 via-background to-blue-50/50 dark:from-violet-900/10 dark:via-background dark:to-blue-900/10 group/section overflow-hidden"
-            description="A three-tier intelligence system: Local NLP for speed, Edge Functions for security, Cloud LLM for creativity."
+            description="A high-performance intelligence system designed for recruitment accuracy: Local engine for privacy, Edge Functions for security, and Cloud AI for candidate storytelling."
         >
             {/* Background Grid Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
@@ -36,27 +36,27 @@ export const TechStackSection: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                        <span className="text-[9px] font-mono uppercase tracking-widest text-violet-200">CLIENT_SIDE_LOGIC</span>
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-violet-200">LOCAL_RECRUIT_SCIENCE</span>
                                     </div>
-                                    <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">PYTHON 3.11</Badge>
+                                    <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">PYODIDE 3.12+</Badge>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-2xl font-black uppercase italic tracking-tight">OFFLINE NLP</h4>
+                                    <h4 className="text-2xl font-black uppercase italic tracking-tight">BROWSER_NATIVE NLP</h4>
                                     <p className="text-violet-200 text-sm mt-2 leading-relaxed">
-                                        FastAPI microservice with spaCy for sub-100ms keyword extraction, ATS scoring, and semantic parsing—without cloud latency or API costs.
+                                        Pyodide (Python in WebAssembly) executes directly in your browser. Handles deterministic tasks like parsing, ATS scoring, and keyword matching at native speeds—zero cloud latency, zero server cost.
                                     </p>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2">
-                                    {['FastAPI', 'spaCy', 'scikit-learn', 'Regex NLP'].map(t => (
+                                    {['Pyodide', 'WASM', 'WebWorkers', 'Regex NLP'].map(t => (
                                         <span key={t} className="px-2 py-1 bg-white/10 backdrop-blur-sm text-[10px] font-mono uppercase">{t}</span>
                                     ))}
                                 </div>
 
                                 <div className="pt-4 border-t border-white/20 flex justify-between items-center">
-                                    <span className="text-[10px] font-mono text-violet-200">LATENCY: &lt;100ms</span>
-                                    <span className="text-[10px] font-mono text-violet-200">COST: $0/request</span>
+                                    <span className="text-[10px] font-mono text-violet-200">LATENCY: &lt;50ms</span>
+                                    <span className="text-[10px] font-mono text-violet-200">NETWORK: NONE</span>
                                 </div>
                             </div>
                         </div>
@@ -70,7 +70,7 @@ export const TechStackSection: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                        <span className="text-[9px] font-mono uppercase tracking-widest text-blue-200">CLOUD_SECURE_ENGINE</span>
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-blue-200">SECURE_CLOUD_INTELLIGENCE</span>
                                     </div>
                                     <Badge className="bg-white/10 text-white border-white/20 rounded-none text-[9px] font-mono">DENO RUNTIME</Badge>
                                 </div>

@@ -8,13 +8,13 @@ export const IntelligenceSection: React.FC = () => {
         <SwissSection
             number="04"
             id="intelligence"
-            title="INTELLIGENCE."
-            subtitle="SECURE AI SERVICES"
+            title="SMART AI."
+            subtitle="ETHICAL ASSISTANCE"
             accentColor="bg-purple-600"
             titleClassName="text-purple-950 dark:text-purple-100"
             subtitleClassName="text-purple-600 dark:text-purple-400"
             className="relative bg-purple-50/50 dark:bg-purple-900/5 group/section"
-            description="AI enhancement without exposing API keys. Supabase Edge Functions act as a secure proxy—your candidates' resumes never touch third-party servers directly."
+            description="Our Intelligence Engine bridges the gap between raw data and career success—all while maintaining the highest standards of candidate privacy and data ethicality."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-purple-500/5 to-transparent pointer-events-none" />
 
@@ -22,18 +22,16 @@ export const IntelligenceSection: React.FC = () => {
                 {/* Architecture Flow */}
                 <div className="p-6 bg-white/50 dark:bg-slate-900/50 border border-purple-200/50 dark:border-purple-800/50">
                     <div className="flex items-center gap-4 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-black uppercase tracking-[0.3em] mb-4">
-                        // SYSTEM_DATA_FLOW
+                        // SECURE_DATA_HANDLING
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-mono">
+                        <span className="px-4 py-2 bg-emerald-600 text-white font-bold">Pyodide WASM</span>
+                        <ArrowRight className="w-5 h-5 text-purple-400" />
                         <span className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold">Browser</span>
                         <ArrowRight className="w-5 h-5 text-purple-400" />
                         <span className="px-4 py-2 bg-purple-600 text-white font-bold">Edge Function</span>
                         <ArrowRight className="w-5 h-5 text-purple-400" />
                         <span className="px-4 py-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white font-bold">Gemini API</span>
-                        <ArrowRight className="w-5 h-5 text-purple-400" />
-                        <span className="px-4 py-2 bg-purple-600 text-white font-bold">Edge Function</span>
-                        <ArrowRight className="w-5 h-5 text-purple-400" />
-                        <span className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold">Browser</span>
                     </div>
                     <p className="text-xs text-center text-muted-foreground mt-4">API keys never leave the server. The browser only sends/receives resume content.</p>
                 </div>
@@ -43,7 +41,7 @@ export const IntelligenceSection: React.FC = () => {
                     {/* What It Does */}
                     <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-purple-200/50 dark:border-purple-800/50 space-y-4">
                         <div className="flex items-center gap-4 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
-                            <Sparkles className="w-4 h-4" /> AI_INTEGRATIONS
+                            <Sparkles className="w-4 h-4" /> AI_CAPABILITIES
                         </div>
                         <h4 className="text-lg font-bold text-foreground">What Gemini 1.5 Flash Does</h4>
                         <ul className="space-y-2 text-sm text-foreground/70">
@@ -80,7 +78,7 @@ export const IntelligenceSection: React.FC = () => {
                             </div>
 
                             <div>
-                                <h4 className="text-2xl font-black uppercase italic tracking-tight">HIGH_SECURITY</h4>
+                                <h4 className="text-2xl font-black uppercase italic tracking-tight">CANDIDATE_TRUST</h4>
                                 <p className="text-purple-100 text-sm mt-2 leading-relaxed">
                                     Your GEMINI_API_KEY lives in Supabase secrets, never in the browser bundle. Each request runs in an isolated Deno sandbox with 50ms cold start.
                                 </p>
@@ -90,6 +88,10 @@ export const IntelligenceSection: React.FC = () => {
                                 <div className="flex justify-between text-[10px] font-mono text-purple-100">
                                     <span>API Key Location</span>
                                     <span className="text-purple-300 font-bold">Server-side only</span>
+                                </div>
+                                <div className="flex justify-between text-[10px] font-mono text-purple-100">
+                                    <span>Latency Tier</span>
+                                    <span className="text-purple-300 font-bold">Hybrid (Local/Cloud)</span>
                                 </div>
                                 <div className="flex justify-between text-[10px] font-mono text-purple-100">
                                     <span>Request Isolation</span>

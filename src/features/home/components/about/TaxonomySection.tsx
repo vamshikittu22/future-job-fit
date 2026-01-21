@@ -8,13 +8,13 @@ export const TaxonomySection: React.FC = () => {
         <SwissSection
             number="06"
             id="skill-mapping"
-            title="TAXONOMY."
-            subtitle="SKILL CLASSIFICATION"
+            title="EXPERTISE."
+            subtitle="SMART SKILL CATEGORIES"
             accentColor="bg-pink-600"
             titleClassName="text-pink-950 dark:text-pink-100"
             subtitleClassName="text-pink-600 dark:text-pink-400"
             className="relative bg-pink-50/50 dark:bg-pink-900/5 group/section"
-            description="Skills aren't just keywords—they belong to categories. Our dual-layer system uses pattern matching locally and AI for intelligent grouping, so 'React, Next.js, Vue' automatically becomes 'Frontend Frameworks'."
+            description="Skills are more than just keywords. Our intelligent grouping system organizes candidate expertise into logical, recruiter-friendly categories like 'Frontend' or 'Cloud Infrastructure' automatically."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-pink-500/5 to-transparent pointer-events-none" />
 

@@ -8,13 +8,13 @@ export const AestheticsSection: React.FC = () => {
         <SwissSection
             number="08"
             id="design-system"
-            title="AESTHETICS."
-            subtitle="ACCESSIBLE UI/UX"
+            title="IMPACT."
+            subtitle="PROFESSIONAL INTERFACE"
             accentColor="bg-slate-700"
             titleClassName="text-slate-900 dark:text-slate-100"
             subtitleClassName="text-slate-500 dark:text-slate-400"
             className="relative bg-slate-50/50 dark:bg-slate-900/5 group/section"
-            description="A mature component system built on Shadcn/ui and Radix primitives. Every button, input, and modal is accessible by default, dark-mode ready, and consistent across the application."
+            description="Our design system is built for clarity and impact. Every element is refined to project a premium, professional image, ensuring candidates feel confident in the quality of their submission."
         >
             <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(100,116,139,0.03)_50%,transparent_51%)] bg-[size:100%_100%] pointer-events-none" />
 
@@ -41,7 +41,7 @@ export const AestheticsSection: React.FC = () => {
                     {/* Accessibility */}
                     <div className="p-8 bg-white/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-700/50 space-y-4">
                         <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 font-mono text-[10px] font-black uppercase tracking-[0.3em]">
-                            // ACCESSIBILITY
+                            // INCLUSIVE_DESIGN
                         </div>
                         <h4 className="text-lg font-bold text-foreground">Built-In A11y</h4>
                         <p className="text-sm text-foreground/70 leading-relaxed">

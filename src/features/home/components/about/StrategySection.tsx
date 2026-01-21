@@ -7,13 +7,13 @@ export const StrategySection: React.FC = () => {
         <SwissSection
             number="09"
             id="dev-logs"
-            title="STRATEGY."
-            subtitle="ARCHITECTURAL DECISIONS"
+            title="INSIGHT."
+            subtitle="TRANSPARENT BLUEPRINT"
             accentColor="bg-amber-600"
             titleClassName="text-amber-950 dark:text-amber-100"
             subtitleClassName="text-amber-600 dark:text-amber-400"
             className="relative bg-amber-50/50 dark:bg-amber-900/5 group/section"
-            description="Every engineering decision has tradeoffs. Here's what we considered, what we rejected, and why. This transparency helps you understand the system's strengths and limitations."
+            description="Our architecture is an open book. We provide full transparency into our decision-making process, ensuring you understand exactly how our platform protects candidate data and drives efficiency."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-amber-500/5 to-transparent pointer-events-none" />
 
@@ -74,9 +74,9 @@ export const StrategySection: React.FC = () => {
 
                 {/* Why It Matters */}
                 <div className="p-6 bg-white/30 dark:bg-slate-900/30 border border-amber-200/30 dark:border-amber-800/30">
-                    <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-3">Why This Matters for Hiring</h4>
+                    <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-3">Why Transparency Matters for Business</h4>
                     <p className="text-sm text-foreground/70 leading-relaxed">
-                        <strong className="text-foreground">Transparency builds trust.</strong> When you evaluate vendor tools, you want to know what's under the hood. These decision records show we made deliberate architectural choices—not just "whatever worked." We considered alternatives, understood tradeoffs, and optimized for your use case: fast, secure, offline-capable resume building.
+                        <strong className="text-foreground">Transparency builds institutional trust.</strong> When evaluating career platforms, you need to know how they work "under the hood." These decision records prove that we made deliberate, outcomes-focused choices—optimizing for speed, security, and the ultimate candidate experience.
                     </p>
                 </div>
             </div>

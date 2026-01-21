@@ -8,13 +8,13 @@ export const FidelitySection: React.FC = () => {
         <SwissSection
             number="05"
             id="identity"
-            title="FIDELITY."
-            subtitle="STRUCTURED DATA MODEL"
+            title="ACCURACY."
+            subtitle="HIGH-FIDELITY DATA"
             accentColor="bg-cyan-600"
             titleClassName="text-cyan-950 dark:text-cyan-100"
             subtitleClassName="text-cyan-600 dark:text-cyan-400"
             className="relative bg-cyan-50/50 dark:bg-cyan-900/5 group/section"
-            description="Every resume is a structured data object, not free-form text. Zod schemas enforce consistency—malformed data is rejected before it ever reaches storage."
+            description="Every resume is a high-fidelity data asset, not just a document. We ensure that every piece of candidate information is verified and structured for maximum clarity."
         >
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
 
