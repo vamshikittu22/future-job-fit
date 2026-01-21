@@ -20,6 +20,7 @@ import {
   Moon,
   Sun,
   Key,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -48,7 +49,7 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   isPreviewVisible,
   isSaving = false,
 }) => {
-  const { undo, redo, canUndo, canRedo, saveResume } = useResume();
+  const { undo, redo, canUndo, canRedo, saveResume, clearForm } = useResume();
   const { wizardState } = useWizard();
   const { isUsingCustomKey, keyState } = useAPIKey();
   const { theme, setTheme } = useTheme();
@@ -227,6 +228,26 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
               </TooltipContent>
             </Tooltip>
           )}
+
+          <Separator orientation="vertical" className="h-6 mx-2" />
+
+          {/* Clear All */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearForm}
+                className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                <span className="hidden md:inline">Clear All</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Clear all resume data</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Center - Auto-save Status */}

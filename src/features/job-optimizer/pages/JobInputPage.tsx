@@ -6,9 +6,10 @@ import { Label } from "@/shared/ui/label";
 import { Badge } from "@/shared/ui/badge";
 import { Switch } from "@/shared/ui/switch";
 import { useNavigate } from "react-router-dom";
-import { FileText, Briefcase, Settings, Eye, Zap } from "lucide-react";
+import { FileText, Briefcase, Settings, Eye, Zap, Trash2 } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useResume } from "@/shared/contexts/ResumeContext";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import ModelSelector from "@/shared/components/common/ModelSelector";
@@ -24,7 +25,43 @@ export default function ResumeInput() {
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [customInstructions, setCustomInstructions] = useState(null);
+  const [customInstructions, setCustomInstructions] = useState<any>({
+    resumeLength: 2,
+    fontSizes: {
+      heading: "18px",
+      subheading: "14px",
+      body: "11px"
+    },
+    summaryBullets: [],
+    summaryCount: 3,
+    skillCategories: {
+      languages: [],
+      frameworks: [],
+      databases: [],
+      tools: []
+    },
+    projectCount: 4,
+    experienceBullets: [],
+    bulletPunctuation: "none",
+    boldKeywords: true,
+    chronologicalOrder: true,
+    prdrAllocation: {
+      backend: 30,
+      frontend: 25,
+      cloud: 20,
+      devops: 10,
+      testing: 10,
+      security: 5
+    },
+    validateVersions: true,
+    techStackOverrides: [],
+    updateSteps: [],
+    targetAudience: "",
+    leadershipGoals: "",
+    metrics: "",
+    customInstructions: "",
+    selectedTags: []
+  });
   const [showPreview, setShowPreview] = useState(true);
 
   // AI Options State
@@ -40,6 +77,7 @@ export default function ResumeInput() {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { clearForm } = useResume();
 
   // Load data from localStorage if coming from Create Resume
   useEffect(() => {
@@ -153,6 +191,64 @@ PREFERRED:
 • Knowledge of GraphQL and Apollo Client
 • Familiarity with micro-frontend architectures
 • Previous leadership or mentoring experience`);
+  };
+
+  const clearAll = () => {
+    if (window.confirm("Are you sure you want to clear all inputs?")) {
+      setResumeText("");
+      setJobDescription("");
+      setSelectedTags([]);
+      setSelectedTemplate("");
+      setSectionToggles({
+        summary: true,
+        projects: true,
+        skills: true,
+        experience: true
+      });
+      setBulletMode('normal');
+      setCustomInstructions({
+        resumeLength: 2,
+        fontSizes: {
+          heading: "18px",
+          subheading: "14px",
+          body: "11px"
+        },
+        summaryBullets: [],
+        summaryCount: 3,
+        skillCategories: {
+          languages: [],
+          frameworks: [],
+          databases: [],
+          tools: []
+        },
+        projectCount: 4,
+        experienceBullets: [],
+        bulletPunctuation: "none",
+        boldKeywords: true,
+        chronologicalOrder: true,
+        prdrAllocation: {
+          backend: 30,
+          frontend: 25,
+          cloud: 20,
+          devops: 10,
+          testing: 10,
+          security: 5
+        },
+        validateVersions: true,
+        techStackOverrides: [],
+        updateSteps: [],
+        targetAudience: "",
+        leadershipGoals: "",
+        metrics: "",
+        customInstructions: "",
+        selectedTags: []
+      });
+
+      toast({
+        title: "Cleared",
+        description: "All inputs have been reset.",
+      });
+    }
   };
 
   return (
@@ -413,6 +509,15 @@ PREFERRED:
             className="px-8 hover:shadow-swiss transition-all duration-300"
           >
             Load Example
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={clearAll}
+            className="px-8 border-destructive/50 text-destructive hover:bg-destructive/10 transition-all duration-300 flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear All
           </Button>
         </motion.div>
       </motion.div>
