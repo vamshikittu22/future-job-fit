@@ -12,6 +12,7 @@ import LoadingSpinner from "@/shared/components/common/LoadingSpinner";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import { resumeAI } from "@/shared/api/resumeAI";
+import { usePyNLP } from "@/shared/hooks/usePyNLP";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 
@@ -26,6 +27,7 @@ interface EvaluationResult {
 }
 
 export default function Results() {
+  const { scoreATS, status: pyStatus, isReady } = usePyNLP();
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +51,54 @@ export default function Results() {
 
       try {
         setError(null);
-        const result = await resumeAI.evaluateResume({
-          resumeText,
-          jobDescription: jobDescription || undefined,
-          model: selectedModel,
-          customInstructions: customInstructions ? JSON.parse(customInstructions) : undefined
-        });
+        let result: EvaluationResult;
+
+        try {
+          // Attempt API evaluation first for full features (rewriting, etc)
+          result = await resumeAI.evaluateResume({
+            resumeText,
+            jobDescription: jobDescription || undefined,
+            model: selectedModel,
+            customInstructions: customInstructions ? JSON.parse(customInstructions) : undefined
+          });
+
+          // Optional: Augment or verify with local NLP if available
+          if (isReady && jobDescription) {
+            const pyResult = await scoreATS(resumeText, jobDescription);
+            console.log("Local NLP Verification Score:", pyResult.score);
+            // We could blend the scores or just use local one for higher precision
+            // For now, we trust the API's holistic view but log the local one
+          }
+        } catch (apiErr) {
+          console.warn("API evaluation failed, attempting local NLP fallback...", apiErr);
+
+          if (isReady && jobDescription) {
+            const pyResult = await scoreATS(resumeText, jobDescription);
+            result = {
+              atsScore: pyResult.score,
+              missingKeywords: pyResult.missing,
+              matchingKeywords: pyResult.matchingKeywords,
+              suggestions: [
+                "Offline Mode: Keyword-based scoring is active.",
+                "Note: Resume rewriting is disabled while offline.",
+                "Add missing keywords manually to improve your score."
+              ],
+              rewrittenResume: resumeText, // Use original text in offline mode
+              improvements: ["Identified missing technical keywords"],
+              nextSteps: ["Incorporate the highlighted keywords into your resume", "Connect to internet for AI rewriting"]
+            };
+
+            toast({
+              title: "Running in offline mode",
+              description: "Full AI rewriting is unavailable, but keyword scoring is active.",
+            });
+          } else if (!isReady) {
+            throw new Error("API and AI engine are both unavailable. Check your connection.");
+          } else {
+            throw apiErr;
+          }
+        }
+
         setEvaluation(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -64,7 +108,7 @@ export default function Results() {
     };
 
     evaluateResume();
-  }, [navigate]);
+  }, [navigate, isReady, scoreATS, toast]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

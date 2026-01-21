@@ -7,6 +7,8 @@ import { Badge } from "@/shared/ui/badge";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Upload, FileText, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
+import { usePyNLP } from "@/shared/hooks/usePyNLP";
+import { extractTextFromFile } from "@/shared/utils/textExtraction";
 
 interface ImportResumeModalProps {
   open: boolean;
@@ -19,6 +21,7 @@ export default function ImportResumeModal({
   onOpenChange,
   onImport
 }: ImportResumeModalProps) {
+  const { parseResume, status, isReady } = usePyNLP();
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -30,7 +33,7 @@ export default function ImportResumeModal({
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-      
+
       if (!validTypes.includes(selectedFile.type)) {
         toast({
           title: "Invalid file type",
@@ -39,7 +42,7 @@ export default function ImportResumeModal({
         });
         return;
       }
-      
+
       if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
         toast({
           title: "File too large",
@@ -48,128 +51,126 @@ export default function ImportResumeModal({
         });
         return;
       }
-      
+
       setFile(selectedFile);
+      setExtractedData(null);
+      setIssues([]);
     }
   };
 
   const processFile = async () => {
     if (!file) return;
-    
+
     setIsProcessing(true);
-    setProgress(0);
-    
+    setProgress(10);
+
     try {
-      // Simulate file processing with progress updates
-      const intervals = [20, 40, 60, 80, 95];
-      
-      for (let i = 0; i < intervals.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProgress(intervals[i]);
+      // 1. Extract text from file
+      setProgress(20);
+      const text = await extractTextFromFile(file);
+      setProgress(40);
+
+      // 2. Parse using Pyodide
+      if (!isReady) {
+        throw new Error("AI engine is still initializing. Please wait a moment.");
       }
-      
-      // Mock extracted data - in a real app, this would come from an AI parsing service
-      const mockData = {
-        personalInfo: {
-          name: "John Doe",
-          email: "john.doe@example.com",
-          phone: "+1 (555) 123-4567",
-          location: "San Francisco, CA",
-          linkedin: "linkedin.com/in/johndoe",
-          website: "johndoe.dev"
-        },
-        summary: "Experienced software engineer with 5+ years in full-stack development, specializing in React, Node.js, and cloud technologies. Proven track record of delivering scalable web applications and leading cross-functional teams.",
-        skills: [
-          "JavaScript", "TypeScript", "React", "Node.js", "Python", 
-          "AWS", "Docker", "Kubernetes", "PostgreSQL", "MongoDB"
-        ],
-        experience: [
-          {
-            id: "1",
-            title: "Senior Software Engineer",
-            company: "Tech Corp",
-            location: "San Francisco, CA",
-            duration: "2021 - Present",
-            bullets: [
-              "Led development of microservices architecture serving 1M+ users daily",
-              "Improved application performance by 40% through optimization techniques",
-              "Mentored 3 junior developers and conducted code reviews"
-            ]
-          },
-          {
-            id: "2",
-            title: "Software Engineer",
-            company: "StartupXYZ",
-            location: "Remote",
-            duration: "2019 - 2021",
-            bullets: [
-              "Built responsive web applications using React and TypeScript",
-              "Integrated third-party APIs and payment systems",
-              "Collaborated with design team to implement pixel-perfect UIs"
-            ]
-          }
-        ],
-        education: [
-          {
-            id: "1",
-            degree: "Bachelor of Science in Computer Science",
-            school: "University of California, Berkeley",
-            year: "2019",
-            gpa: "3.8"
-          }
-        ],
-        projects: [
-          {
-            id: "1",
-            name: "E-commerce Platform",
-            tech: "React, Node.js, PostgreSQL, Stripe",
-            duration: "2023",
-            bullets: [
-              "Built full-stack e-commerce platform with payment integration",
-              "Implemented real-time inventory management system",
-              "Deployed using Docker and AWS ECS"
-            ]
-          }
-        ],
-        achievements: [
-          "AWS Certified Solutions Architect",
-          "Hackathon winner - Best Technical Implementation (2022)",
-          "Employee of the Month - Q2 2023"
-        ],
-        certifications: [
-          "AWS Solutions Architect Associate",
-          "Google Cloud Professional Developer",
-          "Certified Kubernetes Administrator"
-        ]
-      };
-      
-      // Mock issues detection
-      const mockIssues = [
-        "Phone number format detected, please verify",
-        "Some work experience dates may need clarification",
-        "Skills section may benefit from reorganization"
-      ];
-      
+
+      setProgress(60);
+      const result = await parseResume(text);
+      setProgress(90);
+
+      // 3. Map Python result to ResumeData
+      const mappedData = mapPythonDataToResume(result);
+
       setProgress(100);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setExtractedData(mockData);
-      setIssues(mockIssues);
-      
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setExtractedData(mappedData);
+
+      // Basic issue detection
+      const foundIssues = [];
+      if (!mappedData.personal.name) foundIssues.push("Name could not be extracted automatically.");
+      if (!mappedData.experience.length) foundIssues.push("No work experience identified.");
+      if (!mappedData.skills.tools.length) foundIssues.push("No technical skills identified.");
+      setIssues(foundIssues);
+
       toast({
         title: "Resume processed successfully",
         description: "Review the extracted information and make any necessary corrections.",
       });
-      
-    } catch (error) {
+
+    } catch (error: any) {
+      console.error("Processing failed:", error);
       toast({
         title: "Processing failed",
-        description: "There was an error processing your resume. Please try again.",
+        description: error.message || "There was an error processing your resume. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const mapPythonDataToResume = (pyData: any) => {
+    const sections = pyData.sections || {};
+
+    return {
+      personal: {
+        name: pyData.name || "",
+        email: pyData.email || "",
+        phone: pyData.phone || "",
+        location: pyData.location || "",
+        website: pyData.website || "",
+        linkedin: pyData.linkedin || "",
+        github: pyData.github || "",
+      },
+      summary: sections.summary || "",
+      experience: (sections.experience || []).map((exp: string, idx: number) => ({
+        id: `exp-${idx}`,
+        title: exp.split('\n')[0] || "Unknown Title",
+        company: "Extracted Company",
+        description: exp,
+        startDate: "",
+        endDate: "",
+        current: false,
+        bullets: exp.split('\n').slice(1).filter(l => l.trim())
+      })),
+      education: (sections.education || []).map((edu: string, idx: number) => ({
+        id: `edu-${idx}`,
+        degree: edu.split('\n')[0] || "Unknown Degree",
+        school: "Extracted University",
+        startDate: "",
+        endDate: "",
+        description: edu
+      })),
+      skills: {
+        languages: [],
+        frameworks: [],
+        tools: pyData.skills || []
+      },
+      projects: (sections.projects || []).map((proj: string, idx: number) => ({
+        id: `proj-${idx}`,
+        name: proj.split('\n')[0] || "Project",
+        description: proj,
+        technologies: [],
+        bullets: proj.split('\n').slice(1).filter(l => l.trim())
+      })),
+      achievements: (sections.achievements || []).map((ach: string, idx: number) => ({
+        id: `ach-${idx}`,
+        title: ach.split('\n')[0] || "Achievement",
+        description: ach
+      })),
+      certifications: (sections.certifications || []).map((cert: string, idx: number) => ({
+        id: `cert-${idx}`,
+        name: cert.split('\n')[0] || "Certification",
+        issuer: "",
+        date: ""
+      })),
+      customSections: [],
+      metadata: {
+        lastUpdated: new Date().toISOString()
+      }
+    };
   };
 
   const handleImport = () => {
@@ -202,7 +203,7 @@ export default function ImportResumeModal({
             Import Resume
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {!file && (
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center">
@@ -225,7 +226,7 @@ export default function ImportResumeModal({
               </Button>
             </div>
           )}
-          
+
           {file && !extractedData && (
             <Card className="p-6">
               <div className="flex items-center gap-4 mb-4">
@@ -237,7 +238,7 @@ export default function ImportResumeModal({
                   </p>
                 </div>
               </div>
-              
+
               {isProcessing && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
@@ -247,7 +248,7 @@ export default function ImportResumeModal({
                   <Progress value={progress} className="w-full" />
                 </div>
               )}
-              
+
               {!isProcessing && (
                 <div className="flex gap-3">
                   <Button onClick={processFile} className="flex items-center gap-2">
@@ -261,7 +262,7 @@ export default function ImportResumeModal({
               )}
             </Card>
           )}
-          
+
           {extractedData && (
             <div className="space-y-6 max-h-96 overflow-y-auto">
               {issues.length > 0 && (
@@ -277,7 +278,7 @@ export default function ImportResumeModal({
                   </AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="grid grid-cols-2 gap-6">
                 {/* Personal Info */}
                 <Card className="p-4">
@@ -286,33 +287,46 @@ export default function ImportResumeModal({
                     Personal Information
                   </h3>
                   <div className="space-y-2 text-sm">
-                    <div><strong>Name:</strong> {extractedData.personalInfo.name}</div>
-                    <div><strong>Email:</strong> {extractedData.personalInfo.email}</div>
-                    <div><strong>Phone:</strong> {extractedData.personalInfo.phone}</div>
-                    <div><strong>Location:</strong> {extractedData.personalInfo.location}</div>
+                    <div><strong>Name:</strong> {extractedData.personal.name}</div>
+                    <div><strong>Email:</strong> {extractedData.personal.email}</div>
+                    <div><strong>Phone:</strong> {extractedData.personal.phone}</div>
+                    <div><strong>Location:</strong> {extractedData.personal.location}</div>
                   </div>
                 </Card>
-                
+
+                {/* Summary */}
+                {extractedData.summary && (
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      Professional Summary
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-4">
+                      {extractedData.summary}
+                    </p>
+                  </Card>
+                )}
+
                 {/* Skills */}
                 <Card className="p-4">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    Technical Skills ({extractedData.skills.length})
+                    Technical Skills ({extractedData.skills.tools.length})
                   </h3>
                   <div className="flex flex-wrap gap-1">
-                    {extractedData.skills.slice(0, 8).map((skill: string, index: number) => (
+                    {extractedData.skills.tools.slice(0, 8).map((skill: string, index: number) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         {skill}
                       </Badge>
                     ))}
-                    {extractedData.skills.length > 8 && (
+                    {extractedData.skills.tools.length > 8 && (
                       <Badge variant="outline" className="text-xs">
-                        +{extractedData.skills.length - 8} more
+                        +{extractedData.skills.tools.length - 8} more
                       </Badge>
                     )}
                   </div>
                 </Card>
-                
+
                 {/* Experience */}
                 <Card className="p-4">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -323,12 +337,12 @@ export default function ImportResumeModal({
                     {extractedData.experience.map((exp: any, index: number) => (
                       <div key={index} className="text-sm">
                         <div className="font-medium">{exp.title}</div>
-                        <div className="text-muted-foreground">{exp.company}</div>
+                        <div className="text-muted-foreground text-[10px] line-clamp-2">{exp.description}</div>
                       </div>
                     ))}
                   </div>
                 </Card>
-                
+
                 {/* Education */}
                 <Card className="p-4">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -339,7 +353,7 @@ export default function ImportResumeModal({
                     {extractedData.education.map((edu: any, index: number) => (
                       <div key={index}>
                         <div className="font-medium">{edu.degree}</div>
-                        <div className="text-muted-foreground">{edu.school}</div>
+                        <div className="text-muted-foreground text-[10px] line-clamp-1">{edu.description}</div>
                       </div>
                     ))}
                   </div>
@@ -347,7 +361,7 @@ export default function ImportResumeModal({
               </div>
             </div>
           )}
-          
+
           {extractedData && (
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button variant="outline" onClick={handleClose}>

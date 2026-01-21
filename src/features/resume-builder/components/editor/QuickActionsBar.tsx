@@ -21,7 +21,9 @@ import {
   Sun,
   Key,
   Trash2,
+  Upload,
 } from 'lucide-react';
+import { usePyNLP } from '@/shared/hooks/usePyNLP';
 import { cn } from '@/shared/lib/utils';
 import {
   Tooltip,
@@ -32,6 +34,7 @@ import {
 
 interface QuickActionsBarProps {
   onLoadSample: () => void;
+  onLoadImport?: () => void;
   onAIEnhance: () => void;
   onTogglePreview: () => void;
   onExport: () => void;
@@ -42,6 +45,7 @@ interface QuickActionsBarProps {
 
 const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   onLoadSample,
+  onLoadImport,
   onAIEnhance,
   onTogglePreview,
   onExport,
@@ -50,6 +54,7 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   isSaving = false,
 }) => {
   const { undo, redo, canUndo, canRedo, saveResume, clearForm } = useResume();
+  const { status: pyStatus, error: pyError } = usePyNLP();
   const { wizardState } = useWizard();
   const { isUsingCustomKey, keyState } = useAPIKey();
   const { theme, setTheme } = useTheme();
@@ -117,6 +122,24 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [canUndo, canRedo, undo, redo, onTogglePreview, handleSave]);
 
+  const getPyStatusColor = () => {
+    switch (pyStatus) {
+      case 'ready': return 'text-green-500';
+      case 'loading': return 'text-yellow-500 animate-pulse';
+      case 'error': return 'text-red-500';
+      default: return 'text-muted-foreground';
+    }
+  };
+
+  const getPyStatusLabel = () => {
+    switch (pyStatus) {
+      case 'ready': return 'AI Engine Ready';
+      case 'loading': return 'Initializing AI Engine...';
+      case 'error': return 'AI Engine Error';
+      default: return 'AI Engine Offline';
+    }
+  };
+
   if (isMobile) {
     return null; // Don't show on mobile to save space
   }
@@ -173,13 +196,33 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
                 className="h-9 px-3"
               >
                 <FileText className="h-4 w-4 mr-2" />
-                <span className="hidden md:inline">Load Sample</span>
+                <span className="hidden md:inline">Sample</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>Load sample resume data</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Import */}
+          {onLoadImport && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLoadImport}
+                  className="h-9 px-3"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  <span className="hidden md:inline">Import</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Import from PDF / DOCX / TXT</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* AI Enhance */}
           <Tooltip>
@@ -196,6 +239,22 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>Enhance resume with AI</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Pyodide Status Indicator */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 px-3 py-1 ml-2 rounded-full bg-muted/30 border border-muted select-none cursor-help">
+                <div className={cn("h-2 w-2 rounded-full", getPyStatusColor().split(' ')[0])} />
+                <span className="text-[10px] font-mono tracking-tighter uppercase text-muted-foreground whitespace-nowrap">
+                  NLP Core
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{getPyStatusLabel()}</p>
+              {pyError && <p className="text-[10px] text-red-400 mt-1">{pyError}</p>}
             </TooltipContent>
           </Tooltip>
 

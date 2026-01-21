@@ -49,7 +49,7 @@ We believe in transparency. The platform includes a dedicated **[About Platform]
 ## 🛠️ Advanced Features
 
 ### 🤖 Hybrid AI Intelligence
-*   **Offline NLP Parser**: Local FastAPI service handles deterministic tasks like keyword matching in <50ms.
+*   **Browser-Native NLP (Pyodide)**: Local Python engine running in the browser handles deterministic tasks like keyword matching in <50ms with zero server cost.
 *   **Secure Edge Functions**: Supabase Edge Functions act as a secure proxy for LLM calls—no API keys in the browser.
 *   **Multi-Model Support**: Ready for Gemini, GPT-4o-mini, and Llama 3.3 via a unified gateway.
 
@@ -80,7 +80,6 @@ Learn more about the platform's core modules:
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18.0 or higher)
 - [npm](https://www.npmjs.com/) or [Bun](https://bun.sh/)
-- (Optional) [Python 3.10+](https://python.org/) for the Offline NLP Parser
 
 ### Quick Installation
 1. **Clone & Install**
@@ -96,13 +95,7 @@ Learn more about the platform's core modules:
    ./scripts/setup_ai_backend.ps1
    ```
 
-3. **Offline NLP Parser**
-   ```bash
-   cd offline-parser
-   python main.py
-   ```
-
-4. **Launch Application**
+3. **Launch Application**
    ```bash
    npm run dev
    ```
@@ -113,7 +106,8 @@ Learn more about the platform's core modules:
 ## 🤝 Roadmap
 - [x] **Modular Architecture Refactor**: All major pages componentized for scalability.
 - [x] **Secure AI Gateway**: Server-side key management.
-- [ ] **Import from PDF**: Advanced parsing using the local NLP suite.
+- [x] **Browser-Native NLP**: Pyodide integration for offline parsing and scoring.
+- [x] **Import from PDF**: Advanced parsing using the local NLP suite.
 - [ ] **Tailored Cover Letter Generator**.
 
 ---

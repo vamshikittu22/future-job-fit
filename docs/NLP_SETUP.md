@@ -1,61 +1,34 @@
-# NLP Setup & Offline Parser
+# NLP Setup & Browser-Native Parser
 
-The `offline-parser` is a Python-based microservice that provides high-performance, private, and offline-capable resume analysis.
+The application now uses **Pyodide**, a Python distribution for the browser based on WebAssembly, to provide high-performance, private, and offline-capable resume analysis without requiring any local backend installation.
 
-## 🚀 Why an Offline Parser?
--   **Privacy**: Resume data is processed on your machine, never leaving your network.
--   **Security**: No external API calls are made for scoring and keyword extraction.
--   **Performance**: Sub-50ms latency for ATS checks.
--   **Cost**: Zero operational cost compared to LLM tokens.
+## 🚀 Why Browser-Native NLP?
+-   **Zero Configuration**: No need to install Python, `pip`, or Docker. It works out-of-the-box in any modern browser.
+-   **True Privacy**: Resume data is processed entirely in your browser's memory. No network requests are made for parsing or scoring.
+-   **Seamless Offline Support**: PWA technology caches the Python engine and NLP scripts, allowing the core intelligence to work without an internet connection.
+-   **High Performance**: Leverages WebAssembly for sub-50ms latency in ATS checks and parsing.
 
-## 🛠️ Local Setup
+## 🛠️ Architecture
 
-### 1. Requirements
--   Python 3.10 or higher (Optimized for **3.14+**)
--   `pip` (Python package manager)
-
-### 2. Installation
-```bash
-cd offline-parser
-
-# Create and activate virtual environment
-python -m venv venv
-.\venv\Scripts\activate      # Windows
-source venv/bin/activate    # Mac/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Running the Service
-```bash
-# Start the FastAPI server
-python main.py
-```
-Default URL: `http://localhost:8000`
-
-## 🔗 Frontend Integration
-
-To route requests to the offline parser instead of Cloud AI, update your `.env.local`:
-
-```env
-VITE_OFFLINE_PARSER=true
-VITE_OFFLINE_PARSER_URL=http://localhost:8000
-```
-
-## 🏗️ Architecture
-
--   **Framework**: FastAPI (for extremely low overhead).
--   **Engine**: Custom regex-based parser.
--   **Models**: Light-weight JSON-based keyword dictionaries (~200KB).
--   **Containerization**: `Dockerfile` included for local or cloud deployment.
+-   **Runtime**: [Pyodide](https://pyodide.org/) (Python 3.12+ in the browser).
+-   **Core Script**: `public/py-nlp/nlp_core.py` (The brain of our resume analysis).
+-   **State Management**: `src/shared/hooks/usePyNLP.ts` (React-friendly interface).
+-   **Optimization**: Configured with COOP/COEP headers for multi-threaded performance.
 
 ## 📂 Key Files
--   `main.py`: Entry point and all logic for keyword matching, parsing, and scoring.
--   `Dockerfile`: Standardized environment for deployment.
--   `requirements.txt`: Minimal dependencies (`fastapi`, `uvicorn`, `pydantic`).
+-   `public/py-nlp/nlp_core.py`: Contains the logic for contact extraction, section identification, keyword matching, and ATS scoring.
+-   `src/shared/hooks/usePyNLP.ts`: Manage the Pyodide instance lifecycle and provides asynchronous methods for parsing and scoring.
+-   `src/shared/utils/textExtraction.ts`: Handles local text extraction from PDF, DOCX, and TXT using `pdfjs` and `mammoth`.
 
-## 🌍 Deployment
-Deploy to Google Cloud Run for a high-availability private instance:
--   Windows: `./offline-parser/deploy.ps1`
--   Bash: `./offline-parser/deploy.sh`
+## 🔗 How it Works
+
+1. **Initialization**: On app load (or on first use), the `usePyNLP` hook downloads the Pyodide runtime (cached by the service worker).
+2. **Core Loading**: It fetches and executes `nlp_core.py` within the virtual Python environment.
+3. **Execution**: When you import a resume or analyze a job, the JS layer passes text to the Python engine and receives structured JSON in return.
+
+## 🏗️ Performance Tips
+For the best performance, the application is deployed with specific security headers in `vercel.json`:
+- `Cross-Origin-Opener-Policy: same-origin`
+- `Cross-Origin-Embedder-Policy: require-corp`
+
+These headers enable **SharedArrayBuffer**, allowing Pyodide to use multiple threads and significantly speeding up complex NLP operations.

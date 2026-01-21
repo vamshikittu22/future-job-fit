@@ -11,6 +11,7 @@ import { APIKeyProvider } from "@/shared/contexts/APIKeyContext";
 // Eagerly loaded - small and needed immediately
 import Home from "@/features/home/pages/HomePage";
 import NotFound from "@/features/home/pages/NotFoundPage";
+const PyodideTest = lazy(() => import("@/features/home/pages/PyodideTestPage"));
 
 // Lazy loaded - heavy features loaded on-demand
 const AboutPlatform = lazy(() => import("@/features/home/pages/AboutPlatformPage"));
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
   { path: "/about-platform", element: <Suspense fallback={<PageLoader />}><AboutPlatform /></Suspense> },
   { path: "/input", element: <Suspense fallback={<PageLoader />}><ResumeInput /></Suspense> },
   { path: "/results", element: <Suspense fallback={<PageLoader />}><Results /></Suspense> },
+  { path: "/py-test", element: <Suspense fallback={<PageLoader />}><PyodideTest /></Suspense> },
   {
     path: "/resume-wizard",
     element: <Suspense fallback={<PageLoader />}><WizardLayout /></Suspense>,

@@ -17,6 +17,7 @@ import SampleDataLoader from '@/features/resume-builder/components/editor/Sample
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 import APIKeySettingsModal from '@/features/resume-builder/components/modals/APIKeySettingsModal';
 import { ExportResumeModal } from '@/features/resume-builder/components/editor/ExportResumeModal';
+import ImportResumeModal from '@/features/resume-builder/components/modals/ImportResumeModal';
 import GodModePanel from '@/features/resume-builder/components/editor/GodModePanel';
 
 const WizardLayoutContent: React.FC = () => {
@@ -28,6 +29,7 @@ const WizardLayoutContent: React.FC = () => {
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSampleDataModalOpen, setIsSampleDataModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAPIKeyModalOpen, setIsAPIKeyModalOpen] = useState(false);
@@ -205,6 +207,7 @@ const WizardLayoutContent: React.FC = () => {
             {!isMobile && (
               <QuickActionsBar
                 onLoadSample={() => setIsSampleDataModalOpen(true)}
+                onLoadImport={() => setIsImportModalOpen(true)}
                 onAIEnhance={() => setIsAIEnhanceModalOpen(true)}
                 onTogglePreview={() => setIsPreviewVisible((prev) => !prev)}
                 onExport={() => setIsExportModalOpen(true)}
@@ -253,6 +256,12 @@ const WizardLayoutContent: React.FC = () => {
         </div>
 
         <SampleDataLoader open={isSampleDataModalOpen} onOpenChange={setIsSampleDataModalOpen} />
+
+        <ImportResumeModal
+          open={isImportModalOpen}
+          onOpenChange={setIsImportModalOpen}
+          onImport={setResumeData}
+        />
 
         <AIEnhanceModal
           open={isAIEnhanceModalOpen}
