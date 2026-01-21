@@ -27,21 +27,21 @@ export default function ConfirmationModal({
 }: ConfirmationModalProps) {
   const formatInstructionsSummary = () => {
     if (!customInstructions) return "Using default AI instructions";
-    
+
     const sections: string[] = [];
-    
+
     if (customInstructions.selectedTags?.length > 0) {
       sections.push(`Focus areas: ${customInstructions.selectedTags.join(', ')}`);
     }
-    
+
     if (customInstructions.targetAudience) {
       sections.push(`Target: ${customInstructions.targetAudience}`);
     }
-    
+
     if (customInstructions.customInstructions) {
       sections.push(`Custom instructions: ${customInstructions.customInstructions.slice(0, 100)}${customInstructions.customInstructions.length > 100 ? '...' : ''}`);
     }
-    
+
     return sections.length > 0 ? sections.join(' • ') : "Using customized AI instructions";
   };
 
@@ -67,7 +67,10 @@ export default function ConfirmationModal({
               </CardHeader>
               <CardContent>
                 <Badge variant="secondary" className="text-sm">
-                  {selectedModel === "gemini-1.5-flash" ? "Gemini 1.5 Flash (Fast)" : "Gemini 1.5 Pro (Advanced)"}
+                  {selectedModel === "gemini-2.5-flash" ? "Gemini 2.5 Flash (Latest)" :
+                    selectedModel === "gemini-2.5-pro" ? "Gemini 2.5 Pro (Best)" :
+                      selectedModel === "gemini-2.0-flash" ? "Gemini 2.0 Flash (Fast)" :
+                        selectedModel === "gemini-1.5-flash" ? "Gemini 1.5 Flash (Stable)" : "Gemini 1.5 Pro (Pro)"}
                 </Badge>
               </CardContent>
             </Card>
@@ -128,7 +131,7 @@ export default function ConfirmationModal({
                 <div className="text-sm text-muted-foreground">
                   {formatInstructionsSummary()}
                 </div>
-                
+
                 {customInstructions?.selectedTags?.length > 0 && (
                   <div className="mt-3">
                     <p className="text-sm font-medium mb-2">Focus Tags:</p>

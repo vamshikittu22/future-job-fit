@@ -22,7 +22,7 @@ import ImportExportPanel from "@/shared/components/common/ImportExportPanel";
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [customInstructions, setCustomInstructions] = useState<any>({

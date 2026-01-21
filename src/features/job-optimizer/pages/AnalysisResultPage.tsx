@@ -13,6 +13,7 @@ import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import { resumeAI } from "@/shared/api/resumeAI";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
+import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 
 interface EvaluationResult {
   atsScore: number;
@@ -30,6 +31,7 @@ export default function Results() {
   const [error, setError] = useState<string | null>(null);
   const [keywordModalOpen, setKeywordModalOpen] = useState(false);
   const [selectedKeyword, setSelectedKeyword] = useState<string>("");
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -37,7 +39,7 @@ export default function Results() {
     const evaluateResume = async () => {
       const resumeText = localStorage.getItem("resumeText");
       const jobDescription = localStorage.getItem("jobDescription");
-      const selectedModel = localStorage.getItem("selectedModel") || "gemini-1.5-flash";
+      const selectedModel = localStorage.getItem("selectedModel") || "gemini-2.5-flash";
       const customInstructions = localStorage.getItem("customInstructions");
 
       if (!resumeText) {
@@ -349,11 +351,11 @@ export default function Results() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => downloadAsText(evaluation.rewrittenResume, "optimized-resume.txt")}
+                      onClick={() => setExportModalOpen(true)}
                       className="hover:shadow-swiss transition-all duration-300"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Download
+                      Export
                     </Button>
                   </div>
                 </div>
@@ -442,6 +444,14 @@ export default function Results() {
         keyword={selectedKeyword}
         resumeText={evaluation?.rewrittenResume || ""}
         onApply={handleKeywordApply}
+      />
+
+      {/* Export Modal */}
+      <ExportOptimizedModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        resumeText={evaluation?.rewrittenResume || ""}
+        atsScore={evaluation?.atsScore}
       />
     </div>
   );

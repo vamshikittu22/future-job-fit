@@ -147,7 +147,7 @@ export class ResumeAIService {
    * Make direct API call to Gemini with user's API key
    */
   private async callGeminiDirect(apiKey: string, task: string, data: any): Promise<any> {
-    const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
     let prompt = '';
     if (task === 'enhanceSection') {
@@ -481,7 +481,7 @@ Rules:
 
 Return ONLY the rewritten bullet point, nothing else.`;
 
-        const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
         const response = await fetch(`${baseUrl}?key=${sessionKey.apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
