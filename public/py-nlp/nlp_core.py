@@ -220,6 +220,29 @@ def parse_resume(text: str) -> dict:
         "skills": skills
     }
 
+def rewrite_bullet(bullet: str, keyword: str) -> str:
+    """Intelligently integrate a keyword into a bullet point."""
+    trimmed = bullet.strip()
+    if not trimmed:
+        return f"• Proficient in {keyword.title()}."
+    
+    keyword = keyword.title()
+    # Simple semantic replacement
+    if 'experience' in trimmed.lower():
+        return re.sub(r'experience', f'experience in {keyword}', trimmed, flags=re.IGNORECASE, count=1)
+    if 'expertise' in trimmed.lower():
+        return re.sub(r'expertise', f'expertise in {keyword}', trimmed, flags=re.IGNORECASE, count=1)
+    if 'developed' in trimmed.lower():
+        return re.sub(r'developed', f'developed {keyword}-driven', trimmed, flags=re.IGNORECASE, count=1)
+    if 'using' in trimmed.lower():
+        return re.sub(r'using', f'using {keyword} and', trimmed, flags=re.IGNORECASE, count=1)
+        
+    # Default: Append with a transition
+    suffix = f" utilizing {keyword}"
+    if trimmed.endswith('.'):
+        return trimmed[:-1] + suffix + "."
+    return trimmed + suffix + "."
+
 def score_ats(resume_text: str, job_desc: str) -> dict:
     """Entry point for ATS scoring."""
     suggestions = []
@@ -293,19 +316,44 @@ def optimize_resume(resume_text: str, job_desc: str) -> str:
     if not missing:
         return resume_text
 
-    # 1. Update/Add Skills section
-    skills_text = sections.get('skills', '')
-    new_skills = [m.title() for m in missing[:10]]
-    if skills_text:
-        sections['skills'] = skills_text + ", " + ", ".join(new_skills)
-    else:
-        sections['skills'] = ", ".join(new_skills)
+    # 1. Distribute some keywords into Experience Section (Better Integration)
+    experience_content = sections.get('experience', '')
+    experience_keywords = missing[:min(len(missing), 5)] # Take first few for experience
+    remaining_keywords = missing[min(len(missing), 5):]
+    
+    if experience_content:
+        lines = experience_content.split('\n')
+        updated_lines = []
+        kw_idx = 0
+        for line in lines:
+            trimmed = line.strip()
+            # If it's a bullet point and we still have keywords to integrate
+            if (trimmed.startswith('•') or trimmed.startswith('-') or trimmed.startswith('*')) and kw_idx < len(experience_keywords):
+                prefix = ""
+                if trimmed.startswith('•'): prefix = "• "
+                elif trimmed.startswith('-'): prefix = "- "
+                elif trimmed.startswith('*'): prefix = "* "
+                
+                raw_text = trimmed.lstrip('•-* ')
+                line = prefix + rewrite_bullet(raw_text, experience_keywords[kw_idx])
+                kw_idx += 1
+            updated_lines.append(line)
+        sections['experience'] = '\n'.join(updated_lines)
 
-    # 2. Enhance Summary if it exists
+    # 2. Update/Add Skills section with remaining
+    skills_text = sections.get('skills', '')
+    if remaining_keywords:
+        new_skills = [m.title() for m in remaining_keywords]
+        if skills_text:
+            sections['skills'] = skills_text + ", " + ", ".join(new_skills)
+        else:
+            sections['skills'] = ", ".join(new_skills)
+
+    # 3. Enhance Summary if it exists
     summary_text = sections.get('summary', '')
     if summary_text:
-        buzzwords = ", ".join([m.title() for m in missing[:3]])
-        sections['summary'] = f"{summary_text.strip()} Proficient in {buzzwords} and dedicated to driving technical excellence."
+        buzzwords = ", ".join([m.title() for m in missing[:2]])
+        sections['summary'] = f"{summary_text.strip()} Expert in {buzzwords} with a focus on delivering high-impact solutions."
 
     # 3. Reconstruct Resume
     ordered_sections = ['header', 'summary', 'skills', 'experience', 'projects', 'education', 'certifications', 'achievements']

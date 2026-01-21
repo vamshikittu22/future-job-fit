@@ -151,15 +151,31 @@ CONTENT: ${content}`;
 
     } else if (task === 'evaluateResume') {
       const { resumeText, jobDescription } = body as EvaluationRequest;
-      const prompt = `Evaluate the following resume against the job description. Return JSON:
+      const prompt = `You are an expert ATS Resume Optimizer.
+Evaluate the following resume against the job description and provide a high-quality optimization.
+
+RESUME:
+${resumeText}
+
+JOB DESCRIPTION:
+${jobDescription || 'N/A'}
+
+TASK:
+1. Identify missing keywords (technologies, skills).
+2. Calculate ATS score (0-100).
+3. Provide 3-5 concrete suggestions for improvement.
+4. Provide a FULLY REWRITTEN and OPTIMIZED version of the entire resume text.
+   - INTEGRATE missing keywords naturally into the experience bullet points where they fit.
+   - Use high-impact action verbs.
+   - Maintain all original factual data.
+
+Return ONLY a JSON object:
 {
   "atsScore": number,
-  "missingKeywords": string[],
-  "suggestions": string[],
-  "rewrittenResume": "A brief optimized version of the summary"
-}
-RESUME: ${resumeText}
-JOB: ${jobDescription || 'N/A'}`;
+  "missingKeywords": ["..."],
+  "suggestions": ["..."],
+  "rewrittenResume": "string (the full optimized resume text)"
+}`;
       const text = await callGemini(prompt, 0.5);
       responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
 

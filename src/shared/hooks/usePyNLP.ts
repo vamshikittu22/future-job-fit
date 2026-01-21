@@ -64,7 +64,7 @@ export const usePyNLP = () => {
                 await py.runPythonAsync(`
           import json
           import sys
-          from nlp_core import parse_resume, score_ats, optimize_resume
+          from nlp_core import parse_resume, score_ats, optimize_resume, rewrite_bullet
         `);
 
                 pyodideInstance = py;
@@ -109,10 +109,19 @@ export const usePyNLP = () => {
         return result;
     }, [init]);
 
+    const rewriteBullet = useCallback(async (bullet: string, keyword: string): Promise<string> => {
+        const py = await init();
+        py.globals.set("bullet_text", bullet);
+        py.globals.set("keyword_text", keyword);
+        const result = await py.runPythonAsync(`rewrite_bullet(bullet_text, keyword_text)`);
+        return result;
+    }, [init]);
+
     return {
         parseResume,
         scoreATS,
         optimizeResume,
+        rewriteBullet,
         status,
         error,
         isReady: status === 'ready',

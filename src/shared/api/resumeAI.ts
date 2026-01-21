@@ -531,25 +531,30 @@ Return ONLY the rewritten bullet point, nothing else.`;
       }
     }
 
-    // Fallback: Simple intelligent insertion
+    // Fallback: More intelligent semantic insertion
     const bullet = request.originalBullet;
     const keyword = request.keyword;
+    const kwTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1);
 
-    // Try to insert keyword naturally
-    let rewritten = bullet;
+    let rewritten = bullet.trim();
 
-    // If bullet mentions "experience" or "expertise", add keyword there
-    if (bullet.toLowerCase().includes('experience')) {
-      rewritten = bullet.replace(/experience/i, `experience in ${keyword}`);
-    } else if (bullet.toLowerCase().includes('worked')) {
-      rewritten = bullet.replace(/worked/i, `worked with ${keyword}`);
-    } else if (bullet.toLowerCase().includes('developed')) {
-      rewritten = bullet.replace(/developed/i, `developed ${keyword}-focused`);
-    } else if (bullet.toLowerCase().includes('managed')) {
-      rewritten = bullet.replace(/managed/i, `managed ${keyword}-related`);
+    // Semantic replacement patterns
+    if (rewritten.toLowerCase().includes('experience')) {
+      rewritten = rewritten.replace(/experience/i, `experience in ${kwTitle}`);
+    } else if (rewritten.toLowerCase().includes('developed')) {
+      rewritten = rewritten.replace(/developed/i, `developed ${kwTitle}-driven`);
+    } else if (rewritten.toLowerCase().includes('expertise')) {
+      rewritten = rewritten.replace(/expertise/i, `expertise in ${kwTitle}`);
+    } else if (rewritten.toLowerCase().includes('using')) {
+      rewritten = rewritten.replace(/using/i, `using ${kwTitle} and`);
     } else {
-      // Append naturally at the end
-      rewritten = `${bullet.replace(/\.$/, '')} utilizing ${keyword}.`;
+      // Append naturally
+      const suffix = ` utilizing ${kwTitle}`;
+      if (rewritten.endsWith('.')) {
+        rewritten = rewritten.slice(0, -1) + suffix + ".";
+      } else {
+        rewritten = rewritten + suffix + ".";
+      }
     }
 
     return { rewrittenBullet: rewritten };
