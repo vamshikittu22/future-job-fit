@@ -4,6 +4,8 @@ import { Separator } from "@/shared/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { FileText, Briefcase, Settings, AlertCircle, CheckCircle } from "lucide-react";
 
+import { extractATSKeywords } from "@/shared/lib/atsKeywords";
+
 interface PreviewPanelProps {
   resumeText: string;
   jobDescription: string;
@@ -11,29 +13,20 @@ interface PreviewPanelProps {
 }
 
 export default function PreviewPanel({ resumeText, jobDescription, customInstructions }: PreviewPanelProps) {
-  // Extract keywords from job description for highlighting
-  const extractKeywords = (jd: string) => {
-    if (!jd) return [];
-    const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'];
-    return jd.toLowerCase()
-      .split(/\W+/)
-      .filter(word => word.length > 3 && !commonWords.includes(word))
-      .slice(0, 20); // Top 20 keywords
-  };
+  // Use the intelligent ATS keyword system
+  const keywords = extractATSKeywords(jobDescription).slice(0, 20);
 
-  const keywords = extractKeywords(jobDescription);
-  
   // Check which keywords are missing from resume
-  const missingKeywords = keywords.filter(keyword => 
+  const missingKeywords = keywords.filter(keyword =>
     !resumeText.toLowerCase().includes(keyword.toLowerCase())
   );
 
-  const matchingKeywords = keywords.filter(keyword => 
+  const matchingKeywords = keywords.filter(keyword =>
     resumeText.toLowerCase().includes(keyword.toLowerCase())
   );
 
   // Calculate rough ATS score
-  const atsScore = keywords.length > 0 
+  const atsScore = keywords.length > 0
     ? Math.round((matchingKeywords.length / keywords.length) * 100)
     : 0;
 
@@ -103,7 +96,7 @@ export default function PreviewPanel({ resumeText, jobDescription, customInstruc
           <TabsContent value="analysis" className="h-full m-0 p-4 overflow-y-auto">
             <div className="space-y-6">
               <h3 className="font-semibold text-lg">Resume Analysis</h3>
-              
+
               {jobDescription && resumeText ? (
                 <>
                   {/* ATS Score */}

@@ -32,8 +32,17 @@ TECH_SKILLS = [
     'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'SciPy', 'Matplotlib', 'Seaborn', 'OpenCV', 'HuggingFace', 'Transformers', 'LLM', 'LangChain', 'OpenAI',
     'REST', 'GraphQL', 'gRPC', 'SOAP', 'API', 'Microservices', 'Serverless', 'WebSockets', 'TRPC',
     'Agile', 'Scrum', 'Kanban', 'TDD', 'BDD', 'Jira', 'Confluence',
-    'Docker Compose', 'Podman', 'Helm', 'Flux', 'ArgoCD', 'Prometheus', 'Grafana', 'ELK Stack', 'DataDog', 'New Relic'
+    'Docker Compose', 'Podman', 'Helm', 'Flux', 'ArgoCD', 'Prometheus', 'Grafana', 'ELK Stack', 'DataDog', 'New Relic',
+    'Tailwind', 'Sass', 'Less', 'CloudFront', 'Lambda', 'S3', 'EC2', 'RDS', 'Redshift', 'BigQuery', 'Snowflake', 'DynamoDB',
+    'Mobile', 'iOS', 'Android', 'Flutter', 'React Native', 'Ionic', 'Capacitor', 'Embedded', 'Firmware', 'Real-time', 'Distributed'
 ]
+
+# Words that should NEVER be considered keywords in an ATS context
+PROHIBITED_KEYWORDS = {
+    'remote', 'located', 'location', 'charleston', 'duration', 'contract', 'months', 'years', 'only', 'must', 'zone', 
+    'time', 'work', 'corp', 'company', 'business', 'professional', 'summary', 'objective', 'skills', 'education', 
+    'experience', 'projects', 'achievements', 'awards', 'honors', 'background', 'profile'
+}
 
 ACTION_VERBS = {
     'led', 'managed', 'developed', 'created', 'designed', 'implemented', 'built',
@@ -50,7 +59,10 @@ STOP_WORDS = {
     'our', 'your', 'my', 'we', 'they', 'you', 'i', 'he', 'she', 'can', 'all', 'each',
     'such', 'what', 'when', 'where', 'how', 'why', 'very', 'just', 'also', 'more',
     'about', 'up', 'out', 'if', 'than', 'so', 'no', 'not', 'only', 'own', 'same',
-    'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between'
+    'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between',
+    'using', 'well', 'used', 'many', 'some', 'most', 'very', 'often', 'like', 'every',
+    'any', 'both', 'once', 'here', 'there', 'too', 'now', 'page', 'site', 'work',
+    'data', 'new', 'time', 'team', 'first', 'level', 'based', 'using', 'throughout'
 }
 
 # --- Internal Utilities ---
@@ -126,10 +138,37 @@ def parse_resume_sections(text: str) -> Dict[str, str]:
     return sections
 
 def extract_keywords(text: str, topn: int = 30) -> List[str]:
-    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-    words = [w for w in words if w not in STOP_WORDS]
-    word_counts = Counter(words)
-    return [word for word, _ in word_counts.most_common(topn)]
+    # 1. Identify explicit technical skills first
+    text_lower = text.lower()
+    found_tech = []
+    for skill in TECH_SKILLS:
+        # Use word boundaries for tech skills to avoid partial matches like 'Go' in 'Google'
+        pattern = r'\b' + re.escape(skill.lower()) + r'\b'
+        if re.search(pattern, text_lower):
+            found_tech.append(skill.lower())
+    
+    # 2. Extract other potentially relevant words (nouns/adj with >3 chars)
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', text_lower)
+    
+    # Filter out stop words, prohibited words, and action verbs
+    filtered = []
+    for w in words:
+        if (w not in STOP_WORDS and 
+            w not in PROHIBITED_KEYWORDS and 
+            w not in ACTION_VERBS and 
+            len(w) > 3): # Favor longer words for non-predefined skills
+            filtered.append(w)
+            
+    # Count frequencies
+    word_counts = Counter(filtered)
+    
+    # Combine tech skills with top generic keywords
+    # Tech skills get priority and are always included if they exist
+    tech_set = set(found_tech)
+    generic_keywords = [word for word, count in word_counts.most_common(topn) if word not in tech_set]
+    
+    combined = found_tech + generic_keywords
+    return combined[:topn]
 
 def calculate_readability(text: str) -> int:
     score = 100
@@ -186,8 +225,12 @@ def score_ats(resume_text: str, job_desc: str) -> dict:
     suggestions = []
     
     # Keyword Match
-    resume_kw = set(extract_keywords(resume_text, 30))
-    jd_kw = set(extract_keywords(job_desc, 30))
+    # Extract name to filter it out from keywords
+    candidate_name = extract_name(resume_text)
+    name_parts = set(candidate_name.lower().split()) if candidate_name else set()
+    
+    resume_kw = set(extract_keywords(resume_text, 30)) - name_parts
+    jd_kw = set(extract_keywords(job_desc, 30)) - name_parts
     matched = resume_kw & jd_kw
     match_ratio = len(matched) / max(len(jd_kw), 1)
     
@@ -234,6 +277,52 @@ def score_ats(resume_text: str, job_desc: str) -> dict:
             "actionVerbs": action_score
         }
     }
+
+def optimize_resume(resume_text: str, job_desc: str) -> str:
+    """Intelligently optimize resume by injecting missing keywords."""
+    sections = parse_resume_sections(resume_text)
+    
+    # Identify missing keywords
+    candidate_name = extract_name(resume_text)
+    name_parts = set(candidate_name.lower().split()) if candidate_name else set()
+    
+    resume_kw = set(extract_keywords(resume_text, 50)) - name_parts
+    jd_kw = set(extract_keywords(job_desc, 30)) - name_parts
+    missing = list(jd_kw - resume_kw)
+    
+    if not missing:
+        return resume_text
+
+    # 1. Update/Add Skills section
+    skills_text = sections.get('skills', '')
+    new_skills = [m.title() for m in missing[:10]]
+    if skills_text:
+        sections['skills'] = skills_text + ", " + ", ".join(new_skills)
+    else:
+        sections['skills'] = ", ".join(new_skills)
+
+    # 2. Enhance Summary if it exists
+    summary_text = sections.get('summary', '')
+    if summary_text:
+        buzzwords = ", ".join([m.title() for m in missing[:3]])
+        sections['summary'] = f"{summary_text.strip()} Proficient in {buzzwords} and dedicated to driving technical excellence."
+
+    # 3. Reconstruct Resume
+    ordered_sections = ['header', 'summary', 'skills', 'experience', 'projects', 'education', 'certifications', 'achievements']
+    output = []
+    
+    # Header is special - it's usually just the top part
+    if 'header' in sections:
+        output.append(sections['header'])
+    
+    for sec in ordered_sections[1:]:
+        if sec in sections:
+            # Add header for the section
+            header_name = sec.upper()
+            output.append(f"\n{header_name}")
+            output.append(sections[sec])
+            
+    return "\n".join(output)
 
 if __name__ == "__main__":
     sample_resume = """

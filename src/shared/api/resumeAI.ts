@@ -291,15 +291,27 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
     }
 
     if (task === 'evaluateResume') {
+      const original = data.resumeText || '';
+      const missing = ['Cloud Architecture', 'Agile Methodology', 'Team Leadership'];
+
+      // Basic simulated optimization for demo mode
+      let optimized = original;
+      if (original.toLowerCase().includes('skills')) {
+        optimized = original.replace(/skills/i, `SKILLS\n${missing.join(', ')}, `);
+      } else {
+        optimized = `${original}\n\nSKILLS\n${missing.join(', ')}`;
+      }
+
       return {
         atsScore: 78,
-        missingKeywords: ['leadership', 'agile', 'cross-functional'],
+        missingKeywords: missing,
         suggestions: [
-          'Add more quantifiable achievements',
-          'Include relevant certifications',
-          'Use stronger action verbs at the start of each bullet'
+          'Add more quantifiable achievements to your experience bullets',
+          'Include relevant certifications for Cloud Architecture',
+          'Use stronger action verbs at the start of each bullet (e.g., Orchestrated instead of Worked)'
         ],
-        rewrittenResume: data.resumeText || ''
+        rewrittenResume: optimized,
+        improvements: ['Injected critical industry keywords', 'Reformated skills for ATS scanning']
       };
     }
 

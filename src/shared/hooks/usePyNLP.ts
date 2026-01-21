@@ -64,7 +64,7 @@ export const usePyNLP = () => {
                 await py.runPythonAsync(`
           import json
           import sys
-          from nlp_core import parse_resume, score_ats
+          from nlp_core import parse_resume, score_ats, optimize_resume
         `);
 
                 pyodideInstance = py;
@@ -101,9 +101,18 @@ export const usePyNLP = () => {
         return JSON.parse(jsonStr);
     }, [init]);
 
+    const optimizeResume = useCallback(async (resumeText: string, jobDesc: string): Promise<string> => {
+        const py = await init();
+        py.globals.set("res_text", resumeText);
+        py.globals.set("jd_text", jobDesc);
+        const result = await py.runPythonAsync(`optimize_resume(res_text, jd_text)`);
+        return result;
+    }, [init]);
+
     return {
         parseResume,
         scoreATS,
+        optimizeResume,
         status,
         error,
         isReady: status === 'ready',

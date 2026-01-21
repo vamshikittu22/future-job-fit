@@ -51,7 +51,6 @@ const router = createBrowserRouter([
   { path: "/about-platform", element: <Suspense fallback={<PageLoader />}><AboutPlatform /></Suspense> },
   { path: "/input", element: <Suspense fallback={<PageLoader />}><ResumeInput /></Suspense> },
   { path: "/results", element: <Suspense fallback={<PageLoader />}><Results /></Suspense> },
-  { path: "/py-test", element: <Suspense fallback={<PageLoader />}><PyodideTest /></Suspense> },
   {
     path: "/resume-wizard",
     element: <Suspense fallback={<PageLoader />}><WizardLayout /></Suspense>,

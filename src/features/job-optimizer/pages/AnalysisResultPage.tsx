@@ -27,7 +27,7 @@ interface EvaluationResult {
 }
 
 export default function Results() {
-  const { scoreATS, status: pyStatus, isReady } = usePyNLP();
+  const { scoreATS, optimizeResume, status: pyStatus, isReady } = usePyNLP();
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,31 +66,31 @@ export default function Results() {
           if (isReady && jobDescription) {
             const pyResult = await scoreATS(resumeText, jobDescription);
             console.log("Local NLP Verification Score:", pyResult.score);
-            // We could blend the scores or just use local one for higher precision
-            // For now, we trust the API's holistic view but log the local one
           }
         } catch (apiErr) {
           console.warn("API evaluation failed, attempting local NLP fallback...", apiErr);
 
           if (isReady && jobDescription) {
             const pyResult = await scoreATS(resumeText, jobDescription);
+            const pyOptimized = await optimizeResume(resumeText, jobDescription);
+
             result = {
               atsScore: pyResult.score,
               missingKeywords: pyResult.missing,
               matchingKeywords: pyResult.matchingKeywords,
               suggestions: [
-                "Offline Mode: Keyword-based scoring is active.",
-                "Note: Resume rewriting is disabled while offline.",
-                "Add missing keywords manually to improve your score."
+                "Local AI optimization engine is currently active.",
+                "Missing keywords have been injected into your skills and summary sections.",
+                "Review the matching keywords and improvements below."
               ],
-              rewrittenResume: resumeText, // Use original text in offline mode
-              improvements: ["Identified missing technical keywords"],
-              nextSteps: ["Incorporate the highlighted keywords into your resume", "Connect to internet for AI rewriting"]
+              rewrittenResume: pyOptimized, // Correctly use the optimized version
+              improvements: ["Injected missing technical keywords", "Balanced content for ATS compatibility"],
+              nextSteps: ["Review the new keywords in the 'Optimized Resume' panel", "Export the updated version for your application"]
             };
 
             toast({
-              title: "Running in offline mode",
-              description: "Full AI rewriting is unavailable, but keyword scoring is active.",
+              title: "Using Local Optimization",
+              description: "Our local engine has tailored your resume based on detected keywords.",
             });
           } else if (!isReady) {
             throw new Error("API and AI engine are both unavailable. Check your connection.");
