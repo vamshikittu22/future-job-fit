@@ -8,6 +8,62 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// --- Shared Constants (loaded from shared-constants.json) ---
+let TECH_SKILLS: string[] = [];
+let SOFT_SKILLS: string[] = [];
+let STOP_WORDS: Set<string> = new Set();
+let constantsLoaded = false;
+
+async function loadSharedConstants(): Promise<void> {
+  if (constantsLoaded) return;
+
+  try {
+    // Try to read from filesystem (relative to function directory)
+    const jsonPath = new URL('../../../public/shared-constants.json', import.meta.url);
+    const jsonContent = await Deno.readTextFile(jsonPath);
+    const constants = JSON.parse(jsonContent);
+    TECH_SKILLS = constants.TECH_SKILLS || [];
+    SOFT_SKILLS = constants.SOFT_SKILLS || [];
+    STOP_WORDS = new Set(constants.STOP_WORDS || []);
+    constantsLoaded = true;
+    console.log('[Shared Constants] Loaded successfully');
+  } catch (error) {
+    console.warn('[Shared Constants] Failed to load from file, using defaults:', error);
+    // Fallback values in case file reading fails
+    TECH_SKILLS = [
+      'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'SQL', 'R', 'Scala', 'Cobol', 'Fortran',
+      'React', 'Angular', 'Vue', 'Next.js', 'Nuxt.js', 'Svelte', 'SolidJS', 'Node.js', 'Express', 'Deno', 'Bun', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Rails', 'Laravel', 'ASP.NET',
+      'AWS', 'Azure', 'GCP', 'Google Cloud', 'DigitalOcean', 'Heroku', 'Netlify', 'Vercel',
+      'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Pulumi', 'Jenkins', 'Git', 'GitHub Actions', 'GitLab CI', 'CircleCI', 'CI/CD', 'DevOps', 'SRE',
+      'PostgreSQL', 'MySQL', 'MariaDB', 'MongoDB', 'Redis', 'Cassandra', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Supabase', 'Firebase', 'Prisma', 'Drizzle',
+      'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'SciPy', 'Matplotlib', 'Seaborn', 'OpenCV', 'HuggingFace', 'Transformers', 'LLM', 'LangChain', 'OpenAI',
+      'REST', 'GraphQL', 'gRPC', 'SOAP', 'API', 'Microservices', 'Serverless', 'WebSockets', 'TRPC',
+      'Agile', 'Scrum', 'Kanban', 'TDD', 'BDD', 'Jira', 'Confluence',
+      'Docker Compose', 'Podman', 'Helm', 'Flux', 'ArgoCD', 'Prometheus', 'Grafana', 'ELK Stack', 'DataDog', 'New Relic',
+      'Tailwind', 'Sass', 'Less', 'CloudFront', 'Lambda', 'S3', 'EC2', 'RDS', 'Redshift', 'BigQuery', 'Snowflake', 'DynamoDB',
+      'Mobile', 'iOS', 'Android', 'Flutter', 'React Native', 'Ionic', 'Capacitor', 'Embedded', 'Firmware', 'Real-time', 'Distributed'
+    ];
+    SOFT_SKILLS = [
+      'leadership', 'communication', 'teamwork', 'problem-solving', 'analytical',
+      'collaboration', 'mentoring', 'management', 'strategic', 'innovative'
+    ];
+    STOP_WORDS = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+      'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had',
+      'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+      'that', 'which', 'who', 'whom', 'this', 'these', 'those', 'it', 'its', 'their',
+      'our', 'your', 'my', 'we', 'they', 'you', 'i', 'he', 'she', 'can', 'all', 'each',
+      'such', 'what', 'when', 'where', 'how', 'why', 'very', 'just', 'also', 'more',
+      'about', 'up', 'out', 'if', 'than', 'so', 'no', 'not', 'only', 'own', 'same',
+      'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between',
+      'using', 'well', 'used', 'many', 'some', 'most', 'very', 'often', 'like', 'every',
+      'any', 'both', 'once', 'here', 'there', 'too', 'now', 'page', 'site', 'work',
+      'data', 'new', 'time', 'team', 'first', 'level', 'based', 'using', 'throughout'
+    ]);
+    constantsLoaded = true;
+  }
+}
+
 // --- Models & Config ---
 const GEMINI_MODEL = "gemini-1.5-flash";
 const GEMINI_API_VERSION = "v1beta"; // Using v1beta for JSON response mode support
@@ -104,32 +160,6 @@ interface EvaluateATSRequest {
   resumeText: string;
   jobDescriptionText: string;
 }
-
-// --- ATS Engine Constants ---
-const TECH_SKILLS: string[] = [
-  'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'SQL', 'R', 'Scala',
-  'React', 'Angular', 'Vue', 'Next.js', 'Nuxt.js', 'Svelte', 'Node.js', 'Express', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Rails', 'Laravel', 'ASP.NET',
-  'AWS', 'Azure', 'GCP', 'Google Cloud', 'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Jenkins', 'Git', 'GitHub Actions', 'GitLab CI', 'CI/CD', 'DevOps',
-  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Supabase', 'Firebase', 'Prisma',
-  'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'OpenCV', 'LangChain', 'OpenAI',
-  'REST', 'GraphQL', 'gRPC', 'API', 'Microservices', 'Serverless', 'WebSockets',
-  'Agile', 'Scrum', 'Kanban', 'TDD', 'Jira',
-  'Tailwind', 'Sass', 'Lambda', 'S3', 'EC2', 'RDS', 'DynamoDB',
-  'Mobile', 'iOS', 'Android', 'Flutter', 'React Native'
-];
-
-const SOFT_SKILLS: string[] = [
-  'leadership', 'communication', 'teamwork', 'problem-solving', 'analytical',
-  'collaboration', 'mentoring', 'management', 'strategic', 'innovative'
-];
-
-const STOP_WORDS = new Set([
-  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
-  'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had',
-  'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
-  'that', 'which', 'who', 'whom', 'this', 'these', 'those', 'it', 'its', 'their',
-  'our', 'your', 'my', 'we', 'they', 'you', 'i', 'he', 'she', 'can', 'all', 'each'
-]);
 
 // --- ATS Engine Helper Functions ---
 function generateId(): string {
@@ -489,6 +519,9 @@ RESPONSE FORMAT (JSON ONLY):
 
 // --- Main Handler ---
 Deno.serve(async (req) => {
+  // Ensure shared constants are loaded
+  await loadSharedConstants();
+
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

@@ -110,6 +110,18 @@ export interface UseATSResult {
 }
 
 /**
+ * Get the default preferOffline value from environment variable.
+ * Defaults to true if not set (backward compatible).
+ */
+const getDefaultPreferOffline = (): boolean => {
+  const envValue = import.meta.env.VITE_PREFER_OFFLINE_ATS;
+  if (envValue === undefined || envValue === null) {
+    return true; // Default for backward compatibility
+  }
+  return envValue === 'true' || envValue === true;
+};
+
+/**
  * ATS Hook with support for both legacy and structured evaluation.
  * 
  * - When jobDescription is NOT provided: Uses legacy local scoring
@@ -117,12 +129,12 @@ export interface UseATSResult {
  * 
  * @param resumeData - The resume data object
  * @param jobDescription - Optional job description text for JD-aware scoring
- * @param preferOffline - Prefer offline (Pyodide) evaluation over cloud
+ * @param preferOffline - Prefer offline (Pyodide) evaluation over cloud (defaults to VITE_PREFER_OFFLINE_ATS env var, or true)
  */
 export const useATS = (
   resumeData: ResumeData,
   jobDescription?: string,
-  preferOffline: boolean = true
+  preferOffline: boolean = getDefaultPreferOffline()
 ): UseATSResult => {
   const [atsScore, setAtsScore] = useState(0);
   const [analysis, setAnalysis] = useState<any>({

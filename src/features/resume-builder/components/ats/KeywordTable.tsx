@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -17,6 +18,9 @@ interface KeywordTableProps {
 type SortField = 'keyword' | 'category' | 'status' | 'scoreContribution';
 type SortDirection = 'asc' | 'desc';
 
+// Threshold for enabling virtualization (only virtualize when > 100 items)
+const VIRTUALIZATION_THRESHOLD = 100;
+
 export const KeywordTable: React.FC<KeywordTableProps> = ({
     matchResults,
     onKeywordClick,
@@ -27,6 +31,9 @@ export const KeywordTable: React.FC<KeywordTableProps> = ({
     const [categoryFilter, setCategoryFilter] = useState<KeywordCategory | 'all'>('all');
     const [sortField, setSortField] = useState<SortField>('scoreContribution');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+    // Ref for virtualizer
+    const tableContainerRef = useRef<HTMLDivElement>(null);
 
     // Get status color
     const getStatusColor = (status: MatchStatus) => {
@@ -140,6 +147,19 @@ export const KeywordTable: React.FC<KeywordTableProps> = ({
         return Array.from(categories);
     }, [matchResults]);
 
+    // Determine if virtualization should be enabled
+    const shouldVirtualize = filteredAndSorted.length > VIRTUALIZATION_THRESHOLD;
+
+    // Setup virtualizer for large lists
+    const virtualizer = useVirtualizer({
+        count: shouldVirtualize ? filteredAndSorted.length : 0,
+        getScrollElement: () => tableContainerRef.current,
+        estimateSize: () => 45, // Estimated row height
+        overscan: 5, // Number of items to render outside viewport
+    });
+
+    const virtualItems = virtualizer.getVirtualItems();
+
     if (matchResults.length === 0) {
         return (
             <div className={cn('text-center py-8 text-muted-foreground', className)}>
@@ -188,9 +208,15 @@ export const KeywordTable: React.FC<KeywordTableProps> = ({
             </div>
 
             {/* Table */}
-            <div className="border rounded-md">
+            <div
+                ref={tableContainerRef}
+                className={cn(
+                    "border rounded-md overflow-auto",
+                    shouldVirtualize && "max-h-[500px]"
+                )}
+            >
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
                             <TableHead className="w-[200px]">
                                 <Button variant="ghost" size="sm" onClick={() => toggleSort('keyword')} className="-ml-3">
@@ -220,40 +246,98 @@ export const KeywordTable: React.FC<KeywordTableProps> = ({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredAndSorted.map((item, index) => (
-                            <TableRow
-                                key={`${item.keyword}-${index}`}
-                                className={cn(
-                                    onKeywordClick && 'cursor-pointer hover:bg-muted/50'
-                                )}
-                                onClick={() => onKeywordClick?.(item)}
-                            >
-                                <TableCell className="font-medium">
-                                    <div className="flex items-center gap-2">
-                                        <div className={cn('w-2 h-2 rounded-full', getStatusColor(item.status))} />
-                                        {item.keyword}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant="outline" className="text-xs">
-                                        {getCategoryLabel(item.category)}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
-                                        {item.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right font-medium">
-                                    {item.scoreContribution.toFixed(1)}
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-                                    {item.locations.length > 0
-                                        ? item.locations.join(', ')
-                                        : '—'}
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {shouldVirtualize ? (
+                            // Virtualized rendering for large lists
+                            <>
+                                <tr style={{ height: `${virtualizer.getTotalSize()}px` }}>
+                                    <td colSpan={5} className="p-0">
+                                        <div style={{ position: 'relative' }}>
+                                            {virtualItems.map(virtualRow => {
+                                                const item = filteredAndSorted[virtualRow.index];
+                                                return (
+                                                    <TableRow
+                                                        key={`${item.keyword}-${virtualRow.index}`}
+                                                        className={cn(
+                                                            onKeywordClick && 'cursor-pointer hover:bg-muted/50'
+                                                        )}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0,
+                                                            width: '100%',
+                                                            transform: `translateY(${virtualRow.start}px)`,
+                                                            height: `${virtualRow.size}px`,
+                                                        }}
+                                                        onClick={() => onKeywordClick?.(item)}
+                                                    >
+                                                        <TableCell className="font-medium w-[200px]">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={cn('w-2 h-2 rounded-full', getStatusColor(item.status))} />
+                                                                {item.keyword}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="w-[120px]">
+                                                            <Badge variant="outline" className="text-xs">
+                                                                {getCategoryLabel(item.category)}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="w-[100px]">
+                                                            <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
+                                                                {item.status}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-medium w-[80px]">
+                                                            {item.scoreContribution.toFixed(1)}
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                                                            {item.locations.length > 0
+                                                                ? item.locations.join(', ')
+                                                                : '—'}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </>
+                        ) : (
+                            // Standard rendering for small lists
+                            filteredAndSorted.map((item, index) => (
+                                <TableRow
+                                    key={`${item.keyword}-${index}`}
+                                    className={cn(
+                                        onKeywordClick && 'cursor-pointer hover:bg-muted/50'
+                                    )}
+                                    onClick={() => onKeywordClick?.(item)}
+                                >
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn('w-2 h-2 rounded-full', getStatusColor(item.status))} />
+                                            {item.keyword}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="text-xs">
+                                            {getCategoryLabel(item.category)}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
+                                            {item.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        {item.scoreContribution.toFixed(1)}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                                        {item.locations.length > 0
+                                            ? item.locations.join(', ')
+                                            : '—'}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>

@@ -2,8 +2,9 @@
 # Pure Python implementation (No FastAPI/Pydantic) for Pyodide compatibility
 
 import re
+import json
 from collections import Counter
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Set
 
 # --- Constants & Patterns ---
 
@@ -23,24 +24,72 @@ SECTION_HEADERS = {
     'achievements': ['achievements', 'awards', 'honors', 'accomplishments']
 }
 
-TECH_SKILLS = [
-    'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'SQL', 'R', 'Scala', 'Cobol', 'Fortran',
-    'React', 'Angular', 'Vue', 'Next.js', 'Nuxt.js', 'Svelte', 'SolidJS', 'Node.js', 'Express', 'Deno', 'Bun', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Rails', 'Laravel', 'ASP.NET',
-    'AWS', 'Azure', 'GCP', 'Google Cloud', 'DigitalOcean', 'Heroku', 'Netlify', 'Vercel',
-    'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Pulumi', 'Jenkins', 'Git', 'GitHub Actions', 'GitLab CI', 'CircleCI', 'CI/CD', 'DevOps', 'SRE',
-    'PostgreSQL', 'MySQL', 'MariaDB', 'MongoDB', 'Redis', 'Cassandra', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Supabase', 'Firebase', 'Prisma', 'Drizzle',
-    'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'SciPy', 'Matplotlib', 'Seaborn', 'OpenCV', 'HuggingFace', 'Transformers', 'LLM', 'LangChain', 'OpenAI',
-    'REST', 'GraphQL', 'gRPC', 'SOAP', 'API', 'Microservices', 'Serverless', 'WebSockets', 'TRPC',
-    'Agile', 'Scrum', 'Kanban', 'TDD', 'BDD', 'Jira', 'Confluence',
-    'Docker Compose', 'Podman', 'Helm', 'Flux', 'ArgoCD', 'Prometheus', 'Grafana', 'ELK Stack', 'DataDog', 'New Relic',
-    'Tailwind', 'Sass', 'Less', 'CloudFront', 'Lambda', 'S3', 'EC2', 'RDS', 'Redshift', 'BigQuery', 'Snowflake', 'DynamoDB',
-    'Mobile', 'iOS', 'Android', 'Flutter', 'React Native', 'Ionic', 'Capacitor', 'Embedded', 'Firmware', 'Real-time', 'Distributed'
-]
+# Shared constants - will be loaded from shared-constants.json
+TECH_SKILLS: List[str] = []
+SOFT_SKILLS: List[str] = []
+STOP_WORDS: Set[str] = set()
+_constants_loaded = False
+
+def _load_shared_constants() -> None:
+    """Load shared constants from shared-constants.json file."""
+    global TECH_SKILLS, SOFT_SKILLS, STOP_WORDS, _constants_loaded
+    
+    if _constants_loaded:
+        return
+    
+    try:
+        # Try to read from filesystem (works in both Pyodide and regular Python)
+        with open('shared-constants.json', 'r', encoding='utf-8') as f:
+            constants = json.load(f)
+        TECH_SKILLS = constants.get('TECH_SKILLS', [])
+        SOFT_SKILLS = constants.get('SOFT_SKILLS', [])
+        STOP_WORDS = set(constants.get('STOP_WORDS', []))
+        _constants_loaded = True
+        print('[Shared Constants] Loaded from shared-constants.json')
+    except Exception as e:
+        print(f'[Shared Constants] Failed to load from file: {e}, using defaults')
+        # Fallback defaults
+        TECH_SKILLS = [
+            'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'SQL', 'R', 'Scala', 'Cobol', 'Fortran',
+            'React', 'Angular', 'Vue', 'Next.js', 'Nuxt.js', 'Svelte', 'SolidJS', 'Node.js', 'Express', 'Deno', 'Bun', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Rails', 'Laravel', 'ASP.NET',
+            'AWS', 'Azure', 'GCP', 'Google Cloud', 'DigitalOcean', 'Heroku', 'Netlify', 'Vercel',
+            'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Pulumi', 'Jenkins', 'Git', 'GitHub Actions', 'GitLab CI', 'CircleCI', 'CI/CD', 'DevOps', 'SRE',
+            'PostgreSQL', 'MySQL', 'MariaDB', 'MongoDB', 'Redis', 'Cassandra', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'Supabase', 'Firebase', 'Prisma', 'Drizzle',
+            'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'SciPy', 'Matplotlib', 'Seaborn', 'OpenCV', 'HuggingFace', 'Transformers', 'LLM', 'LangChain', 'OpenAI',
+            'REST', 'GraphQL', 'gRPC', 'SOAP', 'API', 'Microservices', 'Serverless', 'WebSockets', 'TRPC',
+            'Agile', 'Scrum', 'Kanban', 'TDD', 'BDD', 'Jira', 'Confluence',
+            'Docker Compose', 'Podman', 'Helm', 'Flux', 'ArgoCD', 'Prometheus', 'Grafana', 'ELK Stack', 'DataDog', 'New Relic',
+            'Tailwind', 'Sass', 'Less', 'CloudFront', 'Lambda', 'S3', 'EC2', 'RDS', 'Redshift', 'BigQuery', 'Snowflake', 'DynamoDB',
+            'Mobile', 'iOS', 'Android', 'Flutter', 'React Native', 'Ionic', 'Capacitor', 'Embedded', 'Firmware', 'Real-time', 'Distributed'
+        ]
+        SOFT_SKILLS = [
+            'leadership', 'communication', 'teamwork', 'problem-solving', 'analytical',
+            'collaboration', 'mentoring', 'management', 'strategic', 'innovative'
+        ]
+        STOP_WORDS = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+            'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had',
+            'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+            'that', 'which', 'who', 'whom', 'this', 'these', 'those', 'it', 'its', 'their',
+            'our', 'your', 'my', 'we', 'they', 'you', 'i', 'he', 'she', 'can', 'all', 'each',
+            'such', 'what', 'when', 'where', 'how', 'why', 'very', 'just', 'also', 'more',
+            'about', 'up', 'out', 'if', 'than', 'so', 'no', 'not', 'only', 'own', 'same',
+            'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between',
+            'using', 'well', 'used', 'many', 'some', 'most', 'very', 'often', 'like', 'every',
+            'any', 'both', 'once', 'here', 'there', 'too', 'now', 'page', 'site', 'work',
+            'data', 'new', 'time', 'team', 'first', 'level', 'based', 'using', 'throughout'
+        }
+        _constants_loaded = True
+
+def ensure_constants_loaded() -> None:
+    """Ensure shared constants are loaded before use."""
+    if not _constants_loaded:
+        _load_shared_constants()
 
 # Words that should NEVER be considered keywords in an ATS context
 PROHIBITED_KEYWORDS = {
-    'remote', 'located', 'location', 'charleston', 'duration', 'contract', 'months', 'years', 'only', 'must', 'zone', 
-    'time', 'work', 'corp', 'company', 'business', 'professional', 'summary', 'objective', 'skills', 'education', 
+    'remote', 'located', 'location', 'charleston', 'duration', 'contract', 'months', 'years', 'only', 'must', 'zone',
+    'time', 'work', 'corp', 'company', 'business', 'professional', 'summary', 'objective', 'skills', 'education',
     'experience', 'projects', 'achievements', 'awards', 'honors', 'background', 'profile'
 }
 
@@ -51,19 +100,8 @@ ACTION_VERBS = {
     'streamlined', 'automated', 'collaborated', 'mentored', 'trained'
 }
 
-STOP_WORDS = {
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
-    'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had',
-    'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
-    'that', 'which', 'who', 'whom', 'this', 'these', 'those', 'it', 'its', 'their',
-    'our', 'your', 'my', 'we', 'they', 'you', 'i', 'he', 'she', 'can', 'all', 'each',
-    'such', 'what', 'when', 'where', 'how', 'why', 'very', 'just', 'also', 'more',
-    'about', 'up', 'out', 'if', 'than', 'so', 'no', 'not', 'only', 'own', 'same',
-    'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between',
-    'using', 'well', 'used', 'many', 'some', 'most', 'very', 'often', 'like', 'every',
-    'any', 'both', 'once', 'here', 'there', 'too', 'now', 'page', 'site', 'work',
-    'data', 'new', 'time', 'team', 'first', 'level', 'based', 'using', 'throughout'
-}
+# Load constants on module import
+_load_shared_constants()
 
 # --- Internal Utilities ---
 
@@ -598,9 +636,90 @@ def parse_resume_canonical(text: str) -> dict:
     }
 
 
-def match_keywords(jd_model: dict, resume_model: dict) -> list:
+def _normalize_for_fuzzy_matching(text: str) -> str:
     """
-    Match JD keywords against resume tokens.
+    Normalize text for fuzzy matching by removing common suffixes and variations.
+    E.g., "ReactJS" -> "react", "React.js" -> "react", "Node.JS" -> "node"
+    """
+    # Convert to lowercase
+    normalized = text.lower()
+    
+    # Remove common suffixes/prefixes for tech terms
+    suffixes = ['.js', '.ts', '.jsx', '.tsx', 'js', 'ts', 'jsx', 'tsx', '.net', 'js', 'py']
+    for suffix in suffixes:
+        if normalized.endswith(suffix):
+            normalized = normalized[:-len(suffix)]
+            break
+    
+    # Remove version numbers (e.g., "python3" -> "python")
+    normalized = re.sub(r'\d+$', '', normalized)
+    
+    # Remove common abbreviations
+    abbreviations = {'js': 'javascript', 'ts': 'typescript', 'py': 'python'}
+    if normalized in abbreviations:
+        normalized = abbreviations[normalized]
+    
+    return normalized.strip()
+
+
+def _calculate_similarity(str1: str, str2: str) -> float:
+    """
+    Calculate similarity between two strings using Levenshtein distance ratio.
+    Returns a value between 0.0 and 1.0.
+    """
+    # Quick exact match
+    if str1 == str2:
+        return 1.0
+    
+    # Normalize both strings
+    norm1 = _normalize_for_fuzzy_matching(str1)
+    norm2 = _normalize_for_fuzzy_matching(str2)
+    
+    # Check normalized match
+    if norm1 == norm2:
+        return 0.95  # High similarity for normalized match
+    
+    # Check if one contains the other
+    if norm1 in norm2 or norm2 in norm1:
+        return 0.9
+    
+    # Calculate Levenshtein distance
+    len1, len2 = len(norm1), len(norm2)
+    if len1 == 0 or len2 == 0:
+        return 0.0
+    
+    # Create distance matrix
+    matrix = [[0] * (len2 + 1) for _ in range(len1 + 1)]
+    
+    for i in range(len1 + 1):
+        matrix[i][0] = i
+    for j in range(len2 + 1):
+        matrix[0][j] = j
+    
+    for i in range(1, len1 + 1):
+        for j in range(1, len2 + 1):
+            cost = 0 if norm1[i - 1] == norm2[j - 1] else 1
+            matrix[i][j] = min(
+                matrix[i - 1][j] + 1,      # deletion
+                matrix[i][j - 1] + 1,      # insertion
+                matrix[i - 1][j - 1] + cost # substitution
+            )
+    
+    distance = matrix[len1][len2]
+    max_len = max(len1, len2)
+    similarity = 1.0 - (distance / max_len) if max_len > 0 else 0.0
+    
+    return similarity
+
+
+def match_keywords(jd_model: dict, resume_model: dict, fuzzy_threshold: float = 0.85) -> list:
+    """
+    Match JD keywords against resume tokens with fuzzy matching support.
+    
+    Args:
+        jd_model: Job description model with categorized keywords
+        resume_model: Resume model with tokens
+        fuzzy_threshold: Minimum similarity score (0.0-1.0) for fuzzy matches
     
     Returns a list of MatchResultModel dicts:
     {
@@ -608,7 +727,8 @@ def match_keywords(jd_model: dict, resume_model: dict) -> list:
         category: KeywordCategory,
         status: MatchStatus,
         locations: string[],
-        scoreContribution: number
+        scoreContribution: number,
+        matchedVariant: string | None  # The actual variant found (e.g., "ReactJS" for keyword "React")
     }
     """
     results = []
@@ -629,6 +749,7 @@ def match_keywords(jd_model: dict, resume_model: dict) -> list:
     for kw in jd_model.get('categorizedKeywords', []):
         keyword = kw['keyword']
         keyword_normalized = keyword.lower()
+        matched_variant = None
         
         # Check for exact match
         locations = location_map.get(keyword_normalized, [])
@@ -639,7 +760,23 @@ def match_keywords(jd_model: dict, resume_model: dict) -> list:
                 if keyword_normalized in token_norm or token_norm in keyword_normalized:
                     if token_norm in location_map:
                         locations = location_map[token_norm]
+                        matched_variant = token_norm
                     break
+        
+        # Fuzzy matching for variations (e.g., "React" vs "ReactJS" vs "React.js")
+        if not locations:
+            best_match = None
+            best_similarity = 0.0
+            
+            for token_norm in resume_token_set:
+                similarity = _calculate_similarity(keyword_normalized, token_norm)
+                if similarity >= fuzzy_threshold and similarity > best_similarity:
+                    best_similarity = similarity
+                    best_match = token_norm
+            
+            if best_match and best_match in location_map:
+                locations = location_map[best_match]
+                matched_variant = best_match
         
         if locations:
             status = 'matched'
@@ -648,13 +785,19 @@ def match_keywords(jd_model: dict, resume_model: dict) -> list:
             status = 'missing'
             score_contribution = 0
         
-        results.append({
+        result = {
             'keyword': keyword,
             'category': kw['category'],
             'status': status,
             'locations': locations,
             'scoreContribution': score_contribution
-        })
+        }
+        
+        # Only add matchedVariant if there's a fuzzy match
+        if matched_variant and matched_variant != keyword_normalized:
+            result['matchedVariant'] = matched_variant
+        
+        results.append(result)
     
     return results
 
