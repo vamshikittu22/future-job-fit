@@ -1,6 +1,11 @@
 import { supabase } from '@/shared/integrations/supabase/client';
+import type {
+  JobDescriptionModel,
+  ATSEvaluationResponse
+} from '@/shared/types/ats';
 
 export type AIProvider = 'openai' | 'gemini' | 'groq';
+
 
 export interface EnhancementRequest {
   section_type: 'summary' | 'experience' | 'skills' | 'projects' | 'education' | 'achievements' | 'certifications';
@@ -558,6 +563,54 @@ Return ONLY the rewritten bullet point, nothing else.`;
     }
 
     return { rewrittenBullet: rewritten };
+  }
+
+  // =============================================================================
+  // NEW ATS V2 METHODS - Deterministic, structured ATS evaluation
+  // =============================================================================
+
+  /**
+   * Parse a job description into a structured model with categorized keywords.
+   * Uses the cloud Edge Function for processing.
+   * This is deterministic (no LLM involved in the core parsing).
+   */
+  async parseJDCloud(rawText: string): Promise<JobDescriptionModel> {
+    console.log('[AI Service] Parsing JD via cloud');
+
+    try {
+      const result = await this.callEdgeFunction('parseJD', { rawText });
+      return result as JobDescriptionModel;
+    } catch (error: any) {
+      console.error('[AI Service] Cloud JD parsing failed:', error);
+      throw new Error(`Failed to parse job description: ${error.message}`);
+    }
+  }
+
+  /**
+   * Full ATS evaluation using the cloud Edge Function.
+   * Parses JD, matches keywords, calculates score, and generates recommendations.
+   * This is deterministic (no LLM involved in scoring/matching).
+   * 
+   * @param resumeText - The resume text content
+   * @param jobDescriptionText - The job description text content
+   * @returns Complete ATS evaluation response with breakdown and recommendations
+   */
+  async evaluateATSCloud(
+    resumeText: string,
+    jobDescriptionText: string
+  ): Promise<ATSEvaluationResponse> {
+    console.log('[AI Service] Evaluating ATS via cloud (deterministic)');
+
+    try {
+      const result = await this.callEdgeFunction('evaluateATS', {
+        resumeText,
+        jobDescriptionText
+      });
+      return result as ATSEvaluationResponse;
+    } catch (error: any) {
+      console.error('[AI Service] Cloud ATS evaluation failed:', error);
+      throw new Error(`Failed to evaluate ATS: ${error.message}`);
+    }
   }
 }
 

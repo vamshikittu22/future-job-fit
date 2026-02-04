@@ -17,6 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
+import { InlineRecommendations } from '@/features/resume-builder/components/ats';
 
 export const SkillsStep: React.FC = () => {
   const { resumeData, updateResumeData, setResumeData } = useResume();
@@ -127,6 +128,9 @@ export const SkillsStep: React.FC = () => {
       description="Add your technical skills, frameworks, and tools"
     >
       <ProgressStepper />
+
+      {/* ATS Inline Recommendations */}
+      <InlineRecommendations section="skills" className="mb-4" />
 
       <div className="space-y-6">
         {/* Skills Summary Card */}

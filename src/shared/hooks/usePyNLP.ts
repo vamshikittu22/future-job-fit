@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadPyodide, type PyodideInterface } from 'pyodide';
+import type {
+    JobDescriptionModel,
+    ATSEvaluationResponse
+} from '@/shared/types/ats';
 
 export interface PyNLPResponse {
     name: string | null;
@@ -12,6 +16,9 @@ export interface PyNLPResponse {
     sections: Record<string, any>;
 }
 
+/**
+ * Legacy ATS response (v1 - simpler format)
+ */
 export interface ATSResponse {
     score: number;
     matchRatio: number;
@@ -24,6 +31,18 @@ export interface ATSResponse {
         readability: number;
         actionVerbs: number;
     };
+}
+
+/**
+ * Canonical resume representation with location tokens
+ */
+export interface ResumeCanonicalModel {
+    sections: Record<string, string>;
+    tokens: Array<{
+        text: string;
+        location: string;
+        normalized: string;
+    }>;
 }
 
 let pyodideInstance: PyodideInterface | null = null;
@@ -60,11 +79,15 @@ export const usePyNLP = () => {
                 // Setup the virtual filesystem
                 py.FS.writeFile('nlp_core.py', code);
 
-                // Warm up and verify imports
+                // Warm up and verify imports - include new ATS v2 functions
                 await py.runPythonAsync(`
           import json
           import sys
-          from nlp_core import parse_resume, score_ats, optimize_resume, rewrite_bullet
+          from nlp_core import (
+              parse_resume, score_ats, optimize_resume, rewrite_bullet,
+              parse_jd, parse_resume_canonical, match_keywords, 
+              calculate_ats_score, generate_recommendations, evaluate_ats
+          )
         `);
 
                 pyodideInstance = py;
@@ -85,6 +108,8 @@ export const usePyNLP = () => {
     useEffect(() => {
         init();
     }, [init]);
+
+    // --- Legacy v1 Methods ---
 
     const parseResume = useCallback(async (text: string): Promise<PyNLPResponse> => {
         const py = await init();
@@ -117,11 +142,60 @@ export const usePyNLP = () => {
         return result;
     }, [init]);
 
+    // --- New ATS v2 Methods ---
+
+    /**
+     * Parse a job description into a structured model with categorized keywords.
+     * This is deterministic (no LLM involved).
+     */
+    const parseJD = useCallback(async (rawText: string): Promise<JobDescriptionModel> => {
+        const py = await init();
+        py.globals.set("jd_raw", rawText);
+        const jsonStr = await py.runPythonAsync(`json.dumps(parse_jd(jd_raw))`);
+        return JSON.parse(jsonStr);
+    }, [init]);
+
+    /**
+     * Parse a resume into a canonical format with tokenized content and locations.
+     * This is deterministic (no LLM involved).
+     */
+    const parseResumeCanonical = useCallback(async (text: string): Promise<ResumeCanonicalModel> => {
+        const py = await init();
+        py.globals.set("resume_raw", text);
+        const jsonStr = await py.runPythonAsync(`json.dumps(parse_resume_canonical(resume_raw))`);
+        return JSON.parse(jsonStr);
+    }, [init]);
+
+    /**
+     * Full ATS evaluation: parses JD, parses resume, matches keywords, calculates score,
+     * and generates recommendations. This is the main entry point for ATS v2.
+     * 
+     * @param resumeText - The resume text content
+     * @param jobDescriptionText - The job description text content
+     * @returns Complete ATS evaluation response with breakdown and recommendations
+     */
+    const evaluateATS = useCallback(async (
+        resumeText: string,
+        jobDescriptionText: string
+    ): Promise<ATSEvaluationResponse> => {
+        const py = await init();
+        py.globals.set("resume_text", resumeText);
+        py.globals.set("jd_text", jobDescriptionText);
+        const jsonStr = await py.runPythonAsync(`json.dumps(evaluate_ats(resume_text, jd_text))`);
+        return JSON.parse(jsonStr);
+    }, [init]);
+
     return {
+        // Legacy v1
         parseResume,
         scoreATS,
         optimizeResume,
         rewriteBullet,
+        // New ATS v2
+        parseJD,
+        parseResumeCanonical,
+        evaluateATS,
+        // Status
         status,
         error,
         isReady: status === 'ready',

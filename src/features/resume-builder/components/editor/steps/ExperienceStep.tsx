@@ -25,6 +25,7 @@ import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanc
 import { QuickAddExperienceModal } from '@/features/resume-builder/components/modals/QuickAddExperienceModal';
 import { useUndo } from '@/shared/hooks/useUndo';
 import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
+import { InlineRecommendations } from '@/features/resume-builder/components/ats';
 import { Zap } from 'lucide-react';
 
 export const ExperienceStep: React.FC = () => {
@@ -212,6 +213,9 @@ export const ExperienceStep: React.FC = () => {
       description="Add your professional work history with achievements and responsibilities"
     >
       <ProgressStepper />
+
+      {/* ATS Inline Recommendations */}
+      <InlineRecommendations section="experience" className="mb-4" />
 
       <div className="space-y-4">
 

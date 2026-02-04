@@ -372,6 +372,460 @@ def optimize_resume(resume_text: str, job_desc: str) -> str:
             
     return "\n".join(output)
 
+# =============================================================================
+# NEW ATS ENGINE V2 - Structured responses matching TypeScript contracts
+# =============================================================================
+
+# --- Type Constants ---
+KEYWORD_CATEGORIES = ['hard_skill', 'tool', 'concept', 'soft_skill']
+
+SOFT_SKILL_PATTERNS = [
+    'leadership', 'communication', 'teamwork', 'problem-solving', 'analytical',
+    'collaboration', 'mentoring', 'management', 'strategic', 'innovative',
+    'adaptable', 'creative', 'detail-oriented', 'organized', 'proactive'
+]
+
+TOOL_KEYWORDS = [
+    'docker', 'kubernetes', 'git', 'jenkins', 'jira', 'terraform', 'ansible', 
+    'github', 'gitlab', 'confluence', 'prometheus', 'grafana', 'datadog',
+    'helm', 'argocd', 'circleci', 'travis', 'bamboo', 'slack', 'notion'
+]
+
+JD_SECTION_PATTERNS = {
+    'requirements': ['requirements', 'qualifications', 'must have', 'required', 'you have', 'you bring'],
+    'responsibilities': ['responsibilities', 'duties', 'what you will do', 'role', 'you will'],
+    'nice_to_have': ['nice to have', 'preferred', 'bonus', 'plus', 'ideal'],
+    'about': ['about us', 'about the company', 'who we are', 'company', 'we are']
+}
+
+def _generate_id() -> str:
+    """Generate a simple unique ID."""
+    import hashlib
+    import time
+    return hashlib.md5(f"{time.time()}".encode()).hexdigest()[:12]
+
+
+def _categorize_keyword(keyword: str) -> str:
+    """Categorize a keyword into hard_skill, tool, concept, or soft_skill."""
+    kw_lower = keyword.lower()
+    
+    # Check if it's a tool
+    if any(tool in kw_lower for tool in TOOL_KEYWORDS):
+        return 'tool'
+    
+    # Check if it's a soft skill
+    if any(soft in kw_lower for soft in SOFT_SKILL_PATTERNS):
+        return 'soft_skill'
+    
+    # Check if it's a known tech skill (hard skill)
+    for skill in TECH_SKILLS:
+        if skill.lower() == kw_lower:
+            return 'hard_skill'
+    
+    # Default to concept
+    return 'concept'
+
+
+def parse_jd(text: str) -> dict:
+    """
+    Parse a job description into a structured JobDescriptionModel.
+    
+    Returns a dict matching the TypeScript JobDescriptionModel interface:
+    {
+        id: string,
+        rawText: string,
+        sections: Record<string, string>,
+        categorizedKeywords: KeywordModel[]
+    }
+    """
+    # Parse sections
+    sections = {}
+    lines = text.split('\n')
+    current_section = 'general'
+    current_content = []
+    
+    for line in lines:
+        lower_line = line.lower().strip()
+        found_section = None
+        
+        # Check each section pattern
+        for section_key, patterns in JD_SECTION_PATTERNS.items():
+            for pattern in patterns:
+                if pattern in lower_line and len(lower_line) < 60:
+                    found_section = section_key
+                    break
+            if found_section:
+                break
+        
+        if found_section:
+            if current_content:
+                sections[current_section] = '\n'.join(current_content)
+            current_section = found_section
+            current_content = []
+        else:
+            current_content.append(line)
+    
+    if current_content:
+        sections[current_section] = '\n'.join(current_content)
+    
+    # Extract and categorize keywords
+    categorized_keywords = []
+    text_lower = text.lower()
+    keyword_counts = {}
+    
+    # Find all tech skills in the JD
+    for skill in TECH_SKILLS:
+        pattern = r'\b' + re.escape(skill.lower()) + r'\b'
+        matches = re.findall(pattern, text_lower, re.IGNORECASE)
+        if matches:
+            keyword_counts[skill.lower()] = len(matches)
+    
+    # Add multi-word phrase detection
+    multi_word_patterns = [
+        r'\b(spring boot|react native|machine learning|deep learning|data science|full stack|front.?end|back.?end|cloud computing|ci/cd)\b'
+    ]
+    for pattern in multi_word_patterns:
+        matches = re.findall(pattern, text_lower)
+        for match in matches:
+            key = match.lower()
+            if key not in keyword_counts:
+                keyword_counts[key] = 1
+    
+    # Determine which section each keyword came from (prioritize requirements)
+    requirements_text = sections.get('requirements', '').lower()
+    
+    for keyword, count in keyword_counts.items():
+        category = _categorize_keyword(keyword)
+        
+        # Determine section
+        jd_section = 'general'
+        if keyword in requirements_text:
+            jd_section = 'requirements'
+        
+        # Calculate weight (requirements get 1.5x boost)
+        base_weight = 1.0
+        frequency_bonus = min(count - 1, 2) * 0.25
+        section_bonus = 0.5 if jd_section == 'requirements' else 0
+        
+        categorized_keywords.append({
+            'keyword': keyword,
+            'category': category,
+            'weight': base_weight + frequency_bonus + section_bonus,
+            'frequency': count,
+            'jdSection': jd_section
+        })
+    
+    # Sort by weight descending
+    categorized_keywords.sort(key=lambda x: x['weight'], reverse=True)
+    
+    return {
+        'id': _generate_id(),
+        'rawText': text,
+        'sections': sections,
+        'categorizedKeywords': categorized_keywords
+    }
+
+
+def parse_resume_canonical(text: str) -> dict:
+    """
+    Parse a resume into a canonical format with location strings for each token.
+    
+    Returns a dict with:
+    {
+        sections: {summary: str, experience: [], skills: [], ...},
+        tokens: [{text: str, location: str, normalized: str}, ...]
+    }
+    """
+    sections = parse_resume_sections(text)
+    tokens = []
+    
+    # Process summary
+    summary = sections.get('summary', '')
+    if summary:
+        for word in summary.lower().split():
+            clean = re.sub(r'[^a-zA-Z0-9\-+#]', '', word)
+            if clean and clean not in STOP_WORDS:
+                tokens.append({
+                    'text': clean,
+                    'location': 'summary:0',
+                    'normalized': clean.lower()
+                })
+    
+    # Process experience (extract bullet points)
+    experience_text = sections.get('experience', '')
+    if experience_text:
+        bullets = re.split(r'\n\s*[-•*]\s*', experience_text)
+        for i, bullet in enumerate(bullets):
+            bullet = bullet.strip()
+            if bullet:
+                words = bullet.lower().split()
+                for word in words:
+                    clean = re.sub(r'[^a-zA-Z0-9\-+#]', '', word)
+                    if clean and clean not in STOP_WORDS:
+                        tokens.append({
+                            'text': clean,
+                            'location': f'experience:0:bullets:{i}',
+                            'normalized': clean.lower()
+                        })
+    
+    # Process skills
+    skills_text = sections.get('skills', '')
+    if skills_text:
+        # Skills are usually comma-separated
+        skills = re.split(r'[,\n•\-*]', skills_text)
+        for i, skill in enumerate(skills):
+            skill = skill.strip()
+            if skill:
+                tokens.append({
+                    'text': skill,
+                    'location': f'skills:0:list:{i}',
+                    'normalized': skill.lower()
+                })
+    
+    # Also extract tech skills from full text
+    text_lower = text.lower()
+    for skill in TECH_SKILLS:
+        if skill.lower() in text_lower:
+            tokens.append({
+                'text': skill,
+                'location': 'detected',
+                'normalized': skill.lower()
+            })
+    
+    return {
+        'sections': sections,
+        'tokens': tokens
+    }
+
+
+def match_keywords(jd_model: dict, resume_model: dict) -> list:
+    """
+    Match JD keywords against resume tokens.
+    
+    Returns a list of MatchResultModel dicts:
+    {
+        keyword: string,
+        category: KeywordCategory,
+        status: MatchStatus,
+        locations: string[],
+        scoreContribution: number
+    }
+    """
+    results = []
+    resume_tokens = resume_model.get('tokens', [])
+    
+    # Create a set of normalized resume tokens for fast lookup
+    resume_token_set = {t['normalized'] for t in resume_tokens}
+    
+    # Create a location map
+    location_map = {}
+    for token in resume_tokens:
+        normalized = token['normalized']
+        if normalized not in location_map:
+            location_map[normalized] = []
+        if token['location'] not in location_map[normalized]:
+            location_map[normalized].append(token['location'])
+    
+    for kw in jd_model.get('categorizedKeywords', []):
+        keyword = kw['keyword']
+        keyword_normalized = keyword.lower()
+        
+        # Check for exact match
+        locations = location_map.get(keyword_normalized, [])
+        
+        # Also check for partial matches (e.g., "react" in "react.js")
+        if not locations:
+            for token_norm in resume_token_set:
+                if keyword_normalized in token_norm or token_norm in keyword_normalized:
+                    if token_norm in location_map:
+                        locations = location_map[token_norm]
+                    break
+        
+        if locations:
+            status = 'matched'
+            score_contribution = kw['weight'] * 5
+        else:
+            status = 'missing'
+            score_contribution = 0
+        
+        results.append({
+            'keyword': keyword,
+            'category': kw['category'],
+            'status': status,
+            'locations': locations,
+            'scoreContribution': score_contribution
+        })
+    
+    return results
+
+
+def calculate_ats_score(jd_model: dict, match_results: list, resume_text: str) -> dict:
+    """
+    Calculate the ATS score breakdown from match results.
+    
+    Returns ATSScoreBreakdown:
+    {
+        hardSkillScore: number,
+        toolsScore: number,
+        conceptScore: number,
+        roleTitleScore: number,
+        structureScore: number,
+        total: number
+    }
+    """
+    # Group by category
+    by_category = {
+        'hard_skill': {'matched': 0, 'total': 0},
+        'tool': {'matched': 0, 'total': 0},
+        'concept': {'matched': 0, 'total': 0},
+        'soft_skill': {'matched': 0, 'total': 0}
+    }
+    
+    for result in match_results:
+        cat = result['category']
+        if cat in by_category:
+            by_category[cat]['total'] += 1
+            if result['status'] == 'matched':
+                by_category[cat]['matched'] += 1
+    
+    # Calculate category scores (0-100)
+    def calc_score(cat):
+        if by_category[cat]['total'] == 0:
+            return 100  # No requirements = perfect score
+        return int((by_category[cat]['matched'] / by_category[cat]['total']) * 100)
+    
+    hard_skill_score = calc_score('hard_skill')
+    tools_score = calc_score('tool')
+    concept_score = calc_score('concept')
+    
+    # Role title match (simplified - check for common title patterns)
+    role_title_score = 75  # Default
+    
+    # Structure score - check for key sections
+    text_lower = resume_text.lower()
+    has_experience = bool(re.search(r'experience|work history|employment', text_lower))
+    has_education = bool(re.search(r'education|degree|university', text_lower))
+    has_skills = bool(re.search(r'skills|technologies|proficient', text_lower))
+    structure_score = (40 if has_experience else 0) + (30 if has_education else 0) + (30 if has_skills else 0)
+    
+    # Total using formula: (HardSkill * 0.45) + (Tools * 0.20) + (Concepts * 0.20) + (RoleTitle * 0.10) + (Structure * 0.05)
+    total = int(
+        hard_skill_score * 0.45 +
+        tools_score * 0.20 +
+        concept_score * 0.20 +
+        role_title_score * 0.10 +
+        structure_score * 0.05
+    )
+    
+    return {
+        'hardSkillScore': hard_skill_score,
+        'toolsScore': tools_score,
+        'conceptScore': concept_score,
+        'roleTitleScore': role_title_score,
+        'structureScore': structure_score,
+        'total': total
+    }
+
+
+def generate_recommendations(match_results: list) -> list:
+    """
+    Generate actionable recommendations from match results.
+    
+    Returns a list of Recommendation dicts:
+    {
+        id: string,
+        message: string,
+        severity: 'info' | 'warning' | 'critical',
+        targetLocation?: string,
+        category?: KeywordCategory,
+        keyword?: string
+    }
+    """
+    recommendations = []
+    
+    # Group missing keywords by category
+    missing_by_category = {
+        'hard_skill': [],
+        'tool': [],
+        'concept': [],
+        'soft_skill': []
+    }
+    
+    for result in match_results:
+        if result['status'] == 'missing':
+            cat = result['category']
+            if cat in missing_by_category:
+                missing_by_category[cat].append(result['keyword'])
+    
+    # Generate recommendations for missing high-priority keywords
+    if missing_by_category['hard_skill']:
+        keywords = missing_by_category['hard_skill'][:3]
+        recommendations.append({
+            'id': _generate_id(),
+            'message': f"Add these technical skills to your experience or skills section: {', '.join(keywords)}",
+            'severity': 'critical',
+            'targetLocation': 'experience',
+            'category': 'hard_skill'
+        })
+    
+    if missing_by_category['tool']:
+        keywords = missing_by_category['tool'][:3]
+        recommendations.append({
+            'id': _generate_id(),
+            'message': f"Consider adding experience with these tools: {', '.join(keywords)}",
+            'severity': 'warning',
+            'targetLocation': 'skills',
+            'category': 'tool'
+        })
+    
+    if missing_by_category['concept']:
+        keywords = missing_by_category['concept'][:2]
+        recommendations.append({
+            'id': _generate_id(),
+            'message': f"Include these relevant concepts in your resume: {', '.join(keywords)}",
+            'severity': 'info',
+            'targetLocation': 'summary',
+            'category': 'concept'
+        })
+    
+    return recommendations
+
+
+def evaluate_ats(resume_text: str, jd_text: str) -> dict:
+    """
+    Complete ATS evaluation - the main entry point for structured ATS analysis.
+    
+    Returns ATSEvaluationResponse:
+    {
+        jdModel: JobDescriptionModel,
+        matchResults: MatchResultModel[],
+        scoreBreakdown: ATSScoreBreakdown,
+        recommendations: Recommendation[]
+    }
+    """
+    # Parse JD
+    jd_model = parse_jd(jd_text)
+    
+    # Parse resume
+    resume_model = parse_resume_canonical(resume_text)
+    
+    # Match keywords
+    match_results = match_keywords(jd_model, resume_model)
+    
+    # Calculate score
+    score_breakdown = calculate_ats_score(jd_model, match_results, resume_text)
+    
+    # Generate recommendations
+    recommendations = generate_recommendations(match_results)
+    
+    return {
+        'jdModel': jd_model,
+        'matchResults': match_results,
+        'scoreBreakdown': score_breakdown,
+        'recommendations': recommendations
+    }
+
+
 if __name__ == "__main__":
     sample_resume = """
     John Doe

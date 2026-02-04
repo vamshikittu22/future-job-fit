@@ -9,3 +9,20 @@ export type {
   CustomSection,
   PersonalInfo
 } from '@/shared/types/resume';
+
+// Re-export ATS types
+export type {
+  KeywordCategory,
+  MatchStatus,
+  RecommendationSeverity,
+  KeywordModel,
+  MatchResultModel,
+  ATSScoreBreakdown,
+  JobDescriptionModel,
+  Recommendation,
+  ATSEvaluationResponse,
+  ParseJDRequest,
+  EvaluateATSRequest,
+  SectionCoverage,
+  LegacyATSResponse
+} from '@/shared/types/ats';

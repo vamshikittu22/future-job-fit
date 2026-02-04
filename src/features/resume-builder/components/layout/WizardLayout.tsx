@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
 import { WizardProvider, useWizard } from '@/shared/contexts/WizardContext';
+import { ATSProvider } from '@/shared/contexts/ATSContext';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useToast } from '@/shared/ui/use-toast';
@@ -321,7 +322,9 @@ const WizardLayoutContent: React.FC = () => {
 
 const WizardLayout: React.FC = () => (
   <WizardProvider>
-    <WizardLayoutContent />
+    <ATSProvider>
+      <WizardLayoutContent />
+    </ATSProvider>
   </WizardProvider>
 );
 

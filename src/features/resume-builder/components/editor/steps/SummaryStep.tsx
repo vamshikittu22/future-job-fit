@@ -17,6 +17,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/shared/ui/accordion';
+import { InlineRecommendations } from '@/features/resume-builder/components/ats';
 
 export const SummaryStep: React.FC = () => {
   const { resumeData, updateResumeData, setResumeData } = useResume();
@@ -78,6 +79,9 @@ export const SummaryStep: React.FC = () => {
       description="Write a compelling summary that highlights your experience and value proposition"
     >
       <ProgressStepper />
+
+      {/* ATS Inline Recommendations */}
+      <InlineRecommendations section="summary" className="mb-4" />
 
       <div className="space-y-6">
         <Card className="border-border shadow-sm">
