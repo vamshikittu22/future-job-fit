@@ -40,6 +40,22 @@ None — foundation phase
 | FOUND-04 | Updated navigation structure with new feature routes |
 | FOUND-05 | Cross-feature data bridge (ResumeContext ↔ JobContext integration) |
 
+### Plans
+**Plans:** 5 plans in 2 waves
+
+Plans:
+- [ ] 01-01-PLAN.md — JobContext state management with types and persistence
+- [ ] 01-02-PLAN.md — Shared types for all v1 features with Zod validation
+- [ ] 01-03-PLAN.md — LinkedIn OAuth 2.0 + PKCE service stubs
+- [ ] 01-04-PLAN.md — Navigation routes and categorized home page
+- [ ] 01-05-PLAN.md — Cross-context bridge and stale data warning
+
+### Wave Structure
+| Wave | Plans | Description |
+|------|-------|-------------|
+| 1 | 01-01, 01-02, 01-03 | Independent foundation work (can run parallel) |
+| 2 | 01-04, 01-05 | Depends on Wave 1 (needs types and context) |
+
 ### Success Criteria
 1. JobContext is available application-wide and persists job description, target role, and company information to localStorage
 2. TypeScript types exist for CoverLetter, InterviewQuestion, InterviewSession, LinkedInProfile, and LinkedInOAuthResponse
