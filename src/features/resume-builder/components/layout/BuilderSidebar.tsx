@@ -1,4 +1,5 @@
-Briefcase,
+import {
+  Briefcase,
   GraduationCap,
   FolderOpen,
   Award,
@@ -15,9 +16,15 @@ Briefcase,
   Plus,
   Pencil,
   Trash2,
-  X
+  X,
+  User,
+  FileText,
+  Code
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { useATS } from '@/shared/hooks/use-ats';
+import { Button } from '@/shared/ui/button';
+import { Separator } from '@/shared/ui/separator';
 import { ResumeData } from '@/shared/lib/initialData';
 import { SECTION_NAMES, SECTION_ORDER, type SectionKey } from '@/shared/constants/sectionNames';
 
