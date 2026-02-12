@@ -4,111 +4,220 @@ import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Separator } from "@/shared/ui/separator";
 import { Progress } from "@/shared/ui/progress";
-import { ArrowLeft, Download, Copy, RefreshCw, Target, AlertCircle, CheckCircle, TrendingUp, Plus } from "lucide-react";
+import { ArrowLeft, Download, Copy, Target, AlertCircle, CheckCircle, TrendingUp, Plus, Sparkles, RefreshCw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
-import LoadingSpinner from "@/shared/components/common/LoadingSpinner";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import { resumeAI } from "@/shared/api/resumeAI";
 import { usePyNLP } from "@/shared/hooks/usePyNLP";
+import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 
 interface EvaluationResult {
   atsScore: number;
   missingKeywords: string[];
+  matchingKeywords: string[];
   suggestions: string[];
   rewrittenResume: string;
-  matchingKeywords?: string[];
   improvements?: string[];
   nextSteps?: string[];
+  source: 'pyodide' | 'api' | 'local';
 }
 
 export default function Results() {
   const { scoreATS, optimizeResume, status: pyStatus, isReady } = usePyNLP();
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keywordModalOpen, setKeywordModalOpen] = useState(false);
   const [selectedKeyword, setSelectedKeyword] = useState<string>("");
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const evaluateResume = async () => {
-      const resumeText = localStorage.getItem("resumeText");
-      const jobDescription = localStorage.getItem("jobDescription");
-      const selectedModel = localStorage.getItem("selectedModel") || "gemini-2.5-flash";
-      const customInstructions = localStorage.getItem("customInstructions");
+    const runAnalysis = async () => {
+      const savedResumeText = localStorage.getItem("resumeText");
+      const savedJobDescription = localStorage.getItem("jobDescription");
 
-      if (!resumeText) {
+      if (!savedResumeText) {
         navigate("/input");
         return;
       }
+
+      setResumeText(savedResumeText);
+      setJobDescription(savedJobDescription || "");
 
       try {
         setError(null);
         let result: EvaluationResult;
 
-        try {
-          // Attempt API evaluation first for full features (rewriting, etc)
-          result = await resumeAI.evaluateResume({
-            resumeText,
-            jobDescription: jobDescription || undefined,
-            model: selectedModel,
-            customInstructions: customInstructions ? JSON.parse(customInstructions) : undefined
-          });
+        // If we have a job description, calculate real keyword matches
+        if (savedJobDescription) {
+          // Extract keywords using the ATS keyword extractor
+          const jdKeywords = extractATSKeywords(savedJobDescription).slice(0, 30);
 
-          // Optional: Augment or verify with local NLP if available
-          if (isReady && jobDescription) {
-            const pyResult = await scoreATS(resumeText, jobDescription);
-            console.log("Local NLP Verification Score:", pyResult.score);
+          const resumeLower = savedResumeText.toLowerCase();
+          const matchingKeywords = jdKeywords.filter(kw =>
+            resumeLower.includes(kw.toLowerCase())
+          );
+          const missingKeywords = jdKeywords.filter(kw =>
+            !resumeLower.includes(kw.toLowerCase())
+          );
+
+          // Calculate ATS score
+          const atsScore = jdKeywords.length > 0
+            ? Math.round((matchingKeywords.length / jdKeywords.length) * 100)
+            : 50;
+
+          // Generate contextual suggestions based on actual analysis
+          const suggestions: string[] = [];
+          if (missingKeywords.length > 5) {
+            suggestions.push(`Consider adding ${Math.min(5, missingKeywords.length)} of the missing keywords to improve your match score.`);
           }
-        } catch (apiErr) {
-          console.warn("API evaluation failed, attempting local NLP fallback...", apiErr);
-
-          if (isReady && jobDescription) {
-            const pyResult = await scoreATS(resumeText, jobDescription);
-            const pyOptimized = await optimizeResume(resumeText, jobDescription);
-
-            result = {
-              atsScore: pyResult.score,
-              missingKeywords: pyResult.missing,
-              matchingKeywords: pyResult.matchingKeywords,
-              suggestions: [
-                "Local AI optimization engine is currently active.",
-                "Missing keywords have been injected into your skills and summary sections.",
-                "Review the matching keywords and improvements below."
-              ],
-              rewrittenResume: pyOptimized, // Correctly use the optimized version
-              improvements: ["Injected missing technical keywords", "Balanced content for ATS compatibility"],
-              nextSteps: ["Review the new keywords in the 'Optimized Resume' panel", "Export the updated version for your application"]
-            };
-
-            toast({
-              title: "Using Local Optimization",
-              description: "Our local engine has tailored your resume based on detected keywords.",
-            });
-          } else if (!isReady) {
-            throw new Error("API and AI engine are both unavailable. Check your connection.");
-          } else {
-            throw apiErr;
+          if (atsScore < 60) {
+            suggestions.push("Your resume may need significant tailoring for this job. Focus on the technical skills mentioned in the job description.");
+          } else if (atsScore < 80) {
+            suggestions.push("Good foundation! Adding a few more relevant keywords could push you past ATS filters.");
           }
+          if (missingKeywords.some(kw => kw.toLowerCase().includes('lead') || kw.toLowerCase().includes('manage'))) {
+            suggestions.push("The job description emphasizes leadership. Highlight any team lead or mentoring experience.");
+          }
+          if (missingKeywords.length > 0) {
+            suggestions.push(`Top priority keywords to add: ${missingKeywords.slice(0, 3).join(', ')}`);
+          }
+
+          result = {
+            atsScore,
+            missingKeywords,
+            matchingKeywords,
+            suggestions: suggestions.length > 0 ? suggestions : [
+              "Your resume shows good alignment with this job description.",
+              "Consider reviewing the missing keywords section to further optimize."
+            ],
+            rewrittenResume: savedResumeText, // Start with original, user can optimize later
+            improvements: matchingKeywords.length > 5
+              ? ["Strong keyword alignment detected", "Resume structure appears ATS-friendly"]
+              : undefined,
+            nextSteps: [
+              "Review missing keywords and click to add them to your resume",
+              "Click 'AI Optimize' to generate an enhanced version",
+              "Export your optimized resume in multiple formats"
+            ],
+            source: 'local'
+          };
+
+          // Try to enhance with Pyodide if available
+          if (isReady) {
+            try {
+              const pyResult = await scoreATS(savedResumeText, savedJobDescription);
+              // Merge Pyodide results for more accuracy
+              result.atsScore = Math.round((result.atsScore + pyResult.score) / 2);
+              if (pyResult.suggestions?.length > 0) {
+                result.suggestions = [...result.suggestions, ...pyResult.suggestions.slice(0, 2)];
+              }
+              result.source = 'pyodide';
+            } catch (pyErr) {
+              console.warn("Pyodide scoring failed, using local analysis:", pyErr);
+            }
+          }
+
+        } else {
+          // No job description - basic analysis
+          result = {
+            atsScore: 70,
+            missingKeywords: [],
+            matchingKeywords: [],
+            suggestions: [
+              "No job description provided - general analysis only.",
+              "For targeted optimization, go back and add a job description.",
+              "Review your resume for common ATS best practices."
+            ],
+            rewrittenResume: savedResumeText,
+            source: 'local'
+          };
         }
 
         setEvaluation(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : "An error occurred during analysis");
       } finally {
         setIsLoading(false);
       }
     };
 
-    evaluateResume();
-  }, [navigate, isReady, scoreATS, toast]);
+    runAnalysis();
+  }, [navigate, isReady, scoreATS]);
+
+  const handleAIOptimize = async () => {
+    if (!evaluation || !resumeText) return;
+
+    setIsOptimizing(true);
+    try {
+      let optimizedResume = resumeText;
+
+      // Try Pyodide optimization first
+      if (isReady && jobDescription) {
+        try {
+          optimizedResume = await optimizeResume(resumeText, jobDescription);
+          toast({
+            title: "Resume Optimized",
+            description: "Your resume has been enhanced with missing keywords.",
+          });
+        } catch (pyErr) {
+          console.warn("Pyodide optimization failed:", pyErr);
+        }
+      }
+
+      // If Pyodide didn't work, try API
+      if (optimizedResume === resumeText && jobDescription) {
+        try {
+          const apiResult = await resumeAI.evaluateResume({
+            resumeText,
+            jobDescription,
+          });
+          if (apiResult.rewrittenResume && apiResult.rewrittenResume !== resumeText) {
+            optimizedResume = apiResult.rewrittenResume;
+            toast({
+              title: "Resume Optimized",
+              description: "AI has enhanced your resume for this job.",
+            });
+          }
+        } catch (apiErr) {
+          console.warn("API optimization failed:", apiErr);
+        }
+      }
+
+      // Update state with optimized resume
+      if (optimizedResume !== resumeText) {
+        setEvaluation({
+          ...evaluation,
+          rewrittenResume: optimizedResume,
+          improvements: [...(evaluation.improvements || []), "AI optimization applied"]
+        });
+        localStorage.setItem("resumeText", optimizedResume);
+      } else {
+        toast({
+          title: "No Changes Needed",
+          description: "Your resume is already well-optimized for this job.",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Optimization Failed",
+        description: "Could not optimize resume. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -116,16 +225,6 @@ export default function Results() {
       title: "Copied to clipboard",
       description: "Resume text has been copied to your clipboard",
     });
-  };
-
-  const downloadAsText = (text: string, filename: string) => {
-    const element = document.createElement("a");
-    const file = new Blob([text], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = filename;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   };
 
   const handleKeywordClick = (keyword: string) => {
@@ -140,16 +239,27 @@ export default function Results() {
         k => k.toLowerCase() !== selectedKeyword.toLowerCase()
       );
       const updatedMatchingKeywords = [
-        ...(evaluation.matchingKeywords || []),
+        ...evaluation.matchingKeywords,
         selectedKeyword
       ];
+
+      // Recalculate score
+      const totalKeywords = updatedMissingKeywords.length + updatedMatchingKeywords.length;
+      const newScore = totalKeywords > 0
+        ? Math.round((updatedMatchingKeywords.length / totalKeywords) * 100)
+        : evaluation.atsScore;
 
       setEvaluation({
         ...evaluation,
         rewrittenResume: updatedResume,
         missingKeywords: updatedMissingKeywords,
-        matchingKeywords: updatedMatchingKeywords
+        matchingKeywords: updatedMatchingKeywords,
+        atsScore: newScore
       });
+
+      // Update localStorage
+      localStorage.setItem("resumeText", updatedResume);
+      setResumeText(updatedResume);
     }
   };
 
@@ -161,7 +271,7 @@ export default function Results() {
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
             <h2 className="text-xl font-semibold mb-2">Analyzing your resume...</h2>
-            <p className="text-muted-foreground">Our AI is evaluating your resume and generating improvements</p>
+            <p className="text-muted-foreground">Calculating ATS compatibility and keyword matches</p>
           </div>
         </div>
         <Footer />
@@ -190,6 +300,18 @@ export default function Results() {
     );
   }
 
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 80) return 'bg-green-100';
+    if (score >= 60) return 'bg-yellow-100';
+    return 'bg-red-100';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavigation />
@@ -210,8 +332,11 @@ export default function Results() {
             Analysis Results
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Your personalized resume analysis with AI-powered optimization
+            Real-time ATS analysis based on your resume and job description
           </p>
+          <Badge variant="outline" className="mt-3">
+            Analysis source: {evaluation.source === 'pyodide' ? 'Pyodide NLP' : evaluation.source === 'api' ? 'Cloud AI' : 'Local Processing'}
+          </Badge>
         </motion.div>
 
         {/* Results Grid */}
@@ -225,14 +350,14 @@ export default function Results() {
             >
               <Card className="p-6 shadow-swiss bg-gradient-card">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${evaluation.atsScore >= 80 ? 'bg-green-100 text-green-600' :
-                    evaluation.atsScore >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-                    }`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getScoreBg(evaluation.atsScore)} ${getScoreColor(evaluation.atsScore)}`}>
                     <Target className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="font-semibold">ATS Score</h3>
-                    <div className="text-2xl font-bold text-accent">{evaluation.atsScore}/100</div>
+                    <div className={`text-2xl font-bold ${getScoreColor(evaluation.atsScore)}`}>
+                      {evaluation.atsScore}/100
+                    </div>
                   </div>
                 </div>
                 <Progress value={evaluation.atsScore} className="mb-2" />
@@ -255,12 +380,12 @@ export default function Results() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Keywords Match</h3>
-                    <div className="text-2xl font-bold text-accent">
-                      {evaluation.matchingKeywords?.length || 0}
+                    <div className="text-2xl font-bold text-green-600">
+                      {evaluation.matchingKeywords.length}
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Keywords found in resume</p>
+                <p className="text-xs text-muted-foreground">Keywords found in your resume</p>
               </Card>
             </motion.div>
 
@@ -276,12 +401,12 @@ export default function Results() {
                   </div>
                   <div>
                     <h3 className="font-semibold">Missing Keywords</h3>
-                    <div className="text-2xl font-bold text-accent">
-                      {evaluation.missingKeywords?.length || 0}
+                    <div className="text-2xl font-bold text-red-600">
+                      {evaluation.missingKeywords.length}
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Opportunities to add</p>
+                <p className="text-xs text-muted-foreground">Click below to add them</p>
               </Card>
             </motion.div>
           </div>
@@ -303,7 +428,7 @@ export default function Results() {
                 </div>
 
                 {/* Matching Keywords */}
-                {evaluation.matchingKeywords && evaluation.matchingKeywords.length > 0 && (
+                {evaluation.matchingKeywords.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle className="w-5 h-5 text-green-600" />
@@ -312,6 +437,7 @@ export default function Results() {
                     <div className="flex flex-wrap gap-2">
                       {evaluation.matchingKeywords.map((keyword, index) => (
                         <Badge key={index} variant="default" className="bg-green-100 text-green-800">
+                          <CheckCircle className="w-3 h-3 mr-1" />
                           {keyword}
                         </Badge>
                       ))}
@@ -345,12 +471,22 @@ export default function Results() {
                   </div>
                 )}
 
+                {evaluation.missingKeywords.length === 0 && evaluation.matchingKeywords.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No job description provided for keyword analysis.</p>
+                    <Link to="/input">
+                      <Button variant="link" className="mt-2">Add job description →</Button>
+                    </Link>
+                  </div>
+                )}
+
                 <Separator className="my-6" />
 
                 {/* Suggestions */}
                 <div>
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <Sparkles className="w-4 h-4 text-accent" />
                     Improvement Suggestions
                   </h4>
                   <ul className="space-y-3">
@@ -367,7 +503,7 @@ export default function Results() {
               </Card>
             </motion.div>
 
-            {/* Rewritten Resume Card */}
+            {/* Optimized Resume Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -379,10 +515,24 @@ export default function Results() {
                     <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                       <CheckCircle className="w-5 h-5 text-accent" />
                     </div>
-                    <h2 className="text-xl font-semibold">Optimized Resume</h2>
+                    <h2 className="text-xl font-semibold">Your Resume</h2>
                   </div>
 
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAIOptimize}
+                      disabled={isOptimizing || !jobDescription}
+                      className="hover:shadow-swiss transition-all duration-300"
+                    >
+                      {isOptimizing ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-2" />
+                      )}
+                      AI Optimize
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -430,7 +580,7 @@ export default function Results() {
                 <Card className="p-6 shadow-swiss bg-gradient-card">
                   <h3 className="font-semibold mb-4 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-accent" />
-                    Key Improvements Made
+                    Analysis Insights
                   </h3>
                   <ul className="space-y-2">
                     {evaluation.improvements.map((improvement, index) => (
@@ -467,14 +617,20 @@ export default function Results() {
 
         {/* Action Buttons */}
         <motion.div
-          className="flex justify-center mt-8"
+          className="flex justify-center gap-4 mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.9 }}
         >
           <Link to="/input">
+            <Button variant="outline" size="lg" className="px-8 hover:shadow-swiss transition-all duration-300">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Input
+            </Button>
+          </Link>
+          <Link to="/resume-wizard">
             <Button variant="secondary" size="lg" className="px-8 hover:shadow-swiss transition-all duration-300">
-              Analyze Another Resume
+              Open Resume Wizard
             </Button>
           </Link>
         </motion.div>

@@ -5,26 +5,26 @@ import { Textarea } from "@/shared/ui/textarea";
 import { Label } from "@/shared/ui/label";
 import { Badge } from "@/shared/ui/badge";
 import { Switch } from "@/shared/ui/switch";
-import { useNavigate } from "react-router-dom";
-import { FileText, Briefcase, Settings, Eye, Zap, Trash2 } from "lucide-react";
+import { FileText, Briefcase, Zap, Trash2, Upload, Copy, Download, FileDown } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useResume } from "@/shared/contexts/ResumeContext";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import ModelSelector from "@/shared/components/common/ModelSelector";
 import CustomizeAIButton from "@/shared/components/common/CustomizeAIButton";
 import CustomizeAIModal from "@/features/job-optimizer/components/CustomizeAIModal";
-import ConfirmationModal from "@/shared/components/modals/ConfirmationModal";
-import PreviewPanel from "@/features/resume-builder/components/preview/PreviewPanel";
+import AnalysisPanel from "@/features/job-optimizer/components/AnalysisPanel";
 import ImportExportPanel from "@/shared/components/common/ImportExportPanel";
+import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 
 export default function ResumeInput() {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [customInstructions, setCustomInstructions] = useState<any>({
     resumeLength: 2,
     fontSizes: {
@@ -62,7 +62,6 @@ export default function ResumeInput() {
     customInstructions: "",
     selectedTags: []
   });
-  const [showPreview, setShowPreview] = useState(true);
 
   // AI Options State
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -75,11 +74,10 @@ export default function ResumeInput() {
   });
   const [bulletMode, setBulletMode] = useState<'expand' | 'shorten' | 'normal'>('normal');
 
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { clearForm } = useResume();
 
-  // Load data from localStorage if coming from Create Resume
+  // Load data from localStorage
   useEffect(() => {
     const savedResume = localStorage.getItem("resumeText");
     const savedJD = localStorage.getItem("jobDescription");
@@ -92,34 +90,11 @@ export default function ResumeInput() {
     if (savedTemplate) setSelectedTemplate(savedTemplate);
   }, []);
 
-  const handleGenerate = () => {
-    if (!resumeText.trim()) {
-      toast({
-        title: "Resume Required",
-        description: "Please paste your resume text before generating.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Show confirmation modal instead of directly navigating
-    setConfirmModalOpen(true);
-  };
-
-  const handleConfirmGeneration = () => {
-    // Store data in localStorage for Results page
-    localStorage.setItem("resumeText", resumeText);
-    localStorage.setItem("jobDescription", jobDescription);
-    localStorage.setItem("selectedModel", selectedModel);
-
-    // Store custom instructions if available
-    if (customInstructions) {
-      localStorage.setItem("customInstructions", JSON.stringify(customInstructions));
-    }
-
-    setConfirmModalOpen(false);
-    navigate("/results");
-  };
+  // Save to localStorage on change
+  useEffect(() => {
+    if (resumeText) localStorage.setItem("resumeText", resumeText);
+    if (jobDescription) localStorage.setItem("jobDescription", jobDescription);
+  }, [resumeText, jobDescription]);
 
   // AI Options
   const tags = ["Cloud", "Backend", "UI/UX", "Java", "Python", "Testing", "Services"];
@@ -133,7 +108,6 @@ export default function ResumeInput() {
 
   const selectTemplate = (template: string) => {
     setSelectedTemplate(template);
-    // Apply template-specific optimizations
     if (template === "Optimize for ATS") {
       setSectionToggles({ summary: true, projects: true, skills: true, experience: true });
       setBulletMode('expand');
@@ -148,6 +122,24 @@ export default function ResumeInput() {
 
   const handleResumeImport = (content: string) => {
     setResumeText(content);
+    setShowImport(false);
+    toast({
+      title: "Resume Imported",
+      description: "Your resume has been loaded successfully.",
+    });
+  };
+
+  const handleResumeUpdate = (updatedResume: string) => {
+    setResumeText(updatedResume);
+    localStorage.setItem("resumeText", updatedResume);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(resumeText);
+    toast({
+      title: "Copied!",
+      description: "Resume copied to clipboard.",
+    });
   };
 
   const loadExample = () => {
@@ -156,41 +148,66 @@ Senior Software Engineer
 john.smith@email.com | (555) 123-4567 | LinkedIn: linkedin.com/in/johnsmith
 
 EXPERIENCE
-Senior Software Engineer - TechCorp (2020-Present)
-• Developed scalable web applications using React and Node.js
-• Led team of 5 developers on client projects
-• Improved application performance by 40%
-• Collaborated with cross-functional teams
 
-Software Engineer - StartupXYZ (2018-2020)  
-• Built responsive frontend interfaces
-• Worked with REST APIs and databases
-• Participated in agile development process
+TechCorp Inc. - Senior Software Engineer (2020-Present)
+• Developed scalable web applications using React and Node.js serving 100K+ users
+• Led team of 5 developers on client-facing dashboard projects
+• Improved application performance by 40% through caching and optimization
+• Collaborated with cross-functional teams to deliver features on schedule
+
+StartupXYZ - Software Engineer (2018-2020)
+• Built responsive frontend interfaces with modern JavaScript frameworks
+• Designed and implemented REST APIs with PostgreSQL databases
+• Participated in agile development process with 2-week sprint cycles
+• Reduced bug count by 35% through comprehensive unit testing
+
+PROJECTS
+
+E-Commerce Platform
+• Architected microservices backend handling 50K daily transactions
+• Implemented real-time inventory management with WebSocket updates
+
+Analytics Dashboard
+• Created interactive data visualization using D3.js and Chart.js
+• Optimized queries reducing load time from 5s to 800ms
 
 EDUCATION
+
 Bachelor of Science in Computer Science
 State University (2014-2018)
 
 SKILLS
-JavaScript, React, Node.js, Python, SQL, Git`);
+JavaScript, TypeScript, React, Node.js, Python, SQL, Git, AWS, Docker`);
 
     setJobDescription(`We are seeking a Senior Frontend Developer to join our dynamic team. The ideal candidate will have:
 
 REQUIREMENTS:
 • 5+ years of experience in frontend development
 • Expert knowledge of React, TypeScript, and modern JavaScript
-• Experience with state management (Redux, Zustand)
-• Proficiency in CSS frameworks (Tailwind, Styled Components)
-• Knowledge of testing frameworks (Jest, Cypress)
-• Experience with CI/CD pipelines and deployment
+• Experience with state management (Redux, Zustand, Context API)
+• Proficiency in CSS frameworks (Tailwind CSS, Styled Components)
+• Knowledge of testing frameworks (Jest, Cypress, React Testing Library)
+• Experience with CI/CD pipelines and deployment automation
 • Strong problem-solving and communication skills
 • Bachelor's degree in Computer Science or related field
 
 PREFERRED:
 • Experience with Next.js or similar frameworks
 • Knowledge of GraphQL and Apollo Client
-• Familiarity with micro-frontend architectures
-• Previous leadership or mentoring experience`);
+• Understanding of micro-frontend architectures
+• Previous leadership or mentoring experience
+• AWS or cloud platform certifications
+
+RESPONSIBILITIES:
+• Lead frontend development initiatives across multiple products
+• Mentor junior developers and conduct code reviews
+• Collaborate with designers to implement pixel-perfect UIs
+• Drive technical decisions and architecture improvements`);
+
+    toast({
+      title: "Example Loaded",
+      description: "Sample resume and job description loaded. Check the Analysis panel!",
+    });
   };
 
   const clearAll = () => {
@@ -206,43 +223,8 @@ PREFERRED:
         experience: true
       });
       setBulletMode('normal');
-      setCustomInstructions({
-        resumeLength: 2,
-        fontSizes: {
-          heading: "18px",
-          subheading: "14px",
-          body: "11px"
-        },
-        summaryBullets: [],
-        summaryCount: 3,
-        skillCategories: {
-          languages: [],
-          frameworks: [],
-          databases: [],
-          tools: []
-        },
-        projectCount: 4,
-        experienceBullets: [],
-        bulletPunctuation: "none",
-        boldKeywords: true,
-        chronologicalOrder: true,
-        prdrAllocation: {
-          backend: 30,
-          frontend: 25,
-          cloud: 20,
-          devops: 10,
-          testing: 10,
-          security: 5
-        },
-        validateVersions: true,
-        techStackOverrides: [],
-        updateSteps: [],
-        targetAudience: "",
-        leadershipGoals: "",
-        metrics: "",
-        customInstructions: "",
-        selectedTags: []
-      });
+      localStorage.removeItem("resumeText");
+      localStorage.removeItem("jobDescription");
 
       toast({
         title: "Cleared",
@@ -262,22 +244,22 @@ PREFERRED:
       >
         {/* Header */}
         <motion.div
-          className="mb-10 text-center"
+          className="mb-8 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
-            Job-Optimized Resume
+            Resume Optimizer
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Paste your resume and job description to get an ATS-optimized, tailored version
+            Paste your resume and job description to see real-time ATS analysis. Click missing keywords to add them.
           </p>
         </motion.div>
 
-        {/* Model Selection & Controls */}
+        {/* Controls Bar */}
         <motion.div
-          className="flex flex-wrap justify-center items-center gap-4 mb-8"
+          className="flex flex-wrap justify-center items-center gap-3 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -290,32 +272,77 @@ PREFERRED:
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowPreview(!showPreview)}
+            onClick={() => setShowImport(!showImport)}
             className="flex items-center gap-2"
           >
-            <Eye className="w-4 h-4" />
-            {showPreview ? 'Hide' : 'Show'} Preview
+            <Upload className="w-4 h-4" />
+            Import
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyToClipboard}
+            disabled={!resumeText}
+            className="flex items-center gap-2"
+          >
+            <Copy className="w-4 h-4" />
+            Copy
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExportModalOpen(true)}
+            disabled={!resumeText}
+            className="flex items-center gap-2"
+          >
+            <FileDown className="w-4 h-4" />
+            Export
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={loadExample}
+          >
+            Load Example
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearAll}
+            className="text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
         </motion.div>
 
-        {/* AI Options Panel */}
-        <motion.div
-          className="max-w-4xl mx-auto mb-8"
+        {/* Import Panel (collapsible) */}
+        {showImport && (
+          <motion.div
+            className="max-w-2xl mx-auto mb-6"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <ImportExportPanel
+              resumeText={resumeText}
+              onResumeImport={handleResumeImport}
+              hasContent={!!resumeText}
+            />
+          </motion.div>
+        )}
+
+        {/* AI Options Panel - Collapsible */}
+        <motion.details
+          className="max-w-4xl mx-auto mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
         >
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4" />
+            AI Enhancement Options (click to expand)
+          </summary>
           <Card className="p-6 shadow-swiss bg-gradient-card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">AI Enhancement Options</h3>
-                <p className="text-sm text-muted-foreground">Configure how AI should optimize your resume</p>
-              </div>
-            </div>
-
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Quick Templates */}
               <div className="space-y-3">
@@ -388,137 +415,83 @@ PREFERRED:
               </div>
             </div>
           </Card>
-        </motion.div>
+        </motion.details>
 
-        {/* Main Content Grid - Preview takes 40% width */}
+        {/* Main Content Grid - 3 columns */}
         <motion.div
-          className="flex flex-col lg:flex-row gap-8 max-w-[1800px] mx-auto"
+          className="grid lg:grid-cols-3 gap-6 max-w-[1800px] mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          {/* Resume Input - 30% width */}
-          <Card className="lg:w-[30%] flex-shrink-0 p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
+          {/* Resume Input - Column 1 */}
+          <Card className="p-5 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-accent" />
+              <div className="w-9 h-9 bg-accent/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-accent" />
               </div>
               <div>
-                <Label htmlFor="resume" className="text-lg font-semibold">
-                  Resume Text
+                <Label htmlFor="resume" className="text-base font-semibold">
+                  Your Resume
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  Copy and paste your resume content
+                <p className="text-xs text-muted-foreground">
+                  Paste or type your resume
                 </p>
               </div>
             </div>
 
             <Textarea
               id="resume"
-              placeholder="Paste your resume here (copy from Word/PDF)&#10;&#10;Include your contact info, experience, education, and skills..."
+              placeholder="Paste your resume here...&#10;&#10;Include Experience, Projects, Skills, etc."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              className="min-h-[400px] text-sm leading-relaxed"
+              className="min-h-[450px] text-sm leading-relaxed font-mono"
             />
+
+            <div className="mt-2 flex justify-between items-center text-xs text-muted-foreground">
+              <span>{resumeText.split(/\s+/).filter(Boolean).length} words</span>
+              <span>{resumeText.length} chars</span>
+            </div>
           </Card>
 
-          {/* Job Description Input - 30% width */}
-          <Card className="lg:w-[30%] flex-shrink-0 p-6 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
+          {/* Job Description Input - Column 2 */}
+          <Card className="p-5 shadow-swiss bg-gradient-card hover:shadow-accent transition-all duration-300">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-accent" />
+              <div className="w-9 h-9 bg-accent/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-accent" />
               </div>
               <div>
-                <Label htmlFor="job-description" className="text-lg font-semibold">
-                  Job Description <span className="text-muted-foreground font-normal">(Optional)</span>
+                <Label htmlFor="job-description" className="text-base font-semibold">
+                  Job Description
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  Add the target job posting for better tailoring
+                <p className="text-xs text-muted-foreground">
+                  Paste target job posting
                 </p>
               </div>
             </div>
 
             <Textarea
               id="job-description"
-              placeholder="Paste the target job description here&#10;&#10;Include requirements, responsibilities, and preferred qualifications..."
+              placeholder="Paste the job description here...&#10;&#10;Include requirements and qualifications."
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              className="min-h-[400px] text-sm leading-relaxed"
+              className="min-h-[450px] text-sm leading-relaxed"
             />
+
+            <div className="mt-2 flex justify-between items-center text-xs text-muted-foreground">
+              <span>{jobDescription.split(/\s+/).filter(Boolean).length} words</span>
+              <span>{jobDescription.length} chars</span>
+            </div>
           </Card>
 
-          {/* Preview Panel - 40% width with smooth slide-in from right */}
-          <AnimatePresence mode="wait">
-            {showPreview ? (
-              <motion.div
-                key="preview"
-                className="lg:w-[40%] flex-shrink-0"
-                initial={{ opacity: 0, x: 300 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 300 }}
-                transition={{
-                  duration: 0.35,
-                  ease: [0.25, 0.46, 0.45, 0.94]
-                }}
-              >
-                <PreviewPanel
-                  resumeText={resumeText}
-                  jobDescription={jobDescription}
-                  customInstructions={customInstructions}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="import"
-                className="lg:w-[40%] flex-shrink-0 space-y-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ImportExportPanel
-                  resumeText={resumeText}
-                  onResumeImport={handleResumeImport}
-                  hasContent={!!resumeText || !!jobDescription}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          className="flex flex-wrap gap-4 justify-center mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <Button
-            variant="hero"
-            size="lg"
-            onClick={handleGenerate}
-            disabled={!resumeText.trim()}
-            className="px-8 hover:shadow-accent transition-all duration-300"
-          >
-            Generate Resume
-          </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={loadExample}
-            className="px-8 hover:shadow-swiss transition-all duration-300"
-          >
-            Load Example
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={clearAll}
-            className="px-8 border-destructive/50 text-destructive hover:bg-destructive/10 transition-all duration-300 flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear All
-          </Button>
+          {/* Analysis Panel - Column 3 */}
+          <div className="min-h-[530px]">
+            <AnalysisPanel
+              resumeText={resumeText}
+              jobDescription={jobDescription}
+              onResumeUpdate={handleResumeUpdate}
+            />
+          </div>
         </motion.div>
       </motion.div>
 
@@ -528,14 +501,10 @@ PREFERRED:
         onSave={setCustomInstructions}
       />
 
-      <ConfirmationModal
-        open={confirmModalOpen}
-        onOpenChange={setConfirmModalOpen}
-        onConfirm={handleConfirmGeneration}
+      <ExportOptimizedModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
         resumeText={resumeText}
-        jobDescription={jobDescription}
-        customInstructions={customInstructions}
-        selectedModel={selectedModel}
       />
 
       <Footer />
