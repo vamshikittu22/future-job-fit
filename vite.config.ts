@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -65,6 +66,12 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       }
+    }),
+    mode === 'analyze' && visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      filename: 'dist/stats.html'
     })
   ],
   resolve: {
@@ -73,7 +80,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['@hello-pangea/dnd', '@radix-ui/react-separator']
+    include: ['@radix-ui/react-separator']
   },
   build: {
     chunkSizeWarningLimit: 600, // Slightly raise limit since we're close
@@ -97,7 +104,7 @@ export default defineConfig(({ mode }) => ({
           }
 
           // DnD
-          if (id.includes('node_modules/@dnd-kit') || id.includes('node_modules/@hello-pangea')) {
+          if (id.includes('node_modules/@dnd-kit')) {
             return 'vendor-dnd';
           }
 
