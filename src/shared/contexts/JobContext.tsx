@@ -14,6 +14,7 @@ import {
   MAX_SAVED_JOBS,
   generateJobId
 } from '@/shared/lib/initialJobData';
+import { setItemCompressed, getItemWithMigration, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
 
 // --- Types ---
 
@@ -273,13 +274,13 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem(JOB_STORAGE_KEY);
+      const savedDraft = getItemWithMigration(JOB_STORAGE_KEY);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft) as JobData;
         dispatch({ type: 'SET_CURRENT_JOB', payload: parsed });
       }
 
-      const savedJobsList = localStorage.getItem(SAVED_JOBS_KEY);
+      const savedJobsList = getItemWithMigration(SAVED_JOBS_KEY);
       if (savedJobsList) {
         const parsed = JSON.parse(savedJobsList) as SavedJob[];
         dispatch({ type: 'SET_SAVED_JOBS', payload: parsed });
@@ -297,7 +298,16 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
         return;
       }
       try {
-        localStorage.setItem(JOB_STORAGE_KEY, JSON.stringify(job));
+        setItemCompressed(JOB_STORAGE_KEY, JSON.stringify(job));
+        
+        // Dev mode: log storage metrics
+        if (import.meta.env.DEV) {
+          const status = getQuotaStatus();
+          console.log(
+            `[Storage] Job draft saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
+            `(${status.percentUsed.toFixed(1)}%)`
+          );
+        }
       } catch (error) {
         console.error('Failed to save job draft:', error);
       }
@@ -312,7 +322,19 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
   // Save savedJobs list to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem(SAVED_JOBS_KEY, JSON.stringify(savedJobs));
+      setItemCompressed(SAVED_JOBS_KEY, JSON.stringify(savedJobs));
+      
+      // Dev mode: log storage metrics
+      if (import.meta.env.DEV) {
+        const status = getQuotaStatus();
+        console.log(
+          `[Storage] Jobs list saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
+          `(${status.percentUsed.toFixed(1)}%)`
+        );
+        if (status.warning) {
+          console.warn(`[Storage] Warning: Storage usage above 80%`);
+        }
+      }
     } catch (error) {
       console.error('Failed to save jobs list:', error);
     }

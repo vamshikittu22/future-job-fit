@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useC
 import { debounce } from 'lodash';
 import { ResumeData, initialResumeData } from '@/shared/lib/initialData';
 import { CustomSection, CustomField, CustomSectionEntry, Certification } from '@/shared/types/resume';
+import { setItemCompressed, getItemWithMigration, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
 
 const STORAGE_KEY = 'resumeBuilderDraft';
 const SNAPSHOTS_STORAGE_KEY = 'resumeBuilderSnapshots';
@@ -482,7 +483,7 @@ interface ResumeProviderProps {
 export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   const [savedVersions, setSavedVersions] = useState<SavedVersion[]>(() => {
     try {
-      const saved = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+      const saved = getItemWithMigration(SNAPSHOTS_STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
       console.error('Failed to load saved versions:', error);
@@ -505,7 +506,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      const savedData = localStorage.getItem(STORAGE_KEY);
+      const savedData = getItemWithMigration(STORAGE_KEY);
       if (savedData) {
         historyDispatch({ type: 'SET_RESUME_DATA', payload: JSON.parse(savedData) });
       }
@@ -516,7 +517,19 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+      setItemCompressed(STORAGE_KEY, JSON.stringify(resumeData));
+      
+      // Dev mode: log storage metrics
+      if (import.meta.env.DEV) {
+        const status = getQuotaStatus();
+        console.log(
+          `[Storage] Resume saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
+          `(${status.percentUsed.toFixed(1)}%)`
+        );
+        if (status.warning) {
+          console.warn(`[Storage] Warning: Storage usage above 80%`);
+        }
+      }
     } catch (error) {
       console.error('Failed to save resume data:', error);
     }
@@ -524,7 +537,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(savedVersions));
+      setItemCompressed(SNAPSHOTS_STORAGE_KEY, JSON.stringify(savedVersions));
     } catch (error) {
       console.error('Failed to save saved versions:', error);
     }
@@ -547,7 +560,16 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   const debouncedSave = useRef(
     debounce((data: ResumeData) => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        setItemCompressed(STORAGE_KEY, JSON.stringify(data));
+        
+        // Dev mode: log storage metrics
+        if (import.meta.env.DEV) {
+          const status = getQuotaStatus();
+          console.log(
+            `[Storage] Auto-saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
+            `(${status.percentUsed.toFixed(1)}%)`
+          );
+        }
       } catch (error) {
         console.error('Failed to save draft:', error);
       }
@@ -670,8 +692,18 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
       ].slice(0, 20); // Keep only the 20 most recent versions
 
       setSavedVersions(updatedVersions);
-      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedVersions));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+      setItemCompressed(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedVersions));
+      setItemCompressed(STORAGE_KEY, JSON.stringify(resumeData));
+      
+      // Dev mode: log storage metrics
+      if (import.meta.env.DEV) {
+        const status = getQuotaStatus();
+        console.log(
+          `[Storage] Version saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
+          `(${status.percentUsed.toFixed(1)}%)`
+        );
+      }
+      
       return Promise.resolve();
     } catch (error) {
       console.error('Failed to save resume:', error);
@@ -684,7 +716,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
       const version = savedVersions.find(v => v.id === id);
       if (version) {
         dispatch({ type: 'SET_RESUME_DATA', payload: version.data });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(version.data));
+        setItemCompressed(STORAGE_KEY, JSON.stringify(version.data));
         return Promise.resolve();
       }
       return Promise.reject(new Error('Version not found'));
