@@ -51,8 +51,7 @@ const mockResumeData = {
     ],
     skills: [
         {
-            id: 'tech',
-            name: 'Technical',
+            category: 'Technical',
             items: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Git'],
         },
     ],
@@ -71,6 +70,7 @@ const mockResumeData = {
     projects: [],
     achievements: [],
     certifications: [],
+    customSections: [],
 };
 
 describe('useATS hook', () => {

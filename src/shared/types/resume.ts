@@ -54,6 +54,8 @@ export interface Certification {
   expiryDate?: string;
   credentialId?: string;
   credentialUrl?: string;
+  /** @deprecated Use credentialUrl instead */
+  url?: string;
   description?: string;
 }
 

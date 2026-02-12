@@ -125,26 +125,32 @@ function resumeReducer(state: ResumeData, action: ResumeAction): ResumeData {
       };
     case 'UPDATE_SECTION':
       return { ...state, [action.payload.section]: action.payload.data };
-    case 'ADD_SKILL':
+    case 'ADD_SKILL': {
+      // Handle legacy skills format (object with languages/frameworks/tools keys)
+      const currentSkills = state.skills as { languages: string[]; frameworks: string[]; tools: string[] };
       return {
         ...state,
         skills: {
-          ...state.skills,
+          ...currentSkills,
           [action.payload.category]: [
-            ...(state.skills?.[action.payload.category] || []),
+            ...(currentSkills[action.payload.category] || []),
             action.payload.skill
           ]
         }
       };
+    }
 
-    case 'REMOVE_SKILL':
+    case 'REMOVE_SKILL': {
+      // Handle legacy skills format (object with languages/frameworks/tools keys)
+      const currentSkills = state.skills as { languages: string[]; frameworks: string[]; tools: string[] };
       return {
         ...state,
         skills: {
-          ...state.skills,
-          [action.payload.category]: state.skills[action.payload.category].filter((_, index) => index !== action.payload.index)
+          ...currentSkills,
+          [action.payload.category]: currentSkills[action.payload.category].filter((_: string, index: number) => index !== action.payload.index)
         }
       };
+    }
 
     case 'ADD_EXPERIENCE':
       return {

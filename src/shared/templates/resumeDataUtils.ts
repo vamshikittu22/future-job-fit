@@ -102,35 +102,49 @@ const formatSkills = (skills: any[]): Record<string, string[]> => {
  * Format raw resume data into the structure expected by the template
  */
 export const formatResumeData = (data: ResumeData): FormattedResumeData => {
-  // Extract personal info
-  const name = (data.personal?.name || '').toString().trim();
+  // Extract personal info with extended properties for compatibility
+  const personalExtended = data.personal as {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    website?: string;
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    title?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  
+  const name = (personalExtended?.name || '').toString().trim();
   const firstNameFromName = name ? name.split(' ')[0] : '';
   const lastNameFromName = name ? name.split(' ').slice(1).join(' ') : '';
   const personalInfo = {
-    firstName: data.personal?.firstName || firstNameFromName || '',
-    lastName: data.personal?.lastName || lastNameFromName || '',
-    title: data.personal?.title || '',
-    email: data.personal?.email || '',
-    phone: data.personal?.phone || '',
-    location: data.personal?.location || '',
-    website: data.personal?.website || data.personal?.linkedin || data.personal?.portfolio || '',
+    firstName: personalExtended?.firstName || firstNameFromName || '',
+    lastName: personalExtended?.lastName || lastNameFromName || '',
+    title: personalExtended?.title || '',
+    email: personalExtended?.email || '',
+    phone: personalExtended?.phone || '',
+    location: personalExtended?.location || '',
+    website: personalExtended?.website || personalExtended?.linkedin || personalExtended?.portfolio || '',
   };
 
   // Normalize personal links (website/linkedin + custom links[])
   const rawLinks = Array.isArray((data as any).personal?.links) ? (data as any).personal.links : [];
   const personalLinks: Array<{ label: string; url: string }> = [];
-  if (data.personal?.website) personalLinks.push({ label: 'Website', url: data.personal.website });
-  if ((data.personal as any)?.linkedin) personalLinks.push({ label: 'LinkedIn', url: (data.personal as any).linkedin });
-  if ((data.personal as any)?.github) personalLinks.push({ label: 'GitHub', url: (data.personal as any).github });
-  if ((data.personal as any)?.portfolio) personalLinks.push({ label: 'Portfolio', url: (data.personal as any).portfolio });
+  if (personalExtended?.website) personalLinks.push({ label: 'Website', url: personalExtended.website });
+  if (personalExtended?.linkedin) personalLinks.push({ label: 'LinkedIn', url: personalExtended.linkedin });
+  if (personalExtended?.github) personalLinks.push({ label: 'GitHub', url: personalExtended.github });
+  if (personalExtended?.portfolio) personalLinks.push({ label: 'Portfolio', url: personalExtended.portfolio });
   rawLinks.forEach((l: any) => {
     if (l && (l.url || l.href)) {
       personalLinks.push({ label: l.label || l.name || 'Link', url: l.url || l.href });
     }
   });
 
-  // Format experience
-  const experience = (data.experience || []).map(exp => {
+  // Format experience with extended properties for compatibility
+  const experience = (data.experience || []).map((exp: any) => {
     // Accept `position` as alias for `title`
     const title = exp.title || exp.position || '';
     // Derive dates from `duration` if explicit dates are missing
@@ -152,8 +166,8 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
     };
   });
 
-  // Format education
-  const education = (data.education || []).map(edu => {
+  // Format education with extended properties for compatibility
+  const education = (data.education || []).map((edu: any) => {
     // Handle both school and institution fields
     const school = edu.school || edu.institution || '';
     const location = edu.location || '';
@@ -188,8 +202,8 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
     };
   });
 
-  // Format projects
-  const projects = (data.projects || []).map(project => ({
+  // Format projects with extended properties for compatibility
+  const projects = (data.projects || []).map((project: any) => ({
     name: project.name || '',
     description: project.description || '',
     technologies: Array.isArray(project.technologies)
@@ -199,8 +213,8 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
     highlights: project.bullets || [], // Map bullets to highlights
   }));
 
-  // Format certifications
-  const certifications = (data.certifications || []).map(cert => ({
+  // Format certifications with extended properties for compatibility
+  const certifications = (data.certifications || []).map((cert: any) => ({
     name: cert.name || '',
     issuer: cert.issuer || '',
     date: cert.date || '',
@@ -216,13 +230,13 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   }).filter((s: string) => s);
 
   // Languages
-  const languages = (data.languages || []).map((lng: any) => ({
+  const languages = ((data as any).languages || []).map((lng: any) => ({
     language: lng.language || lng.name || '',
     proficiency: lng.proficiency || lng.level || '',
   })).filter((l: any) => l.language);
 
-  // Format custom sections
-  const customSections = (data.customSections || []).map(section => {
+  // Format custom sections with extended properties for compatibility
+  const customSections = (data.customSections || []).map((section: any) => {
     if (Array.isArray(section.items) && section.items.length > 0) {
       // Flatten items to a readable string array
       const contentList = section.items.map((item: any) => {
@@ -247,10 +261,10 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   return {
     personalInfo,
     personalLinks,
-    summary: data.summary || data.personal?.summary || '',
+    summary: data.summary || (data.personal as any)?.summary || '',
     experience,
     education,
-    skills: formatSkills(data.skills || []),
+    skills: formatSkills((data.skills as any) || []),
     projects,
     certifications,
     achievements,
