@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, X, RefreshCw, Cpu, Activity, AlertTriangle } from 'lucide-react';
+import { Terminal, X, RefreshCw, Cpu, Activity, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Badge } from '@/shared/ui/badge';
 import { cn } from '@/shared/lib/utils';
+import { AnalyticsPanel } from '@/shared/components/dev/AnalyticsPanel';
 
 const GodModePanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     const { resumeData } = useResume();
@@ -64,22 +65,20 @@ const GodModePanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
             className="fixed bottom-0 left-0 right-0 h-64 bg-black/95 border-t border-accent/20 z-[60] font-mono text-xs text-green-500 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex"
         >
             {/* Sidebar Stats */}
-            <div className="w-64 border-r border-white/10 p-4 space-y-4 bg-muted/5 flex-shrink-0">
+            <div className="w-72 border-r border-white/10 p-4 space-y-4 bg-muted/5 flex-shrink-0 overflow-y-auto">
                 <div className="flex items-center gap-2 text-accent font-bold uppercase tracking-widest mb-4">
                     <Terminal className="w-4 h-4" /> GOD_MODE_V1
                 </div>
 
-                <div className="space-y-1">
-                    <div className="text-[10px] text-muted-foreground uppercase">Session Tokens</div>
-                    <div className="text-xl font-bold text-white">4,291</div>
-                </div>
-                <div className="space-y-1">
-                    <div className="text-[10px] text-muted-foreground uppercase">ATS Validations</div>
-                    <div className="text-xl font-bold text-white">128/s</div>
-                </div>
-                <div className="space-y-1">
-                    <div className="text-[10px] text-muted-foreground uppercase">Render Cycles</div>
-                    <div className="text-xl font-bold text-white">60fps</div>
+                {/* AI Analytics Panel */}
+                <AnalyticsPanel />
+
+                <div className="border-t border-white/10 pt-4 mt-4">
+                    <div className="text-[10px] text-muted-foreground uppercase mb-2">System</div>
+                    <div className="space-y-1">
+                        <div className="text-[10px] text-muted-foreground uppercase">Render Cycles</div>
+                        <div className="text-lg font-bold text-white">60fps</div>
+                    </div>
                 </div>
             </div>
 
