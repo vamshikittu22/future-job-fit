@@ -26,7 +26,7 @@ export const generatePdf = async (resumeData: any, template: string = 'minimal')
   doc.setLineWidth(0.5);
   doc.line(20, 35, 190, 35);
 
-  let yPos = 45;
+  const yPos = 45;
 
   // ... (keeping legacy logic for now, but usually generateFormattedPdf is preferred)
   return doc.output('blob');
