@@ -3,6 +3,11 @@ import type {
   JobDescriptionModel,
   ATSEvaluationResponse
 } from '@/shared/types/ats';
+import { trackAICall, initAISession } from '@/shared/lib/ai/costTracker';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+
+// Initialize AI session tracking on module load
+initAISession();
 
 export type AIProvider = 'openai' | 'gemini' | 'groq';
 
@@ -324,13 +329,52 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   }
 
   async enhanceSection(request: EnhancementRequest): Promise<EnhancementResponse> {
+    const startTime = performance.now();
+    
     try {
       console.log(`[AI Service] Enhancing section: ${request.section_type}`);
 
       const result = await this.callEdgeFunction('enhanceSection', request);
+      const duration = performance.now() - startTime;
+      
+      // Track cost (ESTIMATED)
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'enhance_section',
+        request.original_text,
+        JSON.stringify(result.variants),
+        duration,
+        true
+      );
+      
+      // Track event (metadata only, no content)
+      trackEvent(AnalyticsEvent.AI_ENHANCE_USED, {
+        section_type: request.section_type,
+        provider: this.provider,
+        demo_mode: this.demoMode
+      });
 
       return result;
     } catch (error: any) {
+      const duration = performance.now() - startTime;
+      
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'enhance_section',
+        request.original_text,
+        '',
+        duration,
+        false,
+        String(error)
+      );
+      
+      trackEvent(AnalyticsEvent.AI_ERROR, {
+        operation: 'enhance_section',
+        error_type: this.categorizeError(error)
+      });
+      
       console.error('[AI Service] Enhancement failed:', error);
 
       // Return fallback with error message
@@ -340,6 +384,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
 
   async analyzeSection(sectionId: string, content: any): Promise<any> {
     const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+    const startTime = performance.now();
 
     // Try offline parser first if available
     if (this.isOfflineMode) {
@@ -348,6 +393,17 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         const scoreResult = await this.callOfflineParser('/score-ats', {
           resumeText: contentStr
         });
+        
+        const duration = performance.now() - startTime;
+        trackAICall(
+          'offline',
+          'local-parser',
+          'analyze_section',
+          contentStr,
+          JSON.stringify(scoreResult),
+          duration,
+          true
+        );
 
         return {
           score: scoreResult.score,
@@ -370,9 +426,37 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         sectionId,
         content: contentStr,
       });
+      
+      const duration = performance.now() - startTime;
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'analyze_section',
+        contentStr,
+        JSON.stringify(result),
+        duration,
+        true
+      );
 
       return { ...result, source: 'llm' };
     } catch (error) {
+      const duration = performance.now() - startTime;
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'analyze_section',
+        contentStr,
+        '',
+        duration,
+        false,
+        String(error)
+      );
+      
+      trackEvent(AnalyticsEvent.AI_ERROR, {
+        operation: 'analyze_section',
+        error_type: this.categorizeError(error)
+      });
+      
       console.error('[AI Service] Section analysis failed:', error);
 
       // Return fallback analysis
@@ -387,6 +471,8 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   }
 
   async evaluateResume(request: ResumeEvaluationRequest): Promise<ResumeEvaluationResponse & { source?: string }> {
+    const startTime = performance.now();
+    
     // Try offline parser first if available
     if (this.isOfflineMode) {
       try {
@@ -412,6 +498,17 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
           resumeText: request.resumeText,
           jobDescription: request.jobDescription
         });
+        
+        const duration = performance.now() - startTime;
+        trackAICall(
+          'offline',
+          'local-parser',
+          'evaluate_resume',
+          request.resumeText + (request.jobDescription || ''),
+          JSON.stringify({ scoreResult, matchResult }),
+          duration,
+          true
+        );
 
         return {
           atsScore: scoreResult.score,
@@ -432,9 +529,43 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         resumeText: request.resumeText,
         jobDescription: request.jobDescription,
       });
+      
+      const duration = performance.now() - startTime;
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'evaluate_resume',
+        request.resumeText + (request.jobDescription || ''),
+        JSON.stringify(result),
+        duration,
+        true
+      );
+      
+      trackEvent(AnalyticsEvent.AI_ATS_SCORED, {
+        provider: this.provider,
+        has_jd: !!request.jobDescription,
+        demo_mode: this.demoMode
+      });
 
       return { ...result, source: 'llm' };
     } catch (error) {
+      const duration = performance.now() - startTime;
+      trackAICall(
+        this.provider,
+        'gemini-1.5-flash',
+        'evaluate_resume',
+        request.resumeText + (request.jobDescription || ''),
+        '',
+        duration,
+        false,
+        String(error)
+      );
+      
+      trackEvent(AnalyticsEvent.AI_ERROR, {
+        operation: 'evaluate_resume',
+        error_type: this.categorizeError(error)
+      });
+      
       console.error('[AI Service] Resume evaluation failed:', error);
 
       // Return fallback evaluation
@@ -469,6 +600,14 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
       variants: [],
       notes: errorMessage || 'AI Service is currently unavailable. Please check your connection and try again.',
     };
+  }
+
+  private categorizeError(error: unknown): string {
+    const message = String(error).toLowerCase();
+    if (message.includes('timeout')) return 'timeout';
+    if (message.includes('rate')) return 'rate_limit';
+    if (message.includes('network')) return 'network';
+    return 'unknown';
   }
 
   /**
