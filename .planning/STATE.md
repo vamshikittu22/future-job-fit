@@ -2,7 +2,7 @@
 
 **Project:** Future Job Fit — ATS Optimization Authority  
 **Core Value:** The most accurate ATS simulation engine for job applications — works offline.  
-**Last Updated:** 2026-02-12  
+**Last Updated:** 2026-02-13  
 **Strategy:** Plan A (Pivot from Career Super App)
 
 ---
@@ -21,11 +21,11 @@
 ## Current Position
 
 **Current Phase:** Phase 0 — Codebase Hardening  
-**Status:** 🔵 Ready to Execute — 4 plans prepared
+**Status:** 🔵 In Progress — 2/4 plans complete
 
 ```
-Progress: [██░░░░░░░░] 8% (2/23 requirements)
-Phase 0:  [███░░░░░░░] 25% (1/4 plans complete)
+Progress: [██░░░░░░░░] 10% (3/23 requirements)
+Phase 0:  [██████░░░░] 50% (2/4 plans complete)
 ```
 
 ---
@@ -84,7 +84,7 @@ Phase 0:  [███░░░░░░░] 25% (1/4 plans complete)
 
 ### Plans
 - [x] 00-01-PLAN.md — TypeScript strict mode & lint cleanup ✅
-- [ ] 00-02-PLAN.md — Dependency cleanup & storage compression
+- [x] 00-02-PLAN.md — Dependency cleanup & storage compression ✅
 - [ ] 00-03-PLAN.md — Storage versioning & migration system
 - [ ] 00-04-PLAN.md — Analytics & AI cost monitoring
 
@@ -105,9 +105,10 @@ Phase 0:  [███░░░░░░░] 25% (1/4 plans complete)
 ## Next Up
 
 **Immediate:**
-1. Continue Phase 0 (Codebase Hardening) → Execute 00-02, 00-03, 00-04
-   - 3 plans remaining in Wave 1
+1. Continue Phase 0 (Codebase Hardening) → Execute 00-03, 00-04
+   - 2 plans remaining in Wave 1
    - 00-01 ✅ Complete: TypeScript strict mode enabled
+   - 00-02 ✅ Complete: Dependency cleanup & storage compression
 
 **Soon:**
 2. Plan Phase 1 (ATS Simulation 2.0)
@@ -121,10 +122,11 @@ Phase 0:  [███░░░░░░░] 25% (1/4 plans complete)
 **Code Quality:**
 - TypeScript strict mode: ✅ Enabled (shared/ directory zero errors)
 - ESLint errors: ~260 (reduced from 68+) → **Target: <10**
-- Known issues: Duplicate dependencies → **Target: Removed**
+- Duplicate dependencies: ✅ Removed (@hello-pangea/dnd removed, kept @dnd-kit)
 
 **Bundle Size:**
-- Current: 2MB+ (includes Pyodide) → **Target: <1.8MB (10% reduction)**
+- Current: 3.9MB dist/ total (Pyodide from CDN)
+- Storage: LZ-String compression reduces resume data 3-5x ✅
 
 **Build Status:**
 - Build: Passing
@@ -146,6 +148,7 @@ Phase 0:  [███░░░░░░░] 25% (1/4 plans complete)
 | **2026-02-12** | **Plan A Strategic Pivot** | **From career super app to ATS authority** |
 | **2026-02-12** | **Phase 0 hardening first** | **Weak foundations break under engine complexity** |
 | **2026-02-12** | **00-01 TypeScript strict mode** | **Shared directory zero errors, strict mode enabled** |
+| **2026-02-12** | **00-02 Dependency cleanup** | **Removed @hello-pangea/dnd, kept @dnd-kit, LZ-String compression** |
 
 ### Pivot Rationale
 
@@ -195,5 +198,5 @@ npm run lint         # Check lint errors
 
 ---
 
-*State updated: 2026-02-12 — 00-01 Complete*  
-*Next update: After 00-02 completion*
+*State updated: 2026-02-13 — 00-02 Complete*  
+*Next update: After 00-03 completion*
