@@ -14,7 +14,7 @@ import {
   MAX_SAVED_JOBS,
   generateJobId
 } from '@/shared/lib/initialJobData';
-import { setItemCompressed, getItemWithMigration, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
+import { setItemVersioned, getItemVersioned, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
 
 // --- Types ---
 
@@ -274,16 +274,14 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const savedDraft = getItemWithMigration(JOB_STORAGE_KEY);
+      const savedDraft = getItemVersioned<JobData>(JOB_STORAGE_KEY);
       if (savedDraft) {
-        const parsed = JSON.parse(savedDraft) as JobData;
-        dispatch({ type: 'SET_CURRENT_JOB', payload: parsed });
+        dispatch({ type: 'SET_CURRENT_JOB', payload: savedDraft });
       }
 
-      const savedJobsList = getItemWithMigration(SAVED_JOBS_KEY);
+      const savedJobsList = getItemVersioned<SavedJob[]>(SAVED_JOBS_KEY);
       if (savedJobsList) {
-        const parsed = JSON.parse(savedJobsList) as SavedJob[];
-        dispatch({ type: 'SET_SAVED_JOBS', payload: parsed });
+        dispatch({ type: 'SET_SAVED_JOBS', payload: savedJobsList });
       }
     } catch (error) {
       console.error('Failed to load job data from localStorage:', error);
@@ -298,16 +296,7 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
         return;
       }
       try {
-        setItemCompressed(JOB_STORAGE_KEY, JSON.stringify(job));
-        
-        // Dev mode: log storage metrics
-        if (import.meta.env.DEV) {
-          const status = getQuotaStatus();
-          console.log(
-            `[Storage] Job draft saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
-            `(${status.percentUsed.toFixed(1)}%)`
-          );
-        }
+        setItemVersioned(JOB_STORAGE_KEY, job);
       } catch (error) {
         console.error('Failed to save job draft:', error);
       }
@@ -322,15 +311,11 @@ export const JobProvider: React.FC<JobProviderProps> = ({ children }) => {
   // Save savedJobs list to localStorage whenever it changes
   useEffect(() => {
     try {
-      setItemCompressed(SAVED_JOBS_KEY, JSON.stringify(savedJobs));
+      setItemVersioned(SAVED_JOBS_KEY, savedJobs);
       
-      // Dev mode: log storage metrics
+      // Dev mode: log storage metrics (now handled by setItemVersioned)
       if (import.meta.env.DEV) {
         const status = getQuotaStatus();
-        console.log(
-          `[Storage] Jobs list saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
-          `(${status.percentUsed.toFixed(1)}%)`
-        );
         if (status.warning) {
           console.warn(`[Storage] Warning: Storage usage above 80%`);
         }

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useC
 import { debounce } from 'lodash';
 import { ResumeData, initialResumeData } from '@/shared/lib/initialData';
 import { CustomSection, CustomField, CustomSectionEntry, Certification } from '@/shared/types/resume';
-import { setItemCompressed, getItemWithMigration, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
+import { setItemVersioned, getItemVersioned, getQuotaStatus, formatBytes } from '@/shared/lib/storage';
 
 const STORAGE_KEY = 'resumeBuilderDraft';
 const SNAPSHOTS_STORAGE_KEY = 'resumeBuilderSnapshots';
@@ -483,8 +483,8 @@ interface ResumeProviderProps {
 export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   const [savedVersions, setSavedVersions] = useState<SavedVersion[]>(() => {
     try {
-      const saved = getItemWithMigration(SNAPSHOTS_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const saved = getItemVersioned<SavedVersion[]>(SNAPSHOTS_STORAGE_KEY);
+      return saved ?? [];
     } catch (error) {
       console.error('Failed to load saved versions:', error);
       return [];
@@ -506,9 +506,9 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      const savedData = getItemWithMigration(STORAGE_KEY);
+      const savedData = getItemVersioned<ResumeData>(STORAGE_KEY);
       if (savedData) {
-        historyDispatch({ type: 'SET_RESUME_DATA', payload: JSON.parse(savedData) });
+        historyDispatch({ type: 'SET_RESUME_DATA', payload: savedData });
       }
     } catch (error) {
       console.error('Failed to load resume data:', error);
@@ -517,15 +517,11 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      setItemCompressed(STORAGE_KEY, JSON.stringify(resumeData));
+      setItemVersioned(STORAGE_KEY, resumeData);
       
-      // Dev mode: log storage metrics
+      // Dev mode: log storage metrics (now handled by setItemVersioned)
       if (import.meta.env.DEV) {
         const status = getQuotaStatus();
-        console.log(
-          `[Storage] Resume saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
-          `(${status.percentUsed.toFixed(1)}%)`
-        );
         if (status.warning) {
           console.warn(`[Storage] Warning: Storage usage above 80%`);
         }
@@ -537,7 +533,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   useEffect(() => {
     try {
-      setItemCompressed(SNAPSHOTS_STORAGE_KEY, JSON.stringify(savedVersions));
+      setItemVersioned(SNAPSHOTS_STORAGE_KEY, savedVersions);
     } catch (error) {
       console.error('Failed to save saved versions:', error);
     }
@@ -560,16 +556,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
   const debouncedSave = useRef(
     debounce((data: ResumeData) => {
       try {
-        setItemCompressed(STORAGE_KEY, JSON.stringify(data));
-        
-        // Dev mode: log storage metrics
-        if (import.meta.env.DEV) {
-          const status = getQuotaStatus();
-          console.log(
-            `[Storage] Auto-saved: ${formatBytes(status.used)} / ${formatBytes(status.total)} ` +
-            `(${status.percentUsed.toFixed(1)}%)`
-          );
-        }
+        setItemVersioned(STORAGE_KEY, data);
       } catch (error) {
         console.error('Failed to save draft:', error);
       }
@@ -692,10 +679,10 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
       ].slice(0, 20); // Keep only the 20 most recent versions
 
       setSavedVersions(updatedVersions);
-      setItemCompressed(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedVersions));
-      setItemCompressed(STORAGE_KEY, JSON.stringify(resumeData));
+      setItemVersioned(SNAPSHOTS_STORAGE_KEY, updatedVersions);
+      setItemVersioned(STORAGE_KEY, resumeData);
       
-      // Dev mode: log storage metrics
+      // Dev mode: log storage metrics (now handled by setItemVersioned)
       if (import.meta.env.DEV) {
         const status = getQuotaStatus();
         console.log(
@@ -716,7 +703,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
       const version = savedVersions.find(v => v.id === id);
       if (version) {
         dispatch({ type: 'SET_RESUME_DATA', payload: version.data });
-        setItemCompressed(STORAGE_KEY, JSON.stringify(version.data));
+        setItemVersioned(STORAGE_KEY, version.data);
         return Promise.resolve();
       }
       return Promise.reject(new Error('Version not found'));
