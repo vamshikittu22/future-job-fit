@@ -65,7 +65,21 @@ function getBadgeColorClass(score: number): string {
  * ```
  */
 export function PlatformComparison({ comparison, className }: PlatformComparisonProps) {
+  // Defensive: Handle undefined or empty comparison
+  if (!comparison || !comparison.scores || comparison.scores.length === 0) {
+    return (
+      <div className={cn("p-4 text-center text-gray-500", className)}>
+        <p>No platform comparison data available.</p>
+        <p className="text-sm mt-1">Add more content to your resume to see platform analysis.</p>
+      </div>
+    );
+  }
+
   const { scores, bestPlatform, worstPlatform } = comparison;
+  
+  // Defensive: Handle undefined best/worst platforms
+  const safeBestPlatform = bestPlatform ?? { platform: PlatformType.LEVER, score: 0 };
+  const safeWorstPlatform = worstPlatform ?? { platform: PlatformType.WORKDAY, score: 0 };
   
   return (
     <div className={cn("space-y-4", className)}>
@@ -75,9 +89,9 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
       
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {scores.map((platformScore: PlatformScore) => {
-          const info = platformInfo[platformScore.platform];
-          const isBest = platformScore.platform === bestPlatform.platform;
-          const isWorst = platformScore.platform === worstPlatform.platform;
+          const info = platformInfo[platformScore.platform] ?? { name: platformScore.platform, icon: '📄', color: 'bg-gray-100' };
+          const isBest = platformScore.platform === safeBestPlatform.platform;
+          const isWorst = platformScore.platform === safeWorstPlatform.platform;
           
           return (
             <div
@@ -134,9 +148,9 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
       
       {/* Summary insight */}
       <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-        <span className="font-medium">Insight:</span> Your resume performs best on {platformInfo[bestPlatform.platform].name} 
-        ({bestPlatform.score}/100) but may have issues with {platformInfo[worstPlatform.platform].name} 
-        ({worstPlatform.score}/100).
+        <span className="font-medium">Insight:</span> Your resume performs best on {platformInfo[safeBestPlatform.platform]?.name ?? 'Unknown'} 
+        ({safeBestPlatform.score}/100) but may have issues with {platformInfo[safeWorstPlatform.platform]?.name ?? 'Unknown'} 
+        ({safeWorstPlatform.score}/100).
       </div>
     </div>
   );
