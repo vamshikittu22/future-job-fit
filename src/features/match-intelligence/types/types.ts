@@ -131,9 +131,9 @@ export interface MatchScoreOptions {
 export type HeatmapZone = 'top-left' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-right';
 
 /**
- * Skill cluster category
+ * Skill cluster category (string literal)
  */
-export type SkillCluster = 'technical' | 'tools' | 'concepts' | 'soft';
+export type SkillClusterCategory = 'technical' | 'tools' | 'concepts' | 'soft';
 
 /**
  * Heatmap analysis result
@@ -154,4 +154,61 @@ export interface SkillClusterResult {
   tools: MatchedSkill[];
   concepts: MatchedSkill[];
   soft: MatchedSkill[];
+}
+
+/**
+ * Skill category type
+ */
+export type SkillCategory = 'technical' | 'tools' | 'concepts' | 'soft';
+
+/**
+ * Clustered skill group with metadata
+ */
+export interface SkillCluster {
+  id: string;
+  category: SkillCategory;
+  label: string;
+  icon?: string;
+  required: MatchedSkill[];
+  preferred: MatchedSkill[];
+  coverage: number;
+}
+
+/**
+ * Competency gap with importance ranking
+ */
+export interface CompetencyGap {
+  skill: string;
+  importance: 'critical' | 'high' | 'medium' | 'low';
+  weight: number;
+  category: string;
+  isRequired: boolean;
+  recommendation: string;
+  difficulty: 'easy' | 'moderate' | 'hard';
+}
+
+/**
+ * Impact recommendation for improvements
+ */
+export interface ImpactRecommendation {
+  id: string;
+  type: 'add_skill' | 'enhance_skill' | 'add_keyword' | 'improve_format';
+  impact: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  specificAction: string;
+  expectedScoreImprovement: number;
+}
+
+/**
+ * Full competency gap analysis result
+ */
+export interface CompetencyGapAnalysis {
+  gaps: CompetencyGap[];
+  totalCritical: number;
+  totalHigh: number;
+  totalMedium: number;
+  totalLow: number;
+  overallGapScore: number;
+  prioritizedRecommendations: ImpactRecommendation[];
 }
