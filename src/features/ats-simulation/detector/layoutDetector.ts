@@ -268,3 +268,14 @@ export function analyzeLayout(
     riskScore
   };
 }
+
+// Re-export types for convenience
+export type {
+  TableRisk,
+  ColumnRisk,
+  HeaderFooterRisk,
+  LayoutAnalysis,
+  LayoutDetectorOptions,
+  RiskLevel,
+  PlatformType
+} from './types';
