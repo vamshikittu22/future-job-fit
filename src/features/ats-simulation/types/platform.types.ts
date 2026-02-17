@@ -260,7 +260,7 @@ export const DEFAULT_PLATFORM_CONFIGS: Record<PlatformType, PlatformConfig> = {
       dateFormatStrict: false,
       supportedDateFormats: ['MMM YYYY', 'MM/YYYY', 'YYYY'],
       headerDetection: 'semantic',
-      footerSensitivity: 'low',
+      footerSensitivity: RiskLevel.LOW,
     },
   },
   [PlatformType.ICIMS]: {
@@ -276,7 +276,7 @@ export const DEFAULT_PLATFORM_CONFIGS: Record<PlatformType, PlatformConfig> = {
       dateFormatStrict: true,
       supportedDateFormats: ['MM/YYYY', 'YYYY'],
       headerDetection: 'strict',
-      footerSensitivity: 'medium',
+      footerSensitivity: RiskLevel.MEDIUM,
     },
   },
   [PlatformType.GENERIC]: {
@@ -292,7 +292,7 @@ export const DEFAULT_PLATFORM_CONFIGS: Record<PlatformType, PlatformConfig> = {
       dateFormatStrict: false,
       supportedDateFormats: ['MMM YYYY', 'MM/YYYY', 'YYYY'],
       headerDetection: 'flexible',
-      footerSensitivity: 'medium',
+      footerSensitivity: RiskLevel.MEDIUM,
     },
   },
 };
