@@ -171,8 +171,8 @@ export function detectColumns(container: HTMLElement): ColumnRisk[] {
 /**
  * Detects header and footer elements with fixed/sticky positioning
  * 
- * Fixed headers and footers may cause content duplication issues
- * when resumes are paginated by ATS systems.
+ * Identifies elements that may repeat across pages or cause parsing issues
+ * in ATS systems due to fixed positioning.
  * 
  * @param container - The HTML element to analyze for headers/footers
  * @returns Array of HeaderFooterRisk objects with severity assessments
@@ -193,7 +193,7 @@ export function detectHeaderFooter(container: HTMLElement): HeaderFooterRisk[] {
     
     if (!isFixed) return;
     
-    // Position-based detection
+    // Position-based detection (top 100px = header, bottom 100px = footer)
     const isHeader = rect.top < 100;
     const isFooter = rect.bottom > viewportHeight - 100;
     
@@ -212,4 +212,59 @@ export function detectHeaderFooter(container: HTMLElement): HeaderFooterRisk[] {
   });
   
   return risks;
+}
+
+/**
+ * Main layout analysis orchestrator
+ * 
+ * Performs comprehensive DOM analysis to identify ATS-risky structures:
+ * - Tables (nested, layout, data tables)
+ * - Column layouts (grid, flex, float)
+ * - Header/footer elements with fixed positioning
+ * 
+ * @param container - The HTML element to analyze
+ * @param options - Configuration options for detection
+ * @returns Complete LayoutAnalysis with all risks and overall score
+ */
+export function analyzeLayout(
+  container: HTMLElement, 
+  options: LayoutDetectorOptions = {}
+): LayoutAnalysis {
+  const {
+    checkTables = true,
+    checkColumns = true,
+    checkHeaderFooter = true
+  } = options;
+  
+  const tables = checkTables ? detectTables(container) : [];
+  const columns = checkColumns ? detectColumns(container) : [];
+  const headerFooter = checkHeaderFooter ? detectHeaderFooter(container) : [];
+  
+  // Calculate overall risk
+  const allRisks = [...tables, ...columns, ...headerFooter];
+  const criticalCount = allRisks.filter(r => r.severity === 'critical').length;
+  const highCount = allRisks.filter(r => r.severity === 'high').length;
+  const mediumCount = allRisks.filter(r => r.severity === 'medium').length;
+  
+  let overallRisk: RiskLevel = 'none';
+  if (criticalCount > 0) overallRisk = 'critical';
+  else if (highCount > 0) overallRisk = 'high';
+  else if (mediumCount > 0) overallRisk = 'medium';
+  else if (allRisks.length > 0) overallRisk = 'low';
+  
+  // Risk score: 0-100 (higher = more problems)
+  // Critical = 25 pts, High = 15 pts, Medium = 5 pts
+  const riskScore = Math.min(100, 
+    criticalCount * 25 + highCount * 15 + mediumCount * 5
+  );
+  
+  return {
+    timestamp: Date.now(),
+    element: container,
+    tables,
+    columns,
+    headerFooter,
+    overallRisk,
+    riskScore
+  };
 }
