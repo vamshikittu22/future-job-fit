@@ -3,3 +3,4 @@
  */
 
 export { useMatchScore, default } from './useMatchScore';
+export { useSkillClusters } from './useSkillClusters';
