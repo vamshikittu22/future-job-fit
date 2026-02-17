@@ -1,0 +1,533 @@
+import React, { useState, useEffect } from 'react';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { WizardStepContainer } from '@/features/resume-builder/components/layout/WizardStepContainer';
+import { ProgressStepper } from '@/features/resume-builder/components/layout/ProgressStepper';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Textarea } from '@/shared/ui/textarea';
+import { Label } from '@/shared/ui/label';
+import { Checkbox } from '@/shared/ui/checkbox';
+import { Badge } from '@/shared/ui/badge';
+import { Plus, Trash2, GripVertical, Briefcase, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog';
+import { AnimatedAccordion } from '@/features/resume-builder/components/editor/AnimatedAccordion';
+import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
+import { QuickAddExperienceModal } from '@/features/resume-builder/components/modals/QuickAddExperienceModal';
+import { useUndo } from '@/shared/hooks/useUndo';
+import { AIEnhanceButton } from '@/shared/ui/ai-enhance-button';
+import { InlineRecommendations } from '@/features/resume-builder/components/ats';
+import { Zap } from 'lucide-react';
+
+export const ExperienceStep: React.FC = () => {
+  const { resumeData, addExperience, updateExperience, removeExperience, setResumeData } = useResume();
+
+  // Undo functionality
+  const { registerDeletion } = useUndo({
+    onUndo: (action) => {
+      if (action.category === 'experience') {
+        // Restore the deleted experience at the original index
+        const experiences = [...(resumeData.experience || [])];
+        experiences.splice(action.index, 0, action.data);
+        setResumeData({ ...resumeData, experience: experiences });
+      }
+    },
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAIEnhanceModalOpen, setIsAIEnhanceModalOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    company: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+    current: false,
+    description: '',
+  });
+
+  const [isEnhanced, setIsEnhanced] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  // Validate date range
+  useEffect(() => {
+    if (formData.startDate && formData.endDate && !formData.current) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+
+      if (start > end) {
+        setDateError('Start date must be before end date');
+      } else {
+        setDateError(null);
+      }
+    } else {
+      setDateError(null);
+    }
+  }, [formData.startDate, formData.endDate, formData.current]);
+
+  // Keyboard shortcut for Quick Add (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsQuickAddOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Helper to format date for display
+  const formatDateDisplay = (dateStr: string): string => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr + '-01');
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Removed useEffect that was auto-resetting isEnhanced
+
+  const handleOpenDialog = (index?: number) => {
+    setIsEnhanced(false);
+    if (index !== undefined) {
+      const exp = resumeData.experience[index];
+      setFormData({
+        title: exp.title,
+        company: exp.company,
+        location: exp.location || '',
+        startDate: exp.startDate,
+        endDate: exp.endDate,
+        current: exp.current,
+        description: exp.description,
+      });
+      setEditingIndex(index);
+    } else {
+      setFormData({
+        title: '',
+        company: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        current: false,
+        description: '',
+      });
+      setEditingIndex(null);
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    if (editingIndex !== null) {
+      updateExperience(editingIndex, {
+        ...resumeData.experience[editingIndex],
+        ...formData,
+      });
+    } else {
+      addExperience({
+        id: uuidv4(),
+        ...formData,
+      });
+    }
+    setIsDialogOpen(false);
+  };
+
+  const handleDelete = (index: number) => {
+    const experienceToDelete = resumeData.experience[index];
+    registerDeletion(
+      'experience',
+      index,
+      experienceToDelete,
+      () => removeExperience(index)
+    );
+  };
+
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+    // Also update the form data if we are editing
+    if (editingIndex !== null && enhancedData.experience && enhancedData.experience[editingIndex]) {
+      setFormData(prev => ({
+        ...prev,
+        description: enhancedData.experience[editingIndex].description
+      }));
+      setIsEnhanced(true);
+    }
+  };
+
+  const experienceItems = resumeData.experience?.map((exp, index) => ({
+    id: exp.id || `exp-${index}`,
+    title: `${exp.title} at ${exp.company}`,
+    badge: exp.current ? 'Current' : undefined,
+    icon: <Briefcase className="h-4 w-4 text-muted-foreground" />,
+    content: (
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {exp.location && <span>{exp.location}</span>}
+            {exp.location && <span>•</span>}
+            <span>{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
+          </div>
+          {exp.description && (
+            <div className="text-sm whitespace-pre-line bg-muted/50 p-4 rounded-md">
+              {exp.description}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenDialog(index)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete(index)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    ),
+  })) || [];
+
+  return (
+    <WizardStepContainer
+      title="Work Experience"
+      description="Add your professional work history with achievements and responsibilities"
+    >
+      <ProgressStepper />
+
+      {/* ATS Inline Recommendations */}
+      <InlineRecommendations section="experience" className="mb-4" />
+
+      <div className="space-y-4">
+
+        {resumeData.experience && resumeData.experience.length > 0 ? (
+          <AnimatedAccordion
+            items={experienceItems}
+            type="single"
+            defaultValue={experienceItems[0]?.id}
+          />
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No work experience added yet</h3>
+              <p className="text-sm text-muted-foreground mb-4 text-center">
+                Add your work experience to showcase your career journey
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={() => handleOpenDialog()}
+            size="lg"
+            className="flex-1 h-12 text-base gap-2 shadow-lg hover:shadow-primary/20 transition-all"
+          >
+            <Plus className="h-5 w-5" />
+            Add Detailed Experience
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setIsQuickAddOpen(true)}
+            className="flex-1 h-12 text-base gap-2 border-primary/20 hover:bg-primary/5 transition-all text-primary group"
+          >
+            <Zap className="h-5 w-5 fill-primary/10 group-hover:fill-primary/20" />
+            Quick Add <span className="ml-1 text-[10px] bg-primary/10 px-1.5 py-0.5 rounded text-primary font-mono opacity-60">Ctrl+K</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Experience Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingIndex !== null ? 'Edit' : 'Add'} Work Experience
+            </DialogTitle>
+            <DialogDescription>
+              Provide details about your role and achievements
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="flex items-center gap-2">
+                  Job Title <span className="text-destructive">*</span>
+                  {formData.title.trim().length >= 2 && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Senior Software Engineer"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.title.trim() && formData.company.trim() && "border-destructive",
+                    formData.title.trim().length >= 2 && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
+                />
+                {!formData.title.trim() && formData.company.trim() && (
+                  <p className="text-xs text-destructive animate-in fade-in slide-in-from-top-1">Job title is required</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company" className="flex items-center gap-2">
+                  Company <span className="text-destructive">*</span>
+                  {formData.company.trim().length >= 2 && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
+                <Input
+                  id="company"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  placeholder="Tech Corp"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.company.trim() && formData.title.trim() && "border-destructive",
+                    formData.company.trim().length >= 2 && "border-green-500 focus-visible:ring-green-500/30"
+                  )}
+                />
+                {!formData.company.trim() && formData.title.trim() && (
+                  <p className="text-xs text-destructive animate-in fade-in slide-in-from-top-1">Company name is required</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="San Francisco, CA"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate" className="flex items-center gap-2">
+                  Start Date <span className="text-destructive">*</span>
+                  {formData.startDate && !dateError && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
+                <Input
+                  id="startDate"
+                  type="month"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  placeholder="YYYY-MM"
+                  className={cn(
+                    "transition-colors duration-200",
+                    !formData.startDate && (formData.title.trim() || formData.company.trim()) && "border-amber-500",
+                    formData.startDate && !dateError && "border-green-500 focus-visible:ring-green-500/30",
+                    dateError && "border-destructive"
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Format: YYYY-MM
+                  {formData.startDate && (
+                    <span className="ml-2 text-foreground font-medium">
+                      → {formatDateDisplay(formData.startDate)}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate" className="flex items-center gap-2">
+                  End Date
+                  {(formData.endDate || formData.current) && !dateError && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                  )}
+                </Label>
+                <Input
+                  id="endDate"
+                  type="month"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  disabled={formData.current}
+                  placeholder="YYYY-MM"
+                  className={cn(
+                    "transition-colors duration-200",
+                    formData.current && "opacity-50 bg-muted",
+                    (formData.endDate || formData.current) && !formData.current && !dateError && "border-green-500 focus-visible:ring-green-500/30",
+                    dateError && "border-destructive"
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {formData.current ? (
+                    <span className="text-green-600 dark:text-green-400 font-medium">Currently active</span>
+                  ) : (
+                    <>
+                      Format: YYYY-MM
+                      {formData.endDate && (
+                        <span className="ml-2 text-foreground font-medium">
+                          → {formatDateDisplay(formData.endDate)}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Date Range Error */}
+            {dateError && (
+              <div className="flex items-center gap-2 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+                <AlertCircle className="h-4 w-4" />
+                <span>{dateError}</span>
+              </div>
+            )}
+
+            {/* Date Range Summary */}
+            {formData.startDate && (formData.endDate || formData.current) && !dateError && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 animate-in fade-in duration-200 bg-green-50 dark:bg-green-950/30 px-3 py-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="font-medium">
+                  Duration: {formatDateDisplay(formData.startDate)} – {formData.current ? 'Present' : formatDateDisplay(formData.endDate)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="current"
+                checked={formData.current}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, current: checked as boolean, endDate: checked ? '' : formData.endDate })
+                }
+              />
+              <Label htmlFor="current" className="cursor-pointer font-medium">
+                I currently work here
+              </Label>
+            </div>
+
+            {/* Description Section with clearer header */}
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="description" className="text-base font-semibold flex items-center gap-2">
+                    Description & Achievements <span className="text-destructive">*</span>
+                    {formData.description.trim().length >= 20 && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500 animate-in fade-in zoom-in duration-200" />
+                    )}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Use bullet points (•) to list your responsibilities and achievements
+                  </p>
+                </div>
+                <AIEnhanceButton
+                  onClick={() => setIsAIEnhanceModalOpen(true)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => {
+                  setFormData({ ...formData, description: e.target.value });
+                  setIsEnhanced(false);
+                }}
+                placeholder="• Managed team of 5 developers&#10;• Increased efficiency by 30%&#10;• Led migration to microservices architecture"
+                className={cn(
+                  "min-h-[180px] text-base leading-relaxed transition-colors duration-200",
+                  !formData.description.trim() && (formData.title.trim() || formData.company.trim()) && "border-amber-500",
+                  formData.description.trim().length >= 20 && "border-green-500 focus-visible:ring-green-500/30"
+                )}
+                maxLength={1000}
+              />
+              {/* Character counter with visual feedback */}
+              <div className="flex items-center justify-between text-xs">
+                <p className="text-muted-foreground">
+                  Use bullet points (•) to list your responsibilities and achievements. Include metrics where possible.
+                </p>
+                <span className={cn(
+                  "font-medium",
+                  formData.description.length === 0 && "text-muted-foreground",
+                  formData.description.length > 0 && formData.description.length < 50 && "text-amber-500",
+                  formData.description.length >= 50 && formData.description.length < 200 && "text-green-500",
+                  formData.description.length >= 200 && formData.description.length < 800 && "text-green-600",
+                  formData.description.length >= 800 && "text-amber-500"
+                )}>
+                  {formData.description.length}/1000
+                  {formData.description.length < 50 && formData.description.length > 0 && " (add more detail)"}
+                  {formData.description.length >= 50 && formData.description.length < 200 && " (good)"}
+                  {formData.description.length >= 200 && formData.description.length < 800 && " (great!)"}
+                </span>
+              </div>
+              {isEnhanced && (
+                <div className="flex items-center gap-2 text-xs text-purple-600 font-medium animate-in fade-in slide-in-from-top-1 mt-2">
+                  <Sparkles className="w-3 h-3" />
+                  Enhanced with AI
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!formData.title || !formData.company || !formData.description}
+            >
+              {editingIndex !== null ? 'Update' : 'Add'} Experience
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AIEnhanceModal
+        open={isAIEnhanceModalOpen}
+        onOpenChange={setIsAIEnhanceModalOpen}
+        resumeData={resumeData}
+        onEnhance={handleAIEnhance}
+        step="experience"
+        targetItemIndex={editingIndex}
+        targetField="description"
+      />
+
+      <QuickAddExperienceModal
+        open={isQuickAddOpen}
+        onOpenChange={setIsQuickAddOpen}
+        onAdd={(data) => {
+          addExperience(data);
+        }}
+        onExpand={(data) => {
+          setFormData({
+            ...formData,
+            ...data,
+          });
+          setEditingIndex(null);
+          setIsDialogOpen(true);
+        }}
+      />
+    </WizardStepContainer>
+  );
+};

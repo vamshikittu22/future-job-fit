@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Swiss-style Monochrome Design System */
+/* Light Mode: Red Monochrome */
+/* Dark Mode: Blue Monochrome */
+
+@layer base {
+  :root {
+    /* Base Typography */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    text-align: left;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Light Mode - Neutral Swiss Palette */
+    --background: 0 0% 99%;
+    --foreground: 220 13% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 220 13% 20%;
+    --muted: 220 13% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+
+    /* Swiss Shadows - Subtle and Minimal */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.2);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.04);
+    --shadow-swiss: 0 2px 8px 0 rgb(0 0 0 / 0.06);
+    --shadow-accent: 0 4px 12px 0 rgb(59 130 246 / 0.15);
+    --shadow-nav: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.02);
+
+    /* Gradients - Premium Swiss Style */
+    --gradient-accent: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(217 91% 70%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(0 0% 97%) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(280 80% 60%) 100%);
+
+    /* Transitions */
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+
+  .dark {
+    /* Dark Mode - Neutral Deep Grays with Blue Accent */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 15%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 15%;
+    --ring: 217 91% 60%;
+
+    /* Dark Mode Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.3);
+    --shadow-swiss: 0 2px 8px 0 rgb(0 0 0 / 0.5);
+    --shadow-accent: 0 4px 12px 0 rgb(59 130 246 / 0.3);
+    --shadow-nav: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.05);
+
+    /* Gradients - Dark Mode Refinement */
+    --gradient-accent: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(217 91% 40%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(222 47% 8%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(222 47% 12%) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(217 91% 40%) 0%, hsl(280 80% 40%) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+    /* Add vertical scrollbar if needed */
+    overflow-y: auto;
+  }
+
+  /* Responsive breakpoints */
+  @media (max-width: 1920px) {
+    body {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 1366px) {
+    body {
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    body {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+@layer components {
+  .swiss-grid {
+    @apply grid gap-8 lg:gap-12;
+  }
+
+  .swiss-section {
+    @apply py-16 lg:py-24;
+  }
+
+  .swiss-container {
+    @apply mx-auto max-w-7xl px-6 lg:px-8;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Global responsive utilities */
+@layer utilities {
+  .overflow-sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100vh;
+  }
+
+  .overflow-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100vh;
+  }
+
+  .header-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    gap: 1rem;
+    justify-content: space-between;
+  }
+
+  .header-responsive > * {
+    flex-shrink: 1;
+  }
+
+  /* Custom Scrollbar Styles for Wizard */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Smooth scrolling */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  /* Ensure min-h-0 allows flex children to shrink */
+  .min-h-0 {
+    min-height: 0;
+  }
+
+  /* Force scrolling on overflow */
+  .overflow-y-auto {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overflow-x-hidden {
+    overflow-x: hidden !important;
+  }
+}
