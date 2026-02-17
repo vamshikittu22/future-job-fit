@@ -21,12 +21,12 @@
 ## Current Position
 
 **Current Phase:** Phase 1 — ATS Simulation 2.0  
-**Status:** 🟡 IN PROGRESS — 5 of 6 plans complete
+**Status:** 🟢 COMPLETE — 6 of 6 plans complete
 
 ```
 Progress: [██████████] 35% (8/23 requirements)
 Phase 0:  [██████████] 100% (4/4 plans complete) ✅
-Phase 1:  [███████░░░] 83% (5/6 plans complete) 🟡
+Phase 1:  [██████████] 100% (6/6 plans complete) 🟢
 ```
 
 ---
@@ -115,7 +115,7 @@ Phase 1:  [███████░░░] 83% (5/6 plans complete) 🟡
 - [x] 01-03-PLAN.md — DOM layout detector (tables, columns, headers) ✅
 - [x] 01-04-PLAN.md — Platform simulators (Workday, Lever, Greenhouse, Taleo)
 - [x] 01-05-PLAN.md — ATS Risk Report UI (ScoreGauge, PlatformComparison) ✅
-- [ ] 01-06-PLAN.md — Integration + modal (checkpoint for UX verification)
+- [x] 01-06-PLAN.md — Integration + modal (checkpoint for UX verification) ✅
 
 ### Wave Structure
 | Wave | Plans | Description |
@@ -194,6 +194,8 @@ Phase 1:  [███████░░░] 83% (5/6 plans complete) 🟡
 | **2026-02-17** | **01-04 Platform simulators** | **Workday (40% table), Taleo (50% column), Greenhouse (10% clean bonus), Lever (semantic matching), comparePlatforms() for multi-platform analysis** |
 | **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
 | **2026-02-17** | **01-05 ATS Risk Report UI** | **5 React components: ScoreGauge, ScoreBreakdown, PlatformComparison, RiskItemsList, ATSRiskReport container with 40/30/20/10 category breakdown** |
+| **2026-02-17** | **01-06 ATS Integration** | **Modal integration, ATS button in preview, dynamic score calculation (parsing/keywords/format/layout), all 4 platforms displayed** |
+| Phase 01-ats-simulation P06 | 10min | 4 tasks | 4 files |
 
 ### Pivot Rationale
 
@@ -243,5 +245,5 @@ npm run lint         # Check lint errors
 
 ---
 
-*State updated: 2026-02-17 — Phase 1 IN PROGRESS (5/6 plans complete)*  
-*Next update: After plan 01-06 execution*
+*State updated: 2026-02-17 — Phase 1 COMPLETE*  
+*Next: Plan Phase 2 (Match Intelligence)*
