@@ -3,3 +3,4 @@
  */
 
 export * from './keywordWeighting';
+export * from './skillClustering';
