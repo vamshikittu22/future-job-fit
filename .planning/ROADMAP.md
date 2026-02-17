@@ -29,7 +29,7 @@
 |-------|------|----------|-----------------|--------|
 | 0 — Hardening | Stabilize codebase for engine complexity | 2 weeks | Clean foundation, strict mode, storage compression | ✅ Complete |
 | 1 — ATS Simulation 2.0 | Deep parsing simulation | 3 weeks | ATS Risk Report with layout detection | ✅ Complete |
-| 2 — Match Intelligence | Advanced analytics dashboard | 3 weeks | Match score breakdown with heatmap | ⚪ Planned |
+| 2 — Match Intelligence | Advanced analytics dashboard | 3 weeks | Match score breakdown with heatmap | 🔵 Planned (6 plans) |
 | 3 — Cover Letter Optimizer | ATS-focused letter optimization | 2 weeks | JD-mapped variant generator | ⚪ Planned |
 
 **Total:** ~10 weeks to MVP  
@@ -109,6 +109,29 @@
 3. Missing competencies ranked by importance
 4. Recommendations specific: "Add 'Kubernetes' to skills section"
 5. Comparison view highlights keyword matches visually
+
+### Plans
+- [x] 02-01-PLAN.md — Core Types & Weighted Scoring Engine (TDD) ✅
+- [x] 02-02-PLAN.md — Skill Clustering & Competency Gaps ✅
+- [x] 02-03-PLAN.md — Semantic Similarity Scoring (TDD) ✅
+- [x] 02-04-PLAN.md — Recruiter Heatmap (F-pattern) ✅
+- [x] 02-05-PLAN.md — Recommendations & Comparison View ✅
+- [x] 02-06-PLAN.md — Integration & Dashboard ✅
+
+### Wave Structure
+| Wave | Plans | Description |
+|------|-------|-------------|
+| 1 | 02-01, 02-02 | Core types, weighted scoring, skill clustering |
+| 2 | 02-03, 02-04 | Semantic similarity, heatmap |
+| 3 | 02-05 | Recommendations, comparison |
+| 4 | 02-06 | Integration & Dashboard (checkpoint) |
+
+### Key Technical Decisions
+1. **Weighted scoring:** 50% required, 25% preferred, 15% experience, 10% keywords
+2. **F-pattern heatmap:** Generic overlay on resume preview as MVP
+3. **Skill clustering:** Technical, Tools, Concepts, Soft Skills categories
+4. **Semantic similarity:** TF-IDF with fallback to similarity prompts
+5. **Recommendation specificity:** Map missing keywords to specific resume actions
 
 ---
 
