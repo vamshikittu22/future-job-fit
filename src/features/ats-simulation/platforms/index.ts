@@ -14,13 +14,33 @@ import {
   PlatformConfig,
   DEFAULT_PLATFORM_CONFIGS,
   RiskLevel,
+  ParsedResumeResult,
+  ScoreCategory,
 } from '../types';
 import type { LayoutAnalysis } from '../detector/types';
+
+// Import platform simulators
+export { simulateWorkday, WORKDAY_QUIRKS } from './workday';
+export { simulateLever, LEVER_QUIRKS } from './lever';
+export { simulateGreenhouse, GREENHOUSE_QUIRKS } from './greenhouse';
+export { simulateTaleo, TALEO_QUIRKS } from './taleo';
+
+// Import simulator functions for use in this module
+import { simulateWorkday } from './workday';
+import { simulateLever } from './lever';
+import { simulateGreenhouse } from './greenhouse';
+import { simulateTaleo } from './taleo';
 
 /**
  * Platform comparison result with best/worst platform identification
  */
 export interface PlatformComparison {
+  /** Results from each platform simulation */
+  results: Array<{
+    platform: PlatformType;
+    result: ParsedResumeResult;
+  }>;
+  
   /** Scores for each platform */
   scores: PlatformScore[];
 
@@ -35,27 +55,99 @@ export interface PlatformComparison {
 }
 
 /**
+ * All supported ATS platforms
+ */
+export const PLATFORMS: PlatformType[] = [
+  PlatformType.WORKDAY,
+  PlatformType.LEVER,
+  PlatformType.GREENHOUSE,
+  PlatformType.TALEO,
+];
+
+/**
+ * Simulate a specific platform parsing the resume.
+ * 
+ * @param platform - The ATS platform to simulate
+ * @param resumeText - Raw resume text content
+ * @param layout - Optional layout analysis for penalty calculation
+ * @returns Parsed resume result from that platform
+ */
+export function simulatePlatform(
+  platform: PlatformType,
+  resumeText: string,
+  layout?: LayoutAnalysis
+): ParsedResumeResult {
+  switch (platform) {
+    case PlatformType.WORKDAY:
+      return simulateWorkday(resumeText, layout);
+    case PlatformType.LEVER:
+      return simulateLever(resumeText, layout);
+    case PlatformType.GREENHOUSE:
+      return simulateGreenhouse(resumeText, layout);
+    case PlatformType.TALEO:
+      return simulateTaleo(resumeText, layout);
+    default:
+      // Fallback to Workday for unknown platforms
+      return simulateWorkday(resumeText, layout);
+  }
+}
+
+/**
+ * Calculate risk level from extraction quality score.
+ */
+function calculateRiskLevel(quality: number): RiskLevel {
+  if (quality >= 85) return RiskLevel.NONE;
+  if (quality >= 70) return RiskLevel.LOW;
+  if (quality >= 50) return RiskLevel.MEDIUM;
+  if (quality >= 30) return RiskLevel.HIGH;
+  return RiskLevel.CRITICAL;
+}
+
+/**
+ * Generate score issues from parsing result.
+ */
+function generateIssues(result: ParsedResumeResult): ScoreIssue[] {
+  const issues: ScoreIssue[] = [];
+  
+  // Add data loss warnings as issues
+  result.dataLossWarnings.forEach(warning => {
+    issues.push({
+      severity: warning.severity as 'critical' | 'high' | 'medium' | 'low',
+      category: ScoreCategory.PARSING,
+      message: `Data loss in "${warning.section}": ${warning.originalText}`,
+      suggestion: 'Use standard date formats for better parsing',
+      affectedPlatforms: [result.platform],
+    });
+  });
+  
+  return issues;
+}
+
+/**
  * Simulates how different ATS platforms parse a resume
  * and returns comparison scores for each platform.
  *
  * @param resumeText - Plain text content of the resume
- * @param layoutAnalysis - Optional layout analysis results
+ * @param layout - Optional layout analysis results
  * @returns Comparison of all platform scores
  */
 export function comparePlatforms(
   resumeText: string,
-  layoutAnalysis?: LayoutAnalysis
+  layout?: LayoutAnalysis
 ): PlatformComparison {
-  const platforms = [
-    PlatformType.WORKDAY,
-    PlatformType.TALEO,
-    PlatformType.GREENHOUSE,
-    PlatformType.LEVER,
-  ];
+  // Run each platform simulator
+  const results = PLATFORMS.map(platform => ({
+    platform,
+    result: simulatePlatform(platform, resumeText, layout)
+  }));
 
-  const scores: PlatformScore[] = platforms.map((platform) =>
-    simulatePlatform(platform, resumeText, layoutAnalysis)
-  );
+  // Convert to PlatformScore format
+  const scores: PlatformScore[] = results.map(r => ({
+    platform: r.result.platform,
+    score: r.result.extractionQuality,
+    issues: generateIssues(r.result),
+    riskLevel: calculateRiskLevel(r.result.extractionQuality)
+  }));
 
   // Find best and worst platforms
   const sorted = [...scores].sort((a, b) => b.score - a.score);
@@ -63,6 +155,7 @@ export function comparePlatforms(
   const worst = sorted[sorted.length - 1];
 
   return {
+    results,
     scores,
     bestPlatform: { platform: best.platform, score: best.score },
     worstPlatform: { platform: worst.platform, score: worst.score },
@@ -70,116 +163,6 @@ export function comparePlatforms(
   };
 }
 
-/**
- * Simulates a specific platform parsing the resume
- */
-function simulatePlatform(
-  platform: PlatformType,
-  resumeText: string,
-  layoutAnalysis?: LayoutAnalysis
-): PlatformScore {
-  const config = DEFAULT_PLATFORM_CONFIGS[platform];
-  const issues: ScoreIssue[] = [];
-  let score = 100;
-
-  // Apply table penalties
-  if (layoutAnalysis) {
-    layoutAnalysis.tables.forEach((table) => {
-      const penalty = Math.round(table.qualityPenalty * config.quirks.tablePenalty * 100);
-      score -= penalty;
-
-      if (table.severity !== 'none') {
-        issues.push({
-          category: 'LAYOUT',
-          severity: table.severity,
-          message: table.message,
-          suggestion: table.isLayoutTable
-            ? 'Convert layout table to single-column format'
-            : 'Consider simplifying table structure',
-          platforms: [platform],
-        });
-      }
-    });
-
-    // Apply column penalties
-    layoutAnalysis.columns.forEach((col) => {
-      const penalty = Math.round(col.qualityPenalty * config.quirks.columnPenalty * 100);
-      score -= penalty;
-
-      if (col.severity !== 'none') {
-        issues.push({
-          category: 'LAYOUT',
-          severity: col.severity,
-          message: col.message,
-          suggestion: 'Use single-column layout for better ATS compatibility',
-          platforms: [platform],
-        });
-      }
-    });
-  }
-
-  // Parse resume content for section issues
-  const lines = resumeText.split('\n');
-
-  // Check for common parsing issues
-  lines.forEach((line, index) => {
-    // Check for special characters that might cause issues
-    if (/[\u{1F300}-\u{1F9FF}]/u.test(line)) {
-      issues.push({
-        category: 'PARSING',
-        severity: 'medium',
-        message: `Line ${index + 1}: Emoji may not render correctly`,
-        suggestion: 'Remove emojis for better ATS compatibility',
-        platforms: [PlatformType.WORKDAY, PlatformType.TALEO],
-      });
-      score -= 5;
-    }
-
-    // Check for header format issues on strict platforms
-    if (config.quirks.strictHeaders) {
-      const potentialHeader = line.trim();
-      if (
-        potentialHeader.length > 0 &&
-        potentialHeader.length < 30 &&
-        !config.quirks.allowedHeaders.some((h) =>
-          potentialHeader.toLowerCase().includes(h.toLowerCase())
-        )
-      ) {
-        // This might be a header that won't be recognized
-        // Only flag if it looks like a section header (all caps, underlined, etc.)
-        if (/^[A-Z\s]{3,20}$/.test(potentialHeader)) {
-          issues.push({
-            category: 'PARSING',
-            severity: 'low',
-            message: `Unrecognized header: "${potentialHeader}"`,
-            suggestion: `Use standard headers like: ${config.quirks.allowedHeaders.slice(0, 3).join(', ')}`,
-            platforms: [platform],
-          });
-          score -= 3;
-        }
-      }
-    }
-  });
-
-  // Ensure score is within bounds
-  score = Math.max(0, Math.min(100, score));
-
-  // Determine risk level based on score
-  let riskLevel: RiskLevel;
-  if (score >= 85) riskLevel = RiskLevel.NONE;
-  else if (score >= 70) riskLevel = RiskLevel.LOW;
-  else if (score >= 50) riskLevel = RiskLevel.MEDIUM;
-  else if (score >= 30) riskLevel = RiskLevel.HIGH;
-  else riskLevel = RiskLevel.CRITICAL;
-
-  return {
-    platform,
-    score,
-    issues,
-    riskLevel,
-  };
-}
-
 // Re-export types for convenience
-export type { PlatformComparison, PlatformScore, PlatformConfig };
+export type { PlatformScore, PlatformConfig };
 export { PlatformType, RiskLevel, DEFAULT_PLATFORM_CONFIGS };
