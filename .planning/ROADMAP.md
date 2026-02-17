@@ -28,7 +28,7 @@
 | Phase | Goal | Duration | Key Deliverable | Status |
 |-------|------|----------|-----------------|--------|
 | 0 — Hardening | Stabilize codebase for engine complexity | 2 weeks | Clean foundation, strict mode, storage compression | ✅ Complete |
-| 1 — ATS Simulation 2.0 | Deep parsing simulation | 3 weeks | ATS Risk Report with layout detection | 🔵 Next |
+| 1 — ATS Simulation 2.0 | Deep parsing simulation | 3 weeks | ATS Risk Report with layout detection | ✅ Complete |
 | 2 — Match Intelligence | Advanced analytics dashboard | 3 weeks | Match score breakdown with heatmap | ⚪ Planned |
 | 3 — Cover Letter Optimizer | ATS-focused letter optimization | 2 weeks | JD-mapped variant generator | ⚪ Planned |
 
