@@ -2,7 +2,7 @@
 
 **Project:** Future Job Fit — ATS Optimization Authority  
 **Core Value:** The most accurate ATS simulation engine for job applications — works offline.  
-**Last Updated:** 2026-02-17  
+**Last Updated:** 2026-02-17
 **Strategy:** Plan A (Pivot from Career Super App)
 
 ---
@@ -26,7 +26,7 @@
 ```
 Progress: [██████████] 35% (8/23 requirements)
 Phase 0:  [██████████] 100% (4/4 plans complete) ✅
-Phase 1:  [██████░░░░] 67% (4/6 plans complete) 🟡
+Phase 1:  [███████░░░] 83% (5/6 plans complete) 🟡
 ```
 
 ---
@@ -190,6 +190,8 @@ Phase 1:  [██████░░░░] 67% (4/6 plans complete) 🟡
 | **2026-02-13** | **00-04 Analytics & AI cost tracking** | **PII-free events with sanitization, ESTIMATE ONLY cost disclaimers, $5 budget warning** |
 | **2026-02-16** | **01-01 Type system foundation** | **Comprehensive TS types for ATS simulation: 40/30/20/10 scoring, platform quirks (Workday 40% table penalty), barrel exports** |
 | **2026-02-17** | **01-02 Section extraction engine** | **Rule-based NLP with 85%+ accuracy, TDD approach with 32 tests, weighted confidence scoring (30/25/25/20), date extraction (MMM YYYY, MM/YY, YYYY)** |
+| **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
+| **2026-02-17** | **01-04 Platform simulators** | **Workday (40% table), Taleo (50% column), Greenhouse (10% clean bonus), Lever (semantic matching), comparePlatforms() for multi-platform analysis** |
 | **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
 | **2026-02-17** | **01-05 ATS Risk Report UI** | **5 React components: ScoreGauge, ScoreBreakdown, PlatformComparison, RiskItemsList, ATSRiskReport container with 40/30/20/10 category breakdown** |
 
