@@ -21,12 +21,12 @@
 ## Current Position
 
 **Current Phase:** Phase 1 — ATS Simulation 2.0  
-**Status:** 🟡 IN PROGRESS — 2 of 6 plans complete
+**Status:** 🟡 IN PROGRESS — 5 of 6 plans complete
 
 ```
-Progress: [███░░░░░░░] 22% (5/23 requirements)
+Progress: [██████████] 35% (8/23 requirements)
 Phase 0:  [██████████] 100% (4/4 plans complete) ✅
-Phase 1:  [███░░░░░░░] 33% (2/6 plans complete) 🟡
+Phase 1:  [██████░░░░] 67% (4/6 plans complete) 🟡
 ```
 
 ---
@@ -113,8 +113,8 @@ Phase 1:  [███░░░░░░░] 33% (2/6 plans complete) 🟡
 - [x] 01-01-PLAN.md — Type system foundation (parser, scoring, platform types) ✅
 - [x] 01-02-PLAN.md — Section extraction engine (TDD approach) ✅
 - [x] 01-03-PLAN.md — DOM layout detector (tables, columns, headers) ✅
-- [ ] 01-04-PLAN.md — Platform simulators (Workday, Lever, Greenhouse, Taleo)
-- [ ] 01-05-PLAN.md — ATS Risk Report UI (ScoreGauge, PlatformComparison)
+- [x] 01-04-PLAN.md — Platform simulators (Workday, Lever, Greenhouse, Taleo)
+- [x] 01-05-PLAN.md — ATS Risk Report UI (ScoreGauge, PlatformComparison) ✅
 - [ ] 01-06-PLAN.md — Integration + modal (checkpoint for UX verification)
 
 ### Wave Structure
@@ -191,6 +191,7 @@ Phase 1:  [███░░░░░░░] 33% (2/6 plans complete) 🟡
 | **2026-02-16** | **01-01 Type system foundation** | **Comprehensive TS types for ATS simulation: 40/30/20/10 scoring, platform quirks (Workday 40% table penalty), barrel exports** |
 | **2026-02-17** | **01-02 Section extraction engine** | **Rule-based NLP with 85%+ accuracy, TDD approach with 32 tests, weighted confidence scoring (30/25/25/20), date extraction (MMM YYYY, MM/YY, YYYY)** |
 | **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
+| **2026-02-17** | **01-05 ATS Risk Report UI** | **5 React components: ScoreGauge, ScoreBreakdown, PlatformComparison, RiskItemsList, ATSRiskReport container with 40/30/20/10 category breakdown** |
 
 ### Pivot Rationale
 
@@ -240,5 +241,5 @@ npm run lint         # Check lint errors
 
 ---
 
-*State updated: 2026-02-17 — Phase 1 IN PROGRESS (1/6 plans complete)*  
-*Next update: After next plan execution*
+*State updated: 2026-02-17 — Phase 1 IN PROGRESS (5/6 plans complete)*  
+*Next update: After plan 01-06 execution*
