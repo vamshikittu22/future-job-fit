@@ -2,7 +2,7 @@
 
 **Project:** Future Job Fit — ATS Optimization Authority  
 **Core Value:** The most accurate ATS simulation engine for job applications — works offline.  
-**Last Updated:** 2026-02-13  
+**Last Updated:** 2026-02-16  
 **Strategy:** Plan A (Pivot from Career Super App)
 
 ---
@@ -188,6 +188,7 @@ Phase 1:  [░░░░░░░░░░] 17% (1/6 plans complete) 🟡
 | **2026-02-12** | **00-02 Dependency cleanup** | **Removed @hello-pangea/dnd, kept @dnd-kit, LZ-String compression** |
 | **2026-02-13** | **00-03 Storage versioning** | **Sequential migration chain, mandatory backups, VersionedData<T> wrapper** |
 | **2026-02-13** | **00-04 Analytics & AI cost tracking** | **PII-free events with sanitization, ESTIMATE ONLY cost disclaimers, $5 budget warning** |
+| **2026-02-16** | **01-01 Type system foundation** | **Comprehensive TS types for ATS simulation: 40/30/20/10 scoring, platform quirks (Workday 40% table penalty), barrel exports** |
 | **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
 
 ### Pivot Rationale
