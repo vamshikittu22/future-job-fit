@@ -1,0 +1,5 @@
+/**
+ * Match Intelligence Hooks Barrel Export
+ */
+
+export { useMatchScore, default } from './useMatchScore';
