@@ -1,8 +1,18 @@
 /**
  * Section Extractor
- * 
+ *
  * Rule-based section extraction engine that simulates how ATS systems parse resumes.
  * Implements pattern matching for headers, dates, and fields with confidence scoring.
+ *
+ * Features:
+ * - Section detection with multiple header pattern variations
+ * - Date extraction in MMM YYYY, MM/YY, and YYYY formats
+ * - Field extraction (companies, titles, degrees, institutions, skills)
+ * - Confidence scoring with weighted factors (30/25/25/20)
+ * - Edge case handling for malformed input
+ *
+ * @module ats-simulation/engine
+ * @version 1.0.0
  */
 
 import type {
@@ -15,6 +25,20 @@ import type {
   NormalizedDate,
   DateRange,
 } from '../types';
+
+/** Debug mode flag - set to true for verbose logging */
+const DEBUG_MODE = false;
+
+/**
+ * Log debug message if debug mode is enabled
+ * @param message - Message to log
+ * @param data - Optional data to include
+ */
+function debugLog(message: string, data?: unknown): void {
+  if (DEBUG_MODE) {
+    console.log(`[SectionExtractor] ${message}`, data ?? '');
+  }
+}
 
 /** Patterns for detecting section headers by type */
 export const SECTION_PATTERNS: Record<SectionType, RegExp[]> = {
@@ -789,14 +813,37 @@ export function extractFields(content: string, sectionType: SectionType): FieldE
 }
 
 /**
+ * Validate input text
+ * @param text - Text to validate
+ * @param paramName - Parameter name for error messages
+ * @returns Validated text or empty string
+ */
+function validateInput(text: string | null | undefined, paramName: string): string {
+  if (text === null || text === undefined) {
+    debugLog(`Warning: ${paramName} is null/undefined`);
+    return '';
+  }
+  if (typeof text !== 'string') {
+    debugLog(`Warning: ${paramName} is not a string`, typeof text);
+    return '';
+  }
+  return text;
+}
+
+/**
  * Extract all sections from a resume text
  * @param resumeText - Raw resume text content
  * @returns Array of extracted sections
  */
 export function extractSections(resumeText: string): ExtractedSection[] {
-  if (!resumeText || resumeText.trim().length === 0) {
+  const validatedInput = validateInput(resumeText, 'resumeText');
+  
+  if (!validatedInput || validatedInput.trim().length === 0) {
+    debugLog('Empty resume text provided, returning empty array');
     return [];
   }
+  
+  debugLog('Starting section extraction', { textLength: validatedInput.length });
   
   // Detect section boundaries
   const boundaries = detectSections(resumeText);
