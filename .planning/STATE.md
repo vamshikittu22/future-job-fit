@@ -21,12 +21,12 @@
 ## Current Position
 
 **Current Phase:** Phase 1 — ATS Simulation 2.0  
-**Status:** 🔵 PLANNED — 6 plans ready for execution
+**Status:** 🟡 IN PROGRESS — 1 of 6 plans complete
 
 ```
-Progress: [██░░░░░░░░] 16% (4/23 requirements)
+Progress: [███░░░░░░░] 20% (5/23 requirements)
 Phase 0:  [██████████] 100% (4/4 plans complete) ✅
-Phase 1:  [░░░░░░░░░░] 0% (0/6 plans complete) 🔵
+Phase 1:  [░░░░░░░░░░] 17% (1/6 plans complete) 🟡
 ```
 
 ---
@@ -51,11 +51,6 @@ Phase 1:  [░░░░░░░░░░] 0% (0/6 plans complete) 🔵
 - ✅ Research completed (5 critical pitfalls identified)
 - ✅ Roadmap created (5 phases)
 
-**Phase 1 Foundation (Pre-Pivot - In Progress):**
-- ✅ Plan 01-01: JobContext state management (COMPLETE)
-- ✅ Plan 01-02: Type Definition & Validation Layer (COMPLETE)
-- ⏳ Plans 01-03 through 01-05: On hold pending Phase 0 completion
-
 **Strategic Pivot (Plan A):**
 - ✅ New roadmap created (4 phases, focused scope)
 - ✅ Phase 0 plans created (4 hardening plans)
@@ -63,19 +58,20 @@ Phase 1:  [░░░░░░░░░░] 0% (0/6 plans complete) 🔵
 
 ---
 
-## New Roadmap (Plan A)
+## Simplified Roadmap (Focused)
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 0 — Hardening | Stabilize codebase for engine complexity | 7 | ✅ Complete |
-| 1 — ATS Simulation 2.0 | Deep parsing simulation engine | 8 | 🔵 Planned (6 plans) |
-| 2 — Match Intelligence | Advanced analytics dashboard | 8 | ⚪ Planned |
-| 3 — Cover Letter Optimizer | ATS-focused letter optimization | 6 | ⚪ Planned |
+| 1 — ATS Simulation 2.0 | Deep parsing simulation engine | 8 | 🔵 Ready (6 plans) |
 
-**Deferred to v2:**
-- Interview Preparation (was Phase 4)
-- LinkedIn Sync beyond minimal onboarding
-- Template Marketplace beyond internal templates
+**Archived/Removed:**
+- ❌ LinkedIn Sync (01-foundation) — archived to `.planning/archive/`
+- ❌ Cover Letter Optimizer — archived to `.planning/archive/`
+- ❌ Match Intelligence — deferred until core engine complete
+- ❌ Interview Preparation — deferred to v2
+
+**Focus:** Resume creation + JD optimization ONLY
 
 ---
 
@@ -116,7 +112,7 @@ Phase 1:  [░░░░░░░░░░] 0% (0/6 plans complete) 🔵
 ### Plans
 - [ ] 01-01-PLAN.md — Type system foundation (parser, scoring, platform types)
 - [ ] 01-02-PLAN.md — Section extraction engine (TDD approach)
-- [ ] 01-03-PLAN.md — DOM layout detector (tables, columns, headers)
+- [x] 01-03-PLAN.md — DOM layout detector (tables, columns, headers) ✅
 - [ ] 01-04-PLAN.md — Platform simulators (Workday, Lever, Greenhouse, Taleo)
 - [ ] 01-05-PLAN.md — ATS Risk Report UI (ScoreGauge, PlatformComparison)
 - [ ] 01-06-PLAN.md — Integration + modal (checkpoint for UX verification)
@@ -192,6 +188,7 @@ Phase 1:  [░░░░░░░░░░] 0% (0/6 plans complete) 🔵
 | **2026-02-12** | **00-02 Dependency cleanup** | **Removed @hello-pangea/dnd, kept @dnd-kit, LZ-String compression** |
 | **2026-02-13** | **00-03 Storage versioning** | **Sequential migration chain, mandatory backups, VersionedData<T> wrapper** |
 | **2026-02-13** | **00-04 Analytics & AI cost tracking** | **PII-free events with sanitization, ESTIMATE ONLY cost disclaimers, $5 budget warning** |
+| **2026-02-17** | **01-03 DOM layout detector** | **DOM-based detection 10x faster than image analysis, 500ms debounce, risk scoring algorithm** |
 
 ### Pivot Rationale
 
@@ -241,5 +238,5 @@ npm run lint         # Check lint errors
 
 ---
 
-*State updated: 2026-02-13 — Phase 0 COMPLETE (4/4 plans)*  
-*Next update: After Phase 1 planning*
+*State updated: 2026-02-17 — Phase 1 IN PROGRESS (1/6 plans complete)*  
+*Next update: After next plan execution*
