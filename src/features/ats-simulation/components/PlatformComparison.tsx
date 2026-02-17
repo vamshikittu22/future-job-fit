@@ -6,11 +6,11 @@ import type { PlatformComparison as PlatformComparisonType } from '../platforms'
  * Platform display information with icons and colors
  * Only showing major 4 platforms used in comparison
  */
-const platformInfo: Record<string, { name: string; icon: string; color: string }> = {
-  [PlatformType.WORKDAY]: { name: 'Workday', icon: '💼', color: 'bg-orange-100 text-orange-800' },
-  [PlatformType.TALEO]: { name: 'Taleo', icon: '📋', color: 'bg-blue-100 text-blue-800' },
-  [PlatformType.GREENHOUSE]: { name: 'Greenhouse', icon: '🌱', color: 'bg-green-100 text-green-800' },
-  [PlatformType.LEVER]: { name: 'Lever', icon: '🎯', color: 'bg-purple-100 text-purple-800' },
+const platformInfo: Record<string, { name: string; icon: string; color: string; darkColor: string }> = {
+  [PlatformType.WORKDAY]: { name: 'Workday', icon: '💼', color: 'bg-orange-100 text-orange-800', darkColor: 'dark:bg-orange-900/30 dark:text-orange-300' },
+  [PlatformType.TALEO]: { name: 'Taleo', icon: '📋', color: 'bg-blue-100 text-blue-800', darkColor: 'dark:bg-blue-900/30 dark:text-blue-300' },
+  [PlatformType.GREENHOUSE]: { name: 'Greenhouse', icon: '🌱', color: 'bg-green-100 text-green-800', darkColor: 'dark:bg-green-900/30 dark:text-green-300' },
+  [PlatformType.LEVER]: { name: 'Lever', icon: '🎯', color: 'bg-purple-100 text-purple-800', darkColor: 'dark:bg-purple-900/30 dark:text-purple-300' },
 };
 
 /**
@@ -47,9 +47,9 @@ function getRiskBadgeContent(riskLevel: RiskLevel): string {
  * Get badge color class based on score
  */
 function getBadgeColorClass(score: number): string {
-  if (score >= 85) return 'bg-green-100 text-green-800';
-  if (score >= 60) return 'bg-yellow-100 text-yellow-800';
-  return 'bg-red-100 text-red-800';
+  if (score >= 85) return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+  if (score >= 60) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+  return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
 }
 
 /**
@@ -83,13 +83,13 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
   
   return (
     <div className={cn("space-y-4", className)}>
-      <h3 className="text-sm font-medium text-gray-700">
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">
         How Different ATS Read Your Resume
       </h3>
       
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {scores.map((platformScore: PlatformScore) => {
-          const info = platformInfo[platformScore.platform] ?? { name: platformScore.platform, icon: '📄', color: 'bg-gray-100' };
+          const info = platformInfo[platformScore.platform] ?? { name: platformScore.platform, icon: '📄', color: 'bg-gray-100', darkColor: 'dark:bg-gray-800' };
           const isBest = platformScore.platform === safeBestPlatform.platform;
           const isWorst = platformScore.platform === safeWorstPlatform.platform;
           
@@ -98,18 +98,18 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
               key={platformScore.platform}
               className={cn(
                 "p-3 rounded-lg border-2 transition-all",
-                isBest ? 'border-green-400 bg-green-50' :
-                isWorst ? 'border-red-400 bg-red-50' :
-                'border-gray-200 bg-white',
+                isBest ? 'border-green-400 bg-green-50 dark:border-green-600 dark:bg-green-900/20' :
+                isWorst ? 'border-red-400 bg-red-50 dark:border-red-600 dark:bg-red-900/20' :
+                'border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700',
                 "hover:shadow-md"
               )}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{info.icon}</span>
-                <span className="font-semibold text-sm">{info.name}</span>
+                <span className="font-semibold text-sm dark:text-white">{info.name}</span>
               </div>
               
-              <div className="text-2xl font-bold mb-1">
+              <div className="text-2xl font-bold mb-1 dark:text-white">
                 {platformScore.score}/100
               </div>
               
@@ -121,7 +121,7 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
               </div>
               
               {platformScore.issues.length > 0 && (
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {platformScore.issues.slice(0, 2).map((issue, i) => (
                     <div key={i} className="flex items-start gap-1">
                       <span>⚠️</span>
@@ -129,7 +129,7 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
                     </div>
                   ))}
                   {platformScore.issues.length > 2 && (
-                    <div className="text-gray-400">
+                    <div className="text-gray-400 dark:text-gray-500">
                       +{platformScore.issues.length - 2} more
                     </div>
                   )}
@@ -137,7 +137,7 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
               )}
               
               {isBest && (
-                <div className="mt-2 text-xs font-medium text-green-600">
+                <div className="mt-2 text-xs font-medium text-green-600 dark:text-green-400">
                   ✓ Best Compatibility
                 </div>
               )}
@@ -147,7 +147,7 @@ export function PlatformComparison({ comparison, className }: PlatformComparison
       </div>
       
       {/* Summary insight */}
-      <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+      <div className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
         <span className="font-medium">Insight:</span> Your resume performs best on {platformInfo[safeBestPlatform.platform]?.name ?? 'Unknown'} 
         ({safeBestPlatform.score}/100) but may have issues with {platformInfo[safeWorstPlatform.platform]?.name ?? 'Unknown'} 
         ({safeWorstPlatform.score}/100).

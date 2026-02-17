@@ -68,7 +68,7 @@ export function ScoreBreakdown({ scores, className }: ScoreBreakdownProps) {
   
   return (
     <div className={cn("space-y-4", className)}>
-      <h3 className="text-sm font-medium text-gray-700">Score Breakdown</h3>
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">Score Breakdown</h3>
       
       {scores.map(({ category, score, weight }) => {
         const config = getCategoryConfig(category);
@@ -77,7 +77,7 @@ export function ScoreBreakdown({ scores, className }: ScoreBreakdownProps) {
         return (
           <div key={category} className="space-y-1 group">
             <div className="flex justify-between text-xs">
-              <span className="font-medium text-gray-600">
+              <span className="font-medium text-gray-600 dark:text-gray-300">
                 {config.label} ({weight}%)
               </span>
               <span className={cn(
@@ -88,7 +88,7 @@ export function ScoreBreakdown({ scores, className }: ScoreBreakdownProps) {
               </span>
             </div>
             
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500 group-hover:opacity-80",
@@ -98,7 +98,7 @@ export function ScoreBreakdown({ scores, className }: ScoreBreakdownProps) {
               />
             </div>
             
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-400 dark:text-gray-500">
               Weighted: {weightedScore} pts
             </div>
           </div>
@@ -106,8 +106,8 @@ export function ScoreBreakdown({ scores, className }: ScoreBreakdownProps) {
       })}
       
       {/* Total contribution */}
-      <div className="pt-2 border-t border-gray-100">
-        <div className="flex justify-between text-sm font-semibold">
+      <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex justify-between text-sm font-semibold dark:text-white">
           <span>Total Score</span>
           <span>
             {totalScore}/100

@@ -163,13 +163,13 @@ export function ATSRiskReport({
   }, [overallScore]);
 
   return (
-    <div className={cn("bg-white rounded-lg shadow-lg p-6 space-y-6", className)}>
+    <div className={cn("bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6", className)}>
       {/* Header with score gauge */}
       <div className="flex items-start gap-6">
         <ScoreGauge score={overallScore} size="lg" />
         <div className="flex-1">
-          <h2 className="text-xl font-bold mb-2">ATS Risk Report</h2>
-          <p className="text-gray-600">
+          <h2 className="text-xl font-bold mb-2 dark:text-white">ATS Risk Report</h2>
+          <p className="text-gray-600 dark:text-gray-300">
             Your resume scores {overallScore}/100 across major ATS platforms. {scoreMessage}
           </p>
         </div>

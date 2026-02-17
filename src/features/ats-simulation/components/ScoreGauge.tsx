@@ -85,6 +85,7 @@ export function ScoreGauge({
             r={radius}
             fill="none"
             stroke="#e5e7eb"
+            className="dark:stroke-gray-600"
             strokeWidth={stroke}
           />
           {/* Progress circle */}
@@ -106,17 +107,17 @@ export function ScoreGauge({
         </svg>
         {/* Score text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={cn("font-bold", font)}>{score}</span>
+          <span className={cn("font-bold dark:text-white", font)}>{score}</span>
           {showLabel && (
-            <span className="text-xs text-gray-500">/100</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">/100</span>
           )}
         </div>
       </div>
       {showLabel && (
         <div className={cn(
           "mt-2 text-sm font-medium",
-          score >= 85 ? 'text-green-600' : 
-          score >= 60 ? 'text-yellow-600' : 'text-red-600'
+          score >= 85 ? 'text-green-600 dark:text-green-400' : 
+          score >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
         )}>
           {badgeLevel}
         </div>

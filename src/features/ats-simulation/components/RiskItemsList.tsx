@@ -67,12 +67,12 @@ export function RiskItemsList({ risks, className }: RiskItemsListProps) {
   
   return (
     <div className={cn("space-y-3", className)}>
-      <h3 className="text-sm font-medium text-gray-700">
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">
         Issues ({risks.length})
       </h3>
       
       {sortedRisks.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <div className="text-4xl mb-2">🎉</div>
           <p>No issues detected!</p>
           <p className="text-sm">Your resume looks ATS-friendly.</p>
@@ -82,18 +82,18 @@ export function RiskItemsList({ risks, className }: RiskItemsListProps) {
           {sortedRisks.map((risk, i) => (
             <details 
               key={i} 
-              className="group border rounded-lg overflow-hidden"
+              className="group border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden"
             >
-              <summary className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50">
+              <summary className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                 <span>{severityIcons[risk.severity]}</span>
-                <span className="flex-1 font-medium text-sm">{risk.message}</span>
-                <span className="text-xs text-gray-400">
+                <span className="flex-1 font-medium text-sm dark:text-white">{risk.message}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   {risk.platforms.slice(0, 2).join(', ')}
                   {risk.platforms.length > 2 && '...'}
                 </span>
               </summary>
-              <div className="px-3 pb-3 text-sm text-gray-600 bg-gray-50">
-                <p className="font-medium text-gray-700">Suggestion:</p>
+              <div className="px-3 pb-3 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50">
+                <p className="font-medium text-gray-700 dark:text-gray-200">Suggestion:</p>
                 <p>{risk.suggestion}</p>
               </div>
             </details>
