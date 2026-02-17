@@ -1,12 +1,123 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useWizard } from '@/shared/contexts/WizardContext';
 import ResumePreview from '@/features/resume-builder/components/preview/ResumePreview';
+import { ATSReportModal } from '../modals/ATSReportModal';
 import { TEMPLATE_OPTIONS } from '@/shared/config/wizardSteps';
 import type { ResumeData } from '@/shared/types/resume';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/lib/utils';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Activity } from 'lucide-react';
+
+/**
+ * Convert structured resume data to plain text for ATS analysis.
+ * Simulates how an ATS would extract text from the resume.
+ */
+function convertResumeToText(resume: ResumeData | null): string {
+  if (!resume) return '';
+  
+  const sections: string[] = [];
+  
+  // Personal info
+  if (resume.personal) {
+    const { name, email, phone, location, title } = resume.personal;
+    if (name) sections.push(name);
+    if (title) sections.push(title);
+    if (email) sections.push(email);
+    if (phone) sections.push(phone);
+    if (location) sections.push(location);
+  }
+  
+  // Summary
+  if (resume.summary) {
+    sections.push('SUMMARY');
+    sections.push(resume.summary);
+  }
+  
+  // Experience
+  if (resume.experience && resume.experience.length > 0) {
+    sections.push('EXPERIENCE');
+    resume.experience.forEach(exp => {
+      sections.push(`${exp.title || ''} at ${exp.company || ''}`);
+      sections.push(`${exp.startDate || ''} - ${exp.endDate || 'Present'}`);
+      if (exp.description) sections.push(exp.description);
+      if (exp.bullets && exp.bullets.length > 0) {
+        exp.bullets.forEach(bullet => sections.push(`• ${bullet}`));
+      }
+    });
+  }
+  
+  // Education
+  if (resume.education && resume.education.length > 0) {
+    sections.push('EDUCATION');
+    resume.education.forEach(edu => {
+      sections.push(`${edu.degree || ''} from ${edu.school || ''}`);
+      sections.push(`${edu.startDate || ''} - ${edu.endDate || 'Present'}`);
+      if (edu.description) sections.push(edu.description);
+    });
+  }
+  
+  // Skills - handle both array format and object format
+  if (resume.skills) {
+    sections.push('SKILLS');
+    if (Array.isArray(resume.skills)) {
+      // Array format: [{ category: string, items: string[] }]
+      resume.skills.forEach((category: { category: string; items: string[] }) => {
+        sections.push(`${category.category || 'Skills'}: ${category.items.join(', ')}`);
+      });
+    } else {
+      // Object format: { languages: [], frameworks: [], tools: [] }
+      const skillsObj = resume.skills as { languages?: string[]; frameworks?: string[]; tools?: string[] };
+      if (skillsObj.languages?.length) sections.push(`Languages: ${skillsObj.languages.join(', ')}`);
+      if (skillsObj.frameworks?.length) sections.push(`Frameworks: ${skillsObj.frameworks.join(', ')}`);
+      if (skillsObj.tools?.length) sections.push(`Tools: ${skillsObj.tools.join(', ')}`);
+    }
+  }
+  
+  // Projects
+  if (resume.projects && resume.projects.length > 0) {
+    sections.push('PROJECTS');
+    resume.projects.forEach(proj => {
+      sections.push(proj.name || '');
+      if (proj.description) sections.push(proj.description);
+      if (proj.technologies) sections.push(`Technologies: ${proj.technologies}`);
+    });
+  }
+  
+  // Achievements
+  if (resume.achievements && resume.achievements.length > 0) {
+    sections.push('ACHIEVEMENTS');
+    resume.achievements.forEach(ach => {
+      sections.push(ach.title || '');
+      if (ach.description) sections.push(ach.description);
+    });
+  }
+  
+  // Certifications
+  if (resume.certifications && resume.certifications.length > 0) {
+    sections.push('CERTIFICATIONS');
+    resume.certifications.forEach(cert => {
+      sections.push(`${cert.name || ''} - ${cert.issuer || ''}`);
+    });
+  }
+  
+  // Custom sections
+  if (resume.customSections) {
+    resume.customSections.forEach(cs => {
+      sections.push(cs.title?.toUpperCase() || '');
+      if (cs.entries) {
+        cs.entries.forEach(entry => {
+          cs.fields.forEach(field => {
+            const value = entry.values[field.id];
+            if (value) sections.push(String(value));
+          });
+        });
+      }
+    });
+  }
+  
+  return sections.filter(Boolean).join('\n\n');
+}
 
 const WizardPreview: React.FC = () => {
   const { resumeData } = useResume();
@@ -15,6 +126,7 @@ const WizardPreview: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [isAutoFit, setIsAutoFit] = useState(true);
+  const [atsModalOpen, setAtsModalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +141,11 @@ const WizardPreview: React.FC = () => {
     'certifications',
     ...(resumeData?.customSections?.map((sec: any) => sec.id) || [])
   ];
+
+  // Convert resume to text for ATS analysis
+  const resumeText = useMemo(() => {
+    return convertResumeToText(resumeData as ResumeData);
+  }, [resumeData]);
 
   const updateScale = useCallback(() => {
     if (!containerRef.current || !isAutoFit) return;
@@ -115,6 +232,17 @@ const WizardPreview: React.FC = () => {
             <Maximize2 className="h-3 w-3" />
             Auto Fit
           </Button>
+          <div className="w-px h-4 bg-border mx-1.5 shadow-sm" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAtsModalOpen(true)}
+            className="h-7 px-2.5 gap-1.5 text-[10px] uppercase tracking-wider font-extrabold text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+            title="Analyze ATS compatibility"
+          >
+            <Activity className="h-3 w-3" />
+            ATS Analysis
+          </Button>
         </div>
 
         <div className="flex items-center gap-2.5 bg-muted/50 p-1 rounded-lg border border-border">
@@ -165,6 +293,14 @@ const WizardPreview: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* ATS Report Modal */}
+      <ATSReportModal
+        open={atsModalOpen}
+        onOpenChange={setAtsModalOpen}
+        resumeText={resumeText}
+        resumeElement={previewWrapperRef.current}
+      />
     </div>
   );
 };
