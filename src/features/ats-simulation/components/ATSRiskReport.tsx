@@ -56,6 +56,54 @@ export function ATSRiskReport({
     return Math.round(avg);
   }, [comparison]);
 
+  // Calculate category scores based on actual resume content analysis
+  const categoryScores = useMemo(() => {
+    // Parsing score: Average extraction quality across all platforms (40% weight)
+    const parsingScore = comparison.scores.reduce((sum, s) => sum + s.score, 0) / comparison.scores.length;
+    
+    // Keywords score: Analyze resume for keyword indicators (30% weight)
+    // Check for action verbs, quantifiable metrics, industry terms
+    const keywordsLower = resumeText.toLowerCase();
+    const keywordIndicators = [
+      // Action verbs (strong resume language)
+      /managed|led|developed|created|implemented|designed|built|launched|increased|decreased|improved|achieved/,
+      // Quantifiable metrics
+      /\d+%|\$\d+|\d+ (users|customers|clients|employees|team|members|projects)/,
+      // Technical skills patterns
+      /javascript|typescript|react|node|python|java|aws|azure|docker|kubernetes|sql/,
+      // Soft skills
+      /communication|leadership|collaboration|problem.solving|critical.thinking/
+    ];
+    let keywordMatches = 0;
+    keywordIndicators.forEach(pattern => {
+      if (pattern.test(keywordsLower)) keywordMatches++;
+    });
+    // Score based on keyword density (cap at 100)
+    const keywordsScore = Math.min(100, 50 + (keywordMatches * 12));
+    
+    // Format score: Analyze formatting quality (20% weight)
+    // Check for proper structure, reasonable length, bullet points
+    const formatChecks = [
+      resumeText.length > 200 && resumeText.length < 10000, // Reasonable length
+      /\n.{2,}/.test(resumeText), // Has multiple paragraphs/sections
+      /•|-|\* /.test(resumeText) || /^\s*[-*•]/.test(resumeText), // Has bullet points
+      /^[A-Z][a-z]+/.test(resumeText), // Starts with capitalized words
+    ];
+    const formatScore = (formatChecks.filter(Boolean).length / formatChecks.length) * 100;
+    
+    // Layout score: Based on layout analysis (10% weight)
+    const layoutScore = providedLayoutAnalysis 
+      ? Math.max(0, 100 - providedLayoutAnalysis.riskScore)
+      : 100;
+    
+    return {
+      parsing: Math.round(parsingScore),
+      keywords: Math.round(keywordsScore),
+      format: Math.round(formatScore),
+      layout: Math.round(layoutScore)
+    };
+  }, [comparison, resumeText, providedLayoutAnalysis]);
+
   // Compile all risks from layout and platform analysis
   const allRisks = useMemo((): RiskItemsListProps['risks'] => {
     const risks: RiskItemsListProps['risks'] = [];
@@ -103,11 +151,6 @@ export function ATSRiskReport({
     return risks;
   }, [providedLayoutAnalysis, comparison]);
 
-  // Calculate layout score
-  const layoutScore = providedLayoutAnalysis 
-    ? 100 - providedLayoutAnalysis.riskScore 
-    : 100;
-
   // Generate score message based on overall score
   const scoreMessage = useMemo(() => {
     if (overallScore >= 85) {
@@ -135,10 +178,10 @@ export function ATSRiskReport({
       {/* Score breakdown by category */}
       <ScoreBreakdown 
         scores={[
-          { category: ScoreCategory.PARSING, score: comparison.scores[0]?.score || 0, weight: 40 },
-          { category: ScoreCategory.KEYWORDS, score: 75, weight: 30 },
-          { category: ScoreCategory.FORMAT, score: 80, weight: 20 },
-          { category: ScoreCategory.LAYOUT, score: layoutScore, weight: 10 }
+          { category: ScoreCategory.PARSING, score: categoryScores.parsing, weight: 40 },
+          { category: ScoreCategory.KEYWORDS, score: categoryScores.keywords, weight: 30 },
+          { category: ScoreCategory.FORMAT, score: categoryScores.format, weight: 20 },
+          { category: ScoreCategory.LAYOUT, score: categoryScores.layout, weight: 10 }
         ]} 
       />
       
