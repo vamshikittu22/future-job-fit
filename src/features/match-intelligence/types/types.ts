@@ -223,11 +223,12 @@ export interface CompetencyGap {
  */
 export interface ImpactRecommendation {
   id: string;
-  type: 'add_skill' | 'enhance_skill' | 'add_keyword' | 'improve_format';
+  type: 'add_skill' | 'enhance_skill' | 'add_keyword' | 'improve_format' | 'add_metrics' | 'enhance_experience' | 'reorder' | 'quantify';
   impact: 'high' | 'medium' | 'low';
   title: string;
   description: string;
   specificAction: string;
+  targetLocation?: string;
   expectedScoreImprovement: number;
 }
 
@@ -271,4 +272,28 @@ export interface SemanticScore {
   bySection: SectionScores;
   /** Interpretation label based on score */
   interpretation: SemanticInterpretation;
+}
+
+// --- JD Comparison Types ---
+
+/**
+ * Comparison item for JD vs Resume
+ */
+export interface ComparisonItem {
+  keyword: string;
+  resumeText?: string;
+  jdRequirement: string;
+  status: MatchStatus;
+  type: 'required' | 'preferred';
+  category: string;
+}
+
+/**
+ * Full JD comparison data
+ */
+export interface JDComparisonData {
+  items: ComparisonItem[];
+  matchedCount: number;
+  partialCount: number;
+  missingCount: number;
 }
