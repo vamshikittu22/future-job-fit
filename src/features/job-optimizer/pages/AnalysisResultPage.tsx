@@ -16,6 +16,7 @@ import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 import { BarChart3 } from "lucide-react";
+import { QuickMatchSummary } from "@/features/job-optimizer/components/QuickMatchSummary";
 
 interface EvaluationResult {
   atsScore: number;
@@ -408,9 +409,23 @@ export default function Results() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">Click below to add them</p>
-              </Card>
+                </Card>
             </motion.div>
           </div>
+
+          {/* Quick Match Intelligence Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+          >
+            <QuickMatchSummary 
+              atsScore={evaluation.atsScore}
+              matchingKeywords={evaluation.matchingKeywords}
+              missingKeywords={evaluation.missingKeywords}
+              jobDescription={jobDescription}
+            />
+          </motion.div>
 
           {/* Detailed Analysis Grid */}
           <div className="grid lg:grid-cols-2 gap-8">
