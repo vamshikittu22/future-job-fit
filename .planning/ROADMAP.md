@@ -29,10 +29,11 @@
 |-------|------|----------|-----------------|--------|
 | 0 — Hardening | Stabilize codebase for engine complexity | 2 weeks | Clean foundation, strict mode, storage compression | ✅ Complete |
 | 1 — ATS Simulation 2.0 | Deep parsing simulation | 3 weeks | ATS Risk Report with layout detection | ✅ Complete |
-| 2 — Match Intelligence | Advanced analytics dashboard | 3 weeks | Match score breakdown with heatmap | 🔵 Planned (6 plans) |
-| 3 — Cover Letter Optimizer | ATS-focused letter optimization | 2 weeks | JD-mapped variant generator | ⚪ Planned |
+| 2 — Match Intelligence | Advanced analytics dashboard | 3 weeks | Match score breakdown with heatmap | ✅ Complete |
+| 3 — Job Optimizer UI | 3-panel layout redesign | 1 week | Clearer UX with progressive disclosure | ✅ Complete |
+| 4 — Cover Letter Optimizer | ATS-focused letter optimization | 2 weeks | JD-mapped variant generator | ⚪ Not Started |
 
-**Total:** ~10 weeks to MVP  
+**Total:** ~11 weeks to MVP  
 **Deferred:** Interview Prep, LinkedIn Sync (minimal only), Template Marketplace (internal only)
 
 ---
@@ -135,7 +136,55 @@
 
 ---
 
-## Phase 3: Cover Letter Optimizer
+## Phase 3: Job Optimizer UI Redesign ✅ COMPLETE (2026-02-17)
+
+**Goal:** Transform Job Optimizer page from crowded single-analysis-panel layout into clearer 3-panel architecture.
+
+### Requirements
+| ID | Requirement | Status |
+|----|-------------|--------|
+| UI-01 | Resume panel (left) with upload/paste and summary display | ✅ Complete |
+| UI-02 | JD Analyzer panel (top-right) with tabbed sections | ✅ Complete |
+| UI-03 | Match Comparison panel (bottom-right) with ATS score | ✅ Complete |
+| UI-04 | Resizable panels with persistence | ✅ Complete |
+| UI-05 | Mobile responsive with tab navigation | ✅ Complete |
+| UI-06 | Empty states with contextual CTAs | ✅ Complete |
+
+### Plans
+- [x] 03-01-PLAN.md — Foundational UI components (EmptyStatePrompt, PanelHeader, usePanelLayout) ✅
+- [x] 03-02-PLAN.md — Resume Panel with upload and summary ✅
+- [x] 03-03-PLAN.md — JD Analyzer Panel with tabbed analysis ✅
+- [x] 03-04-PLAN.md — Match Comparison Panel with ATS scoring ✅
+- [x] 03-05-PLAN.md — JobOptimizerLayout integration ✅
+- [x] 03-06-PLAN.md — Human verification checkpoint ✅
+
+### Wave Structure
+| Wave | Plans | Description |
+|------|-------|-------------|
+| 1 | 03-01, 03-02, 03-03 | Foundational components, Resume Panel, JD Analyzer (parallel) |
+| 2 | 03-04 | Match Comparison Panel |
+| 3 | 03-05 | Layout integration |
+| 4 | 03-06 | Human verification checkpoint |
+
+### Key Technical Decisions
+1. **Reuse existing infrastructure:** react-resizable-panels v2.1.9, Radix UI, Framer Motion
+2. **Nested panel groups:** Horizontal (Resume vs Analysis) + Vertical (JD vs Match)
+3. **Progressive disclosure:** Tabs within panels for complex analysis sections
+4. **Empty states:** Contextual prompts with actionable CTAs
+5. **Layout persistence:** localStorage for user panel size preferences
+6. **Mobile-first responsive:** Tab bar navigation for <768px screens
+
+### Success Criteria — ALL ACHIEVED ✅
+1. ✅ User sees 3-panel layout on desktop with clear separation of concerns
+2. ✅ Panels are resizable and sizes persist across sessions
+3. ✅ Mobile users see tab navigation with one panel at a time
+4. ✅ Empty states guide users to next action with clear CTAs
+5. ✅ JD analysis separate from resume comparison (reduced cognitive load)
+6. ✅ Match Comparison shows ATS score, gaps, similarity, recommendations
+
+---
+
+## Phase 4: Cover Letter Optimizer
 
 **Goal:** ATS-focused cover letter — not generic AI writer.
 
