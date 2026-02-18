@@ -212,3 +212,32 @@ export interface CompetencyGapAnalysis {
   overallGapScore: number;
   prioritizedRecommendations: ImpactRecommendation[];
 }
+
+// --- Semantic Similarity Types ---
+
+/**
+ * Semantic score interpretation levels
+ */
+export type SemanticInterpretation = 'excellent' | 'good' | 'fair' | 'poor';
+
+/**
+ * Section-level similarity scores
+ */
+export interface SectionScores {
+  summary: number;
+  experience: number;
+  skills: number;
+  education: number;
+}
+
+/**
+ * Semantic similarity score result
+ */
+export interface SemanticScore {
+  /** Overall similarity score (0-100) */
+  overall: number;
+  /** Per-section similarity breakdown */
+  bySection: SectionScores;
+  /** Interpretation label based on score */
+  interpretation: SemanticInterpretation;
+}
