@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Briefcase, FileText } from 'lucide-react';
 
 import EmptyStatePrompt from '@/features/job-optimizer/components/EmptyStatePrompt';
@@ -6,14 +6,10 @@ import PanelHeader from '@/features/job-optimizer/components/PanelHeader';
 import { useJobAnalyzer } from '@/features/job-optimizer/hooks/useJobAnalyzer';
 import { useJob } from '@/shared/contexts/JobContext';
 import { Badge } from '@/shared/ui/badge';
-import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Separator } from '@/shared/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Textarea } from '@/shared/ui/textarea';
-
-const DEFAULT_JOB_ID = 'current-job';
 
 function renderExperienceYears(years: string[]): string {
   if (!years.length) {
@@ -24,63 +20,10 @@ function renderExperienceYears(years: string[]): string {
 }
 
 export default function JDAnalyzerPanel() {
-  const { currentJob, setCurrentJob } = useJob();
+  const { currentJob } = useJob();
   const jobDescription = currentJob?.description ?? '';
-  const [draftDescription, setDraftDescription] = useState(jobDescription);
   const hasJobDescription = Boolean(jobDescription.trim());
   const analysis = useJobAnalyzer(jobDescription);
-
-  useEffect(() => {
-    setDraftDescription(jobDescription);
-  }, [jobDescription]);
-
-  const syncDescriptionToJob = useCallback(
-    (nextDescription: string) => {
-      const now = new Date().toISOString();
-      const baseJob =
-        currentJob ?? {
-          id: DEFAULT_JOB_ID,
-          title: 'Current Job Analysis',
-          company: '',
-          description: '',
-          extractedFields: [],
-          requirements: [],
-          status: 'draft' as const,
-          metadata: {
-            createdAt: now,
-            updatedAt: now,
-          },
-        };
-
-      setCurrentJob({
-        ...baseJob,
-        description: nextDescription,
-        metadata: {
-          ...baseJob.metadata,
-          updatedAt: now,
-        },
-      });
-    },
-    [currentJob, setCurrentJob]
-  );
-
-  const handleDescriptionChange = (nextDescription: string) => {
-    setDraftDescription(nextDescription);
-    syncDescriptionToJob(nextDescription);
-  };
-
-  const clearDescription = () => {
-    handleDescriptionChange('');
-  };
-
-  const descriptionWordCount = useMemo(() => {
-    const trimmed = draftDescription.trim();
-    if (!trimmed) {
-      return 0;
-    }
-
-    return trimmed.split(/\s+/).length;
-  }, [draftDescription]);
 
   const topKeywords = analysis.keywords.keywords.slice(0, 15);
   const requiredSkills = analysis.requirements.required;
@@ -93,6 +36,32 @@ export default function JDAnalyzerPanel() {
     `Experience signal: ${renderExperienceYears(analysis.insights.experienceYears)}`,
   ];
 
+  const analyzerSuggestions = useMemo(() => {
+    const suggestions: string[] = [];
+
+    if (!analysis.overview.roleTitle || analysis.overview.roleTitle === 'Role title not detected') {
+      suggestions.push('Add a clear role title near the top of the JD for better analysis accuracy.');
+    }
+
+    if (requiredSkills.length < 3) {
+      suggestions.push('Add more required skills and must-have criteria to improve match precision.');
+    }
+
+    if (preferredSkills.length === 0) {
+      suggestions.push('Add a preferred/nice-to-have section to help prioritize optimization suggestions.');
+    }
+
+    if (topKeywords.length < 8) {
+      suggestions.push('Include specific tools/frameworks and domain terms to strengthen keyword extraction.');
+    }
+
+    if (!analysis.insights.experienceYears.length) {
+      suggestions.push('Specify expected years of experience (for example: "3+ years") for better fit scoring.');
+    }
+
+    return suggestions;
+  }, [analysis, preferredSkills.length, requiredSkills.length, topKeywords.length]);
+
   return (
     <Card className="flex h-full flex-col">
       <PanelHeader
@@ -101,34 +70,11 @@ export default function JDAnalyzerPanel() {
         badge={analysis.isAnalyzing ? 'Analyzing...' : `${topKeywords.length} keywords`}
       />
 
-      <div className="space-y-3 border-b p-4">
-        <Textarea
-          id="job-description-textarea"
-          value={draftDescription}
-          onChange={(event) => handleDescriptionChange(event.target.value)}
-          placeholder="Paste the full job description here..."
-          className="min-h-[120px] resize-none"
-        />
-
-        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>
-            {descriptionWordCount > 0
-              ? `${descriptionWordCount} words loaded`
-              : 'Paste a role description to generate requirements and keyword analysis.'}
-          </span>
-          {draftDescription.trim() ? (
-            <Button type="button" size="sm" variant="ghost" onClick={clearDescription}>
-              Clear JD
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
       {!hasJobDescription ? (
         <EmptyStatePrompt
           icon={FileText}
           title="Analyze Job Description"
-          description="Paste a job description above to unlock role requirements, keyword frequency, and key insights."
+          description="Paste a job description in the left JD panel to unlock role requirements, keyword frequency, and key insights here."
         />
       ) : (
         <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col">
@@ -225,13 +171,32 @@ export default function JDAnalyzerPanel() {
 
           <TabsContent value="insights" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full p-4">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {insightLines.map((line, index) => (
                 <div key={line} className="space-y-3">
                   <p className="text-sm">{line}</p>
                   {index < insightLines.length - 1 ? <Separator /> : null}
                 </div>
               ))}
+
+              <Separator />
+
+              <section className="space-y-2">
+                <h4 className="text-sm font-medium">JD Improvements</h4>
+                {analyzerSuggestions.length ? (
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {analyzerSuggestions.map((suggestion) => (
+                      <li key={suggestion} className="rounded-md border bg-muted/40 px-3 py-2">
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    JD quality looks strong. You can now focus on resume-side optimization in Match Analysis.
+                  </p>
+                )}
+              </section>
             </div>
           </ScrollArea>
           </TabsContent>

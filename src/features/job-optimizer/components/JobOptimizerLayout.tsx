@@ -4,6 +4,7 @@ import { Briefcase, FileText, Target } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import JDAnalyzerPanel from '@/features/job-optimizer/components/JDAnalyzerPanel';
+import JDInputPanel from '@/features/job-optimizer/components/JDInputPanel';
 import MatchComparisonPanel from '@/features/job-optimizer/components/MatchComparisonPanel';
 import ResumePanelV2 from '@/features/job-optimizer/components/ResumePanelV2';
 import { usePanelLayout } from '@/features/job-optimizer/hooks/usePanelLayout';
@@ -89,21 +90,28 @@ export default function JobOptimizerLayout() {
 
   return (
     <PanelGroup direction="horizontal" onLayout={handleHorizontalLayoutChange} className="h-full min-h-0">
-      <Panel defaultSize={layout.horizontal[0]} minSize={25} maxSize={50} id="resume-panel" className="min-h-0">
-        <ResumePanelV2 />
+      <Panel defaultSize={layout.horizontal[0]} minSize={30} maxSize={55} id="input-panel" className="min-h-0">
+        <div className="flex h-full min-h-0 flex-col gap-2 p-2">
+          <div className="min-h-0 flex-1">
+            <ResumePanelV2 />
+          </div>
+          <div className="min-h-0 flex-1">
+            <JDInputPanel />
+          </div>
+        </div>
       </Panel>
 
       <PanelResizeHandle className="w-1 bg-border transition-colors hover:bg-accent data-[dragging=true]:bg-accent" />
 
-      <Panel defaultSize={layout.horizontal[1]} minSize={50} id="analysis-panels" className="min-h-0">
+      <Panel defaultSize={layout.horizontal[1]} minSize={45} id="analysis-panels" className="min-h-0">
         <PanelGroup direction="vertical" onLayout={handleVerticalLayoutChange} className="h-full min-h-0">
-          <Panel defaultSize={layout.vertical[0]} minSize={30} id="jd-panel" className="min-h-0">
+          <Panel defaultSize={layout.vertical[0]} minSize={30} id="jd-analyzer-panel" className="min-h-0 p-2">
             <JDAnalyzerPanel />
           </Panel>
 
           <PanelResizeHandle className="h-1 bg-border transition-colors hover:bg-accent data-[dragging=true]:bg-accent" />
 
-          <Panel defaultSize={layout.vertical[1]} minSize={30} id="match-panel" className="min-h-0">
+          <Panel defaultSize={layout.vertical[1]} minSize={30} id="match-panel" className="min-h-0 p-2">
             <MatchComparisonPanel />
           </Panel>
         </PanelGroup>
