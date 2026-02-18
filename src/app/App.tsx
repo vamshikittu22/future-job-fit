@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "@/shared/providers/theme-provider";
 import { ResumeProvider } from "@/shared/contexts/ResumeContext";
+import { JobProvider } from "@/shared/contexts/JobContext";
 import { APIKeyProvider } from "@/shared/contexts/APIKeyContext";
 
 // Eagerly loaded - small and needed immediately
@@ -20,6 +21,9 @@ const Results = lazy(() => import("@/features/job-optimizer/pages/AnalysisResult
 
 // Wizard Layout - lazy load the entire wizard feature
 const WizardLayout = lazy(() => import("@/features/resume-builder/components/layout/WizardLayout").then(m => ({ default: m.WizardLayout })));
+
+// Match Intelligence - lazy loaded
+const MatchIntelligence = lazy(() => import("@/features/match-intelligence/pages/MatchIntelligencePage"));
 
 // Wizard Steps - lazy loaded individually
 const TemplateStep = lazy(() => import("@/features/resume-builder/components/editor/steps/TemplateStep").then(m => ({ default: m.TemplateStep })));
@@ -51,6 +55,7 @@ const router = createBrowserRouter([
   { path: "/about-platform", element: <Suspense fallback={<PageLoader />}><AboutPlatform /></Suspense> },
   { path: "/input", element: <Suspense fallback={<PageLoader />}><ResumeInput /></Suspense> },
   { path: "/results", element: <Suspense fallback={<PageLoader />}><Results /></Suspense> },
+  { path: "/match-intelligence", element: <Suspense fallback={<PageLoader />}><MatchIntelligence /></Suspense> },
   {
     path: "/resume-wizard",
     element: <Suspense fallback={<PageLoader />}><WizardLayout /></Suspense>,
@@ -77,11 +82,13 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <APIKeyProvider>
-          <ResumeProvider>
-            <Toaster />
-            <Sonner />
-            <RouterProvider router={router} />
-          </ResumeProvider>
+          <JobProvider>
+            <ResumeProvider>
+              <Toaster />
+              <Sonner />
+              <RouterProvider router={router} />
+            </ResumeProvider>
+          </JobProvider>
         </APIKeyProvider>
       </ThemeProvider>
     </TooltipProvider>

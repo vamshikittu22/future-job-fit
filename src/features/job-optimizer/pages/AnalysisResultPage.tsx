@@ -15,6 +15,7 @@ import { usePyNLP } from "@/shared/hooks/usePyNLP";
 import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
+import { BarChart3 } from "lucide-react";
 
 interface EvaluationResult {
   atsScore: number;
@@ -631,6 +632,12 @@ export default function Results() {
           <Link to="/resume-wizard">
             <Button variant="secondary" size="lg" className="px-8 hover:shadow-swiss transition-all duration-300">
               Open Resume Wizard
+            </Button>
+          </Link>
+          <Link to="/match-intelligence">
+            <Button variant="default" size="lg" className="px-8 hover:shadow-swiss transition-all duration-300">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Match Intelligence
             </Button>
           </Link>
         </motion.div>
