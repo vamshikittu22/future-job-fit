@@ -98,52 +98,80 @@ export default function AnalysisPanel({
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="space-y-6"
+                                className="space-y-4"
                             >
-                                {/* ATS Score Card */}
-                                <Card className={`p-4 border ${getScoreBg(atsScore)}`}>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`text-4xl font-bold ${getScoreColor(atsScore)}`}>
-                                                {atsScore}%
-                                            </div>
-                                            <div>
-                                                <h4 className="font-semibold">ATS Match Score</h4>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {matchingKeywords.length}/{keywords.length} keywords matched
-                                                </p>
-                                            </div>
+                                {/* Score Metrics Grid */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* ATS Score */}
+                                    <Card className={`p-3 border ${getScoreBg(atsScore)}`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Target className={`w-4 h-4 ${getScoreColor(atsScore)}`} />
+                                            <span className="text-xs text-muted-foreground">ATS Score</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <TrendingUp className={`w-5 h-5 ${getScoreColor(atsScore)}`} />
-                                        </div>
-                                    </div>
-
-                                    {/* Progress bar */}
-                                    <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
-                                        <motion.div
-                                            className={`h-full ${atsScore >= 80 ? 'bg-green-500' : atsScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${atsScore}%` }}
-                                            transition={{ duration: 0.8, ease: "easeOut" }}
-                                        />
-                                    </div>
-                                </Card>
-
-                                {/* Quick Tips */}
-                                {atsScore < 80 && (
-                                    <Card className="p-4 bg-accent/5 border-accent/20">
-                                        <div className="flex items-start gap-3">
-                                            <Lightbulb className="w-5 h-5 text-accent mt-0.5" />
-                                            <div>
-                                                <h5 className="font-medium text-sm mb-1">Quick Tip</h5>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Click on any missing keyword below to integrate it into your resume with AI assistance.
-                                                </p>
-                                            </div>
+                                        <div className={`text-2xl font-bold ${getScoreColor(atsScore)}`}>
+                                            {atsScore}%
                                         </div>
                                     </Card>
-                                )}
+
+                                    {/* Match Rate */}
+                                    <Card className="p-3 border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <TrendingUp className="w-4 h-4 text-blue-600" />
+                                            <span className="text-xs text-muted-foreground">Match Rate</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-blue-600">
+                                            {keywords.length > 0 ? Math.round((matchingKeywords.length / keywords.length) * 100) : 0}%
+                                        </div>
+                                    </Card>
+
+                                    {/* Matched */}
+                                    <Card className="p-3 border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <CheckCircle className="w-4 h-4 text-green-600" />
+                                            <span className="text-xs text-muted-foreground">Matched</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-green-600">
+                                            {matchingKeywords.length}
+                                        </div>
+                                    </Card>
+
+                                    {/* Gaps */}
+                                    <Card className="p-3 border bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <AlertCircle className="w-4 h-4 text-red-600" />
+                                            <span className="text-xs text-muted-foreground">Gaps</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-red-600">
+                                            {missingKeywords.length}
+                                        </div>
+                                    </Card>
+                                </div>
+
+                                {/* Skills in JD */}
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-green-500" />
+                                        Skills in Job Description
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1">
+                                        {(() => {
+                                            const jdLower = jobDescription.toLowerCase();
+                                            const allSkills = [
+                                                'javascript', 'typescript', 'python', 'java', 'c++', 'go', 'rust', 'ruby', 'php', 'swift', 'kotlin',
+                                                'react', 'angular', 'vue', 'node', 'django', 'spring', 'express', 'nextjs', 'flutter',
+                                                'aws', 'azure', 'gcp', 'kubernetes', 'docker', 'terraform', 'serverless',
+                                                'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'nosql',
+                                                'git', 'jira', 'jenkins', 'ci/cd', 'agile', 'scrum'
+                                            ];
+                                            const found = allSkills.filter(s => jdLower.includes(s)).slice(0, 12);
+                                            return found.length > 0 ? found.map((skill, i) => (
+                                                <Badge key={i} variant="secondary" className="text-xs">
+                                                    {skill}
+                                                </Badge>
+                                            )) : <span className="text-xs text-muted-foreground">No common skills detected</span>;
+                                        })()}
+                                    </div>
+                                </div>
 
                                 <Separator />
 
@@ -273,13 +301,13 @@ export default function AnalysisPanel({
                     </AnimatePresence>
                 </ScrollArea>
 
-                {/* Match Intelligence Link */}
+                {/* Deep Analysis Button */}
                 {hasData && (
-                    <div className="p-4 border-t">
+                    <div className="p-4 border-t bg-blue-50 dark:bg-blue-950/30">
                         <Link to="/match-intelligence">
-                            <Button variant="default" className="w-full">
+                            <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
                                 <BarChart3 className="w-4 h-4 mr-2" />
-                                View Match Intelligence
+                                Deep Analysis
                             </Button>
                         </Link>
                     </div>
