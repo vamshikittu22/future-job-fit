@@ -16,7 +16,6 @@ import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 import KeywordIntegrationModal from "@/features/job-optimizer/components/KeywordIntegrationModal";
 import ExportOptimizedModal from "@/features/job-optimizer/components/ExportOptimizedModal";
 import { BarChart3 } from "lucide-react";
-import { QuickMatchSummary } from "@/features/job-optimizer/components/QuickMatchSummary";
 
 interface EvaluationResult {
   atsScore: number;
@@ -344,87 +343,154 @@ export default function Results() {
         {/* Results Grid */}
         <div className="max-w-7xl mx-auto space-y-10">
           {/* ATS Score Dashboard */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* ATS Score */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Card className="p-6 shadow-swiss bg-gradient-card">
-                <div className="flex items-center gap-3 mb-4">
+              <Card className="p-5 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getScoreBg(evaluation.atsScore)} ${getScoreColor(evaluation.atsScore)}`}>
                     <Target className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">ATS Score</h3>
+                    <h3 className="font-semibold text-sm">ATS Score</h3>
                     <div className={`text-2xl font-bold ${getScoreColor(evaluation.atsScore)}`}>
-                      {evaluation.atsScore}/100
+                      {evaluation.atsScore}
                     </div>
                   </div>
                 </div>
-                <Progress value={evaluation.atsScore} className="mb-2" />
+                <Progress value={evaluation.atsScore} className="h-2 mb-1" />
                 <p className="text-xs text-muted-foreground">
-                  {evaluation.atsScore >= 80 ? "Excellent compatibility" :
-                    evaluation.atsScore >= 60 ? "Good, needs improvement" : "Requires optimization"}
+                  {evaluation.atsScore >= 80 ? "Excellent" : evaluation.atsScore >= 60 ? "Good" : "Needs work"}
                 </p>
               </Card>
             </motion.div>
 
+            {/* Match Rate */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+            >
+              <Card className="p-5 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">Match Rate</h3>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {(() => {
+                        const total = evaluation.matchingKeywords.length + evaluation.missingKeywords.length;
+                        return total > 0 ? Math.round((evaluation.matchingKeywords.length / total) * 100) : 0;
+                      })()}%
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {evaluation.matchingKeywords.length} of {evaluation.matchingKeywords.length + evaluation.missingKeywords.length} skills
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Keywords Match */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <Card className="p-6 shadow-swiss bg-gradient-card">
-                <div className="flex items-center gap-3 mb-4">
+              <Card className="p-5 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Keywords Match</h3>
+                    <h3 className="font-semibold text-sm">Matched</h3>
                     <div className="text-2xl font-bold text-green-600">
                       {evaluation.matchingKeywords.length}
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Keywords found in your resume</p>
+                <p className="text-xs text-muted-foreground">Skills in your resume</p>
               </Card>
             </motion.div>
 
+            {/* Missing Keywords */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
             >
-              <Card className="p-6 shadow-swiss bg-gradient-card">
-                <div className="flex items-center gap-3 mb-4">
+              <Card className="p-5 shadow-swiss bg-gradient-card">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                     <AlertCircle className="w-5 h-5 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Missing Keywords</h3>
+                    <h3 className="font-semibold text-sm">Gaps</h3>
                     <div className="text-2xl font-bold text-red-600">
                       {evaluation.missingKeywords.length}
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Click below to add them</p>
-                </Card>
+                <p className="text-xs text-muted-foreground">Skills to add</p>
+              </Card>
             </motion.div>
           </div>
 
-          {/* Quick Match Intelligence Summary */}
+          {/* Skill Categories Row */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <QuickMatchSummary 
-              atsScore={evaluation.atsScore}
-              matchingKeywords={evaluation.matchingKeywords}
-              missingKeywords={evaluation.missingKeywords}
-              jobDescription={jobDescription}
-            />
+            <Card className="p-5 shadow-swiss">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  Skills Detected in Job Description
+                </h3>
+                <Link to="/match-intelligence">
+                  <Button variant="outline" size="sm">
+                    Deep Analysis
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const jdLower = jobDescription.toLowerCase();
+                  const categories = {
+                    languages: ['javascript', 'typescript', 'python', 'java', 'c++', 'go', 'rust', 'ruby', 'php', 'swift', 'kotlin'],
+                    frameworks: ['react', 'angular', 'vue', 'node', 'django', 'spring', 'express', 'nextjs', 'flutter'],
+                    cloud: ['aws', 'azure', 'gcp', 'kubernetes', 'docker', 'terraform', 'serverless', 'lambda'],
+                    databases: ['sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'nosql', 'dynamodb', 'oracle'],
+                    tools: ['git', 'jira', 'jenkins', 'ci/cd', 'agile', 'scrum', 'figma', 'jira']
+                  };
+                  
+                  const found: string[] = [];
+                  Object.entries(categories).forEach(([cat, skills]) => {
+                    skills.forEach(skill => {
+                      if (jdLower.includes(skill) && !found.includes(skill)) {
+                        found.push(skill);
+                      }
+                    });
+                  });
+                  
+                  if (found.length === 0) {
+                    return <span className="text-sm text-muted-foreground">No common skills detected</span>;
+                  }
+                  
+                  return found.slice(0, 15).map((skill, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ));
+                })()}
+              </div>
+            </Card>
           </motion.div>
 
           {/* Detailed Analysis Grid */}
