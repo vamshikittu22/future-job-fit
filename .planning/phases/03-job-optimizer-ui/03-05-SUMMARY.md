@@ -70,7 +70,20 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] State automation commands were incompatible with existing STATE.md format**
+- **Found during:** Post-task state update workflow
+- **Issue:** `gsd-tools state advance-plan`, `state update-progress`, `state add-decision`, and `state record-session` could not parse current STATE structure.
+- **Fix:** Updated STATE.md manually for progress, next plan, and decision log while keeping successful `state record-metric` output.
+- **Files modified:** `.planning/STATE.md`
+- **Verification:** Confirmed STATE now reflects 5/6 plans complete for Phase 3 and includes 03-05 decisions + metrics row.
+- **Committed in:** `71f610e`
+
+---
+
+**Total deviations:** 1 auto-fixed (1 blocking)
+**Impact on plan:** No scope creep; only execution metadata handling adjusted to match repository STATE format.
 
 ## Issues Encountered
 None.
