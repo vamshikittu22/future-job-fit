@@ -59,9 +59,34 @@ export function useMatchScore(options: UseMatchScoreOptions = {}): UseMatchScore
     }
 
     // Extract keywords from job description
-    // In a real implementation, this would use the JD parser to extract
-    // keywords with weights. For now, we use extractedFields if available.
-    const extractedFields = currentJob.extractedFields || [];
+    // Use extractedFields if available, otherwise parse from description
+    let extractedFields = currentJob.extractedFields || [];
+    
+    // If no extracted fields, create keywords from the description text
+    if (extractedFields.length === 0 && currentJob.description) {
+      // Simple keyword extraction from JD text
+      const jdText = currentJob.description.toLowerCase();
+      const commonSkills = [
+        'javascript', 'typescript', 'react', 'node', 'python', 'java', 'aws', 'docker',
+        'kubernetes', 'sql', 'nosql', 'mongodb', 'postgresql', 'mysql', 'git', 'ci/cd',
+        'agile', 'scrum', 'rest', 'api', 'graphql', 'html', 'css', 'redux', 'vue',
+        'angular', 'spring', 'django', 'flask', 'ruby', 'rails', 'php', 'laravel',
+        '.net', 'c#', 'c++', 'go', 'rust', 'swift', 'kotlin', 'flutter', 'react native',
+        'machine learning', 'ai', 'data science', 'analytics', 'tableau', 'power bi',
+        'linux', 'unix', 'bash', 'shell', 'powershell', 'terraform', 'ansible', 'jenkins',
+        'jira', 'confluence', 'figma', 'sketch', 'adobe xd', 'photoshop', 'illustrator'
+      ];
+      
+      extractedFields = commonSkills
+        .filter(skill => jdText.includes(skill))
+        .map((skill, idx) => ({
+          id: `extracted-${idx}`,
+          fieldType: 'skill' as const,
+          value: skill,
+          confidence: 0.8,
+          sourceSection: 'description'
+        }));
+    }
     
     // Convert extracted fields to keywords with weights
     // Skills have higher weight (0.8+), qualifications lower (0.5-0.7)
