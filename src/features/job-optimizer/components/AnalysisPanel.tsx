@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 import KeywordIntegrationModal from "./KeywordIntegrationModal";
+import { Link } from "react-router-dom";
 
 interface AnalysisPanelProps {
     resumeText: string;
@@ -271,6 +272,18 @@ export default function AnalysisPanel({
                         )}
                     </AnimatePresence>
                 </ScrollArea>
+
+                {/* Match Intelligence Link */}
+                {hasData && (
+                    <div className="p-4 border-t">
+                        <Link to="/match-intelligence">
+                            <Button variant="default" className="w-full">
+                                <BarChart3 className="w-4 h-4 mr-2" />
+                                View Match Intelligence
+                            </Button>
+                        </Link>
+                    </div>
+                )}
             </Card>
 
             {/* Keyword Integration Modal */}

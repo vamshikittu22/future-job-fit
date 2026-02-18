@@ -9,6 +9,7 @@ import { FileText, Briefcase, Zap, Trash2, Upload, Copy, Download, FileDown } fr
 import { useToast } from "@/shared/hooks/use-toast";
 import { motion } from "framer-motion";
 import { useResume } from "@/shared/contexts/ResumeContext";
+import { useJob } from "@/shared/contexts/JobContext";
 import AppNavigation from "@/shared/components/layout/AppNavigation";
 import Footer from "@/shared/components/layout/Footer";
 import ModelSelector from "@/shared/components/common/ModelSelector";
@@ -25,6 +26,9 @@ export default function ResumeInput() {
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  
+  // Job Context - sync with localStorage
+  const { currentJob, setCurrentJob } = useJob();
   const [customInstructions, setCustomInstructions] = useState<any>({
     resumeLength: 2,
     fontSizes: {
@@ -95,6 +99,27 @@ export default function ResumeInput() {
     if (resumeText) localStorage.setItem("resumeText", resumeText);
     if (jobDescription) localStorage.setItem("jobDescription", jobDescription);
   }, [resumeText, jobDescription]);
+
+  // Sync job description to JobContext for Match Intelligence
+  useEffect(() => {
+    if (jobDescription && jobDescription.trim()) {
+      setCurrentJob({
+        id: 'current-job',
+        title: 'Current Job Analysis',
+        company: '',
+        description: jobDescription,
+        extractedFields: [],
+        requirements: [],
+        salaryRange: undefined,
+        url: undefined,
+        status: 'draft',
+        metadata: {
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+    }
+  }, [jobDescription, setCurrentJob]);
 
   // AI Options
   const tags = ["Cloud", "Backend", "UI/UX", "Java", "Python", "Testing", "Services"];
