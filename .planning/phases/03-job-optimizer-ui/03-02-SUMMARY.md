@@ -60,7 +60,7 @@ Each task was committed atomically:
 1. **Task 1: Create useResumeUpload hook** - `f45e6af` (feat)
 2. **Task 2: Create ResumePanelV2 component** - `9a059d8` (feat)
 
-**Plan metadata:** Pending
+**Plan metadata:** `56084b2` (docs)
 
 ## Files Created/Modified
 - `src/features/job-optimizer/hooks/useResumeUpload.ts` - File upload and text-summary extraction hook for resume intake.
