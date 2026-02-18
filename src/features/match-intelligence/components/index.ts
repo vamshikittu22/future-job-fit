@@ -8,3 +8,5 @@ export { SemanticScoreCard, default as SemanticScoreCardDefault } from './Semant
 export { RecruiterHeatmap, default as RecruiterHeatmapDefault } from './RecruiterHeatmap';
 export { RecommendationsPanel, default as RecommendationsPanelDefault } from './RecommendationsPanel';
 export { JDComparisonView, default as JDComparisonViewDefault } from './JDComparisonView';
+export { MatchScoreGauge, default as MatchScoreGaugeDefault } from './MatchScoreGauge';
+export { MatchDashboard, default as MatchDashboardDefault } from './MatchDashboard';

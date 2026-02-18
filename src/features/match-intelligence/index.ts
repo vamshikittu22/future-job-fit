@@ -24,3 +24,5 @@ export { SemanticScoreCard } from './components/SemanticScoreCard';
 export { RecruiterHeatmap } from './components/RecruiterHeatmap';
 export { RecommendationsPanel } from './components/RecommendationsPanel';
 export { JDComparisonView } from './components/JDComparisonView';
+export { MatchScoreGauge } from './components/MatchScoreGauge';
+export { MatchDashboard } from './components/MatchDashboard';
