@@ -126,9 +126,40 @@ export interface MatchScoreOptions {
 // --- F-Pattern Heatmap Types ---
 
 /**
- * F-pattern reading zone
+ * F-pattern reading zone (legacy)
  */
-export type HeatmapZone = 'top-left' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-right';
+export type FPatternZone = 'top-left' | 'top-right' | 'middle-left' | 'middle-right' | 'bottom-left' | 'bottom-right';
+
+/**
+ * Section position data from resume layout
+ */
+export interface SectionPosition {
+  id: string;
+  type: 'header' | 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'custom';
+  top: number;      // Percentage from top (0-100)
+  left: number;    // Percentage from left (0-100)
+  height: number;  // Percentage height (0-100)
+  width: number;   // Percentage width (0-100)
+}
+
+/**
+ * Detailed heatmap zone for F-pattern visualization
+ */
+export interface HeatmapZoneDetailed {
+  id: string;
+  resumeSection: string;
+  position: { x: number; y: number };
+  dimensions: { width: number; height: number };
+  attention: number;  // 0-1 normalized
+  label: string;
+  color: string;
+  attentionSeconds?: number;
+}
+
+/**
+ * Alias for backward compatibility - use detailed type now
+ */
+export type { HeatmapZoneDetailed as HeatmapZone };
 
 /**
  * Skill cluster category (string literal)
@@ -139,7 +170,7 @@ export type SkillClusterCategory = 'technical' | 'tools' | 'concepts' | 'soft';
  * Heatmap analysis result
  */
 export interface HeatmapAnalysis {
-  zone: HeatmapZone;
+  zone: FPatternZone;
   keywordDensity: number;
   readingProbability: number;
 }

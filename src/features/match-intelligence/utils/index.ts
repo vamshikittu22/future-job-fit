@@ -4,3 +4,4 @@
 
 export * from './keywordWeighting';
 export * from './skillClustering';
+export * from './heatmapGenerator';
