@@ -43,12 +43,12 @@ export default function JobInputPage() {
   const resumeStatus = resumeText.trim() ? 'Resume loaded' : 'Resume empty';
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background pt-14">
       <AppNavigation />
 
       <div className="border-b bg-background/95 px-4 py-3">
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col items-start justify-between gap-3 md:flex-row md:items-center">
-          <div>
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold">Job Optimizer</h1>
             <p className="text-sm text-muted-foreground">Compare your resume with the role in a dedicated 3-panel workspace.</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -61,7 +61,7 @@ export default function JobInputPage() {
             </div>
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end">
+          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap lg:justify-end lg:self-start">
             <ModelSelector value={selectedModel} onValueChange={setSelectedModel} />
             <CustomizeAIButton onClick={() => setCustomizeModalOpen(true)} />
             <Button type="button" variant="outline" size="sm" onClick={() => setExportModalOpen(true)}>
@@ -71,7 +71,7 @@ export default function JobInputPage() {
         </div>
       </div>
 
-      <div className="flex-1 h-[calc(100vh-theme(spacing.16)-theme(spacing.20))] overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <JobOptimizerLayout />
       </div>
 

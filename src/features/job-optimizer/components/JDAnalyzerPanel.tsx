@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Briefcase, FileText } from 'lucide-react';
 
 import EmptyStatePrompt from '@/features/job-optimizer/components/EmptyStatePrompt';
@@ -5,10 +6,14 @@ import PanelHeader from '@/features/job-optimizer/components/PanelHeader';
 import { useJobAnalyzer } from '@/features/job-optimizer/hooks/useJobAnalyzer';
 import { useJob } from '@/shared/contexts/JobContext';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Separator } from '@/shared/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { Textarea } from '@/shared/ui/textarea';
+
+const DEFAULT_JOB_ID = 'current-job';
 
 function renderExperienceYears(years: string[]): string {
   if (!years.length) {
@@ -19,31 +24,63 @@ function renderExperienceYears(years: string[]): string {
 }
 
 export default function JDAnalyzerPanel() {
-  const { currentJob } = useJob();
+  const { currentJob, setCurrentJob } = useJob();
   const jobDescription = currentJob?.description ?? '';
+  const [draftDescription, setDraftDescription] = useState(jobDescription);
   const hasJobDescription = Boolean(jobDescription.trim());
   const analysis = useJobAnalyzer(jobDescription);
 
-  const focusJobDescription = () => {
-    const input = document.getElementById('job-description-textarea');
-    input?.focus();
+  useEffect(() => {
+    setDraftDescription(jobDescription);
+  }, [jobDescription]);
+
+  const syncDescriptionToJob = useCallback(
+    (nextDescription: string) => {
+      const now = new Date().toISOString();
+      const baseJob =
+        currentJob ?? {
+          id: DEFAULT_JOB_ID,
+          title: 'Current Job Analysis',
+          company: '',
+          description: '',
+          extractedFields: [],
+          requirements: [],
+          status: 'draft' as const,
+          metadata: {
+            createdAt: now,
+            updatedAt: now,
+          },
+        };
+
+      setCurrentJob({
+        ...baseJob,
+        description: nextDescription,
+        metadata: {
+          ...baseJob.metadata,
+          updatedAt: now,
+        },
+      });
+    },
+    [currentJob, setCurrentJob]
+  );
+
+  const handleDescriptionChange = (nextDescription: string) => {
+    setDraftDescription(nextDescription);
+    syncDescriptionToJob(nextDescription);
   };
 
-  if (!hasJobDescription) {
-    return (
-      <Card className="flex h-full flex-col">
-        <EmptyStatePrompt
-          icon={FileText}
-          title="Analyze Job Description"
-          description="Paste a job description to see role requirements, keywords, and insights."
-          action={{
-            label: 'Paste JD',
-            onClick: focusJobDescription,
-          }}
-        />
-      </Card>
-    );
-  }
+  const clearDescription = () => {
+    handleDescriptionChange('');
+  };
+
+  const descriptionWordCount = useMemo(() => {
+    const trimmed = draftDescription.trim();
+    if (!trimmed) {
+      return 0;
+    }
+
+    return trimmed.split(/\s+/).length;
+  }, [draftDescription]);
 
   const topKeywords = analysis.keywords.keywords.slice(0, 15);
   const requiredSkills = analysis.requirements.required;
@@ -64,15 +101,45 @@ export default function JDAnalyzerPanel() {
         badge={analysis.isAnalyzing ? 'Analyzing...' : `${topKeywords.length} keywords`}
       />
 
-      <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="grid w-full grid-cols-4 rounded-none border-b bg-transparent p-1">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="requirements">Requirements</TabsTrigger>
-          <TabsTrigger value="keywords">Keywords</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-        </TabsList>
+      <div className="space-y-3 border-b p-4">
+        <Textarea
+          id="job-description-textarea"
+          value={draftDescription}
+          onChange={(event) => handleDescriptionChange(event.target.value)}
+          placeholder="Paste the full job description here..."
+          className="min-h-[120px] resize-none"
+        />
 
-        <TabsContent value="overview" className="mt-0 min-h-0 flex-1">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span>
+            {descriptionWordCount > 0
+              ? `${descriptionWordCount} words loaded`
+              : 'Paste a role description to generate requirements and keyword analysis.'}
+          </span>
+          {draftDescription.trim() ? (
+            <Button type="button" size="sm" variant="ghost" onClick={clearDescription}>
+              Clear JD
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {!hasJobDescription ? (
+        <EmptyStatePrompt
+          icon={FileText}
+          title="Analyze Job Description"
+          description="Paste a job description above to unlock role requirements, keyword frequency, and key insights."
+        />
+      ) : (
+        <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col">
+          <TabsList className="grid w-full grid-cols-4 rounded-none border-b bg-transparent p-1">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="requirements">Requirements</TabsTrigger>
+            <TabsTrigger value="keywords">Keywords</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full p-4">
             <div className="space-y-4">
               <div>
@@ -99,9 +166,9 @@ export default function JDAnalyzerPanel() {
               </div>
             </div>
           </ScrollArea>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="requirements" className="mt-0 min-h-0 flex-1">
+          <TabsContent value="requirements" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full p-4">
             <div className="space-y-5">
               <section>
@@ -135,9 +202,9 @@ export default function JDAnalyzerPanel() {
               </section>
             </div>
           </ScrollArea>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="keywords" className="mt-0 min-h-0 flex-1">
+          <TabsContent value="keywords" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full p-4">
             {topKeywords.length ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -154,9 +221,9 @@ export default function JDAnalyzerPanel() {
               <p className="text-sm text-muted-foreground">No keywords detected yet.</p>
             )}
           </ScrollArea>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="insights" className="mt-0 min-h-0 flex-1">
+          <TabsContent value="insights" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full p-4">
             <div className="space-y-3">
               {insightLines.map((line, index) => (
@@ -167,8 +234,9 @@ export default function JDAnalyzerPanel() {
               ))}
             </div>
           </ScrollArea>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      )}
     </Card>
   );
 }
