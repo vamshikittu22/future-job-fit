@@ -21,7 +21,7 @@
 ## Current Position
 
 **Current Phase:** Phase 4 — Resume Wizard Redesign  
-**Current Plan:** 04-02 (2 of 6 plans)
+**Current Plan:** 04-05 (5 of 6 plans)
 **Status:** 🔄 IN PROGRESS
 
 ```
@@ -30,7 +30,7 @@ Phase 0:  [██████████] 100% (4/4 plans complete) ✅
 Phase 1:  [██████████] 100% (6/6 plans complete) ✅
 Phase 2:  [██████████] 100% (6/6 plans complete) ✅
 Phase 3:  [██████████] 100% (6/6 plans complete) ✅
-Phase 4:  [██░░░░░░░░]  17% (1/6 plans complete) 🔄
+Phase 4:  [████████░░]  67% (4/6 plans complete) 🔄
 ```
 
 ---
@@ -136,15 +136,15 @@ Phase 4:  [██░░░░░░░░]  17% (1/6 plans complete) 🔄
 
 ---
 
-## Phase 4: Resume Wizard Redesign (IN PROGRESS — 1/6 complete)
+## Phase 4: Resume Wizard Redesign (IN PROGRESS — 4/6 complete)
 
 **Goal:** Transform wizard UX from linear form-fill to modern guided experience with progressive disclosure and contextual assistance.
 
 ### Plans
 - [x] 04-01-PLAN.md — Modern vertical stepper with completion states & ATS badges ✅
-- [ ] 04-02-PLAN.md — AI-powered section suggestions
-- [ ] 04-03-PLAN.md — Smart content guidance
-- [ ] 04-04-PLAN.md — Section reordering improvements
+- [x] 04-02-PLAN.md — Helper rail with step-specific guidance ✅
+- [x] 04-03-PLAN.md — Smart content guidance (AI prompts, character counts) ✅
+- [x] 04-04-PLAN.md — Job description awareness (linked badge, keyword hints, match snapshot) ✅
 - [ ] 04-05-PLAN.md — Template-specific recommendations
 - [ ] 04-06-PLAN.md — Final integration & polish
 
@@ -153,21 +153,23 @@ Phase 4:  [██░░░░░░░░]  17% (1/6 plans complete) 🔄
 2. **ATS weight visibility** — Show badges only for steps >=20% (Experience, Skills, Summary)
 3. **Visual completion states** — Green check (100%), yellow circle (partial), grey circle (empty)
 4. **Motion feedback** — whileHover micro-interactions for navigable items
+5. **Helper rail pattern** — Collapsible 30% panel with step-specific guidance, localStorage persistence
+6. **JD awareness integration** — Linked badge in header, keyword hints per step, match snapshot in review
 
 ---
 
 ## Next Up
 
-**Phase 4 Plan 01 COMPLETE ✅**
-Modern vertical stepper with visual completion states and ATS weight indicators.
+**Phase 4 Plan 04 COMPLETE ✅**
+Job description awareness integrated: Linked JD badge in header, missing keyword hints per step (Summary/Experience/Skills), match score snapshot in Review step.
 
 **Immediate:**
-1. **Continue Phase 4** → Execute plan 04-02 (AI-powered section suggestions)
-   - Build on completion tracking foundation from 04-01
-   - Add intelligent suggestions for incomplete sections
+1. **Continue Phase 4** → Execute plan 04-05 (Template-specific recommendations)
+   - Build on JD awareness and helper rail foundations
+   - Provide template-specific optimization suggestions
 
 **Soon:**
-2. Complete remaining Phase 4 plans (04-03 through 04-06)
+2. Complete final Phase 4 plan (04-06: Final integration & polish)
 3. Run phase verification after 04-06 completion
 
 ---
@@ -229,6 +231,8 @@ Modern vertical stepper with visual completion states and ATS weight indicators.
 | **2026-02-18** | **03-06 JD input discoverability** | **Embedded visible JD paste textarea directly in JDAnalyzerPanel and synchronized updates via JobContext** |
 | **2026-02-18** | **03-06 header overlap fix** | **Adjusted JobInputPage spacing/responsive header controls to avoid subtitle/control overlap under fixed navigation** |
 | **2026-02-19** | **04-02 Helper rail integration** | **Collapsible helper panel (30% desktop width) with step-specific guidance, localStorage persistence, preview takes precedence, mobile accordion** |
+| **2026-02-19** | **04-03 Smart content guidance** | **AIPromptCard for quick AI actions, CharacterGuidance for length feedback with ATS-optimized ranges** |
+| **2026-02-19** | **04-04 JD awareness integration** | **Linked JD badge in header, JDKeywordHints per step (5-8 missing keywords), JDMatchSnapshot in review (match % + skill breakdown)** |
 | Phase 01-ats-simulation P06 | 10min | 4 tasks | 4 files |
 | Phase 03 P01 | 6 min | 3 tasks | 3 files |
 | Phase 03 P02 | 2 min | 2 tasks | 2 files |
@@ -238,6 +242,7 @@ Modern vertical stepper with visual completion states and ATS weight indicators.
 | Phase 03 P06 | 8 min | 1 tasks | 2 files |
 | Phase 04-resume-wizard-redesign P02 | 4min | 3 tasks | 3 files |
 | Phase 04-resume-wizard-redesign P01 | 6 min | 3 tasks | 3 files |
+| Phase 04-resume-wizard-redesign P04-04 | 6min | 3 tasks | 4 files |
 
 ### Pivot Rationale
 
@@ -287,5 +292,5 @@ npm run lint         # Check lint errors
 
 ---
 
-*State updated: 2026-02-18 — Phase 3 complete (6/6 plans complete)*  
-*Next: Verify Phase 3 and begin next phase planning*
+*State updated: 2026-02-19 — Phase 4 progress (4/6 plans complete)*  
+*Next: Execute plan 04-05 (Template-specific recommendations)*
