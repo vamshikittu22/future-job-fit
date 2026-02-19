@@ -24,6 +24,9 @@ import { ExportResumeModal } from '@/features/resume-builder/components/editor/E
 import ImportResumeModal from '@/features/resume-builder/components/modals/ImportResumeModal';
 import GodModePanel from '@/features/resume-builder/components/editor/GodModePanel';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
+import { MobileProgressBar } from '@/features/resume-builder/components/layout/MobileProgressBar';
+import { MobileActionBar } from '@/features/resume-builder/components/layout/MobileActionBar';
 
 const WizardLayoutContent: React.FC = () => {
   const { currentStep } = useWizard();
@@ -304,58 +307,55 @@ const WizardLayoutContent: React.FC = () => {
         <APIKeySettingsModal open={isAPIKeyModalOpen} onOpenChange={setIsAPIKeyModalOpen} />
       </div>
 
-      {/* Mobile Helper Rail Accordion (Bottom) */}
+      {/* Mobile Progress Bar (Top) */}
+      {isMobile && <MobileProgressBar />}
+
+      {/* Mobile Helper Rail Accordion (Above Action Bar) */}
       {isMobile && (
         <Accordion type="single" collapsible className="border-t bg-background">
-          <AccordionItem value="helper">
-            <AccordionTrigger className="px-4 py-2 text-xs font-medium">
-              Step Guide
+          <AccordionItem value="helper" className="border-none">
+            <AccordionTrigger className="px-4 py-2 text-xs font-medium hover:no-underline">
+              📘 Step Guide
             </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
+            <AccordionContent className="px-4 pb-4 max-h-[300px] overflow-auto">
               <WizardHelperRail currentStepId={currentStep?.id || 'personal'} />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
       )}
 
+      {/* Mobile Action Bar (Bottom) */}
+      {isMobile && <MobileActionBar onOpenDrawer={() => setIsSidebarCollapsed(false)} />}
+
+      {/* Mobile Sidebar as Sheet Drawer */}
       {isMobile && (
-        <Button
-          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-xl bg-primary text-primary-foreground hover:scale-110 active:scale-95 transition-all z-30"
-          size="icon"
-          onClick={() => setIsPreviewOpen(true)}
-          title="Full Preview"
-        >
-          <Eye className="h-6 w-6" />
-        </Button>
+        <Sheet open={!isSidebarCollapsed} onOpenChange={(open) => setIsSidebarCollapsed(!open)}>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle>Resume Steps</SheetTitle>
+            </SheetHeader>
+            <WizardSidebar 
+              isCollapsed={false} 
+              onToggle={() => setIsSidebarCollapsed(true)} 
+            />
+          </SheetContent>
+        </Sheet>
       )}
 
-      {isMobile && isPreviewOpen && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between border-b p-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold">Preview</h2>
-            <Button variant="ghost" size="sm" onClick={() => setIsPreviewOpen(false)} className="ml-auto">
-              Close
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 flex justify-center">
-            <div className="w-full max-w-[210mm] h-full" style={{ aspectRatio: '210/297' }}>
-              <WizardPreview />
+      {/* Mobile Preview as Sheet */}
+      {isMobile && (
+        <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <SheetContent side="right" className="w-full p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle>Preview</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-auto p-2 flex justify-center">
+              <div className="w-full max-w-[210mm]">
+                <WizardPreview />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {isMobile && !isSidebarCollapsed && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={() => setIsSidebarCollapsed(true)}
-            aria-hidden="true"
-          />
-          <div className="fixed inset-y-0 left-0 z-50 w-80 bg-card shadow-xl">
-            <WizardSidebar isCollapsed={false} onToggle={() => setIsSidebarCollapsed(true)} />
-          </div>
-        </>
+          </SheetContent>
+        </Sheet>
       )}
       <GodModePanel isOpen={isGodMode} onClose={() => setIsGodMode(false)} />
     </>
