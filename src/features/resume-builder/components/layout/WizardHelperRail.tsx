@@ -4,14 +4,23 @@ import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Lightbulb, ChevronRight, ChevronLeft, Info, Target, CheckCircle } from 'lucide-react';
 import { StepGuideCard } from '@/features/resume-builder/components/helpers/StepGuideCard';
+import { AIPromptCard } from '@/features/resume-builder/components/helpers/AIPromptCard';
+import { CharacterGuidance } from '@/features/resume-builder/components/helpers/CharacterGuidance';
+import { JDKeywordHints } from '@/features/resume-builder/components/helpers/JDKeywordHints';
+import { JDMatchSnapshot } from '@/features/resume-builder/components/helpers/JDMatchSnapshot';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/shared/lib/utils';
+import { useResume } from '@/shared/contexts/ResumeContext';
+import { useJob } from '@/shared/contexts/JobContext';
+import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
 
 interface HelperContent {
   stepId: string;
   title: string;
   description: string;
   tips: string[];
+  aiPromptExamples?: string[];
+  characterTarget?: [number, number];
 }
 
 interface WizardHelperRailProps {
@@ -53,7 +62,14 @@ const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
       'Quantify experience (e.g., "5+ years in...")',
       'Highlight 2-3 key skills relevant to the job',
       'End with unique value or specialization'
-    ]
+    ],
+    aiPromptExamples: [
+      "Make this ATS-friendly",
+      "Add industry keywords",
+      "Emphasize leadership",
+      "Quantify achievements"
+    ],
+    characterTarget: [100, 150]
   },
   experience: {
     stepId: 'experience',
@@ -65,7 +81,14 @@ const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
       'Include 3-5 bullet points per role (most important achievements)',
       'List most recent experience first (reverse chronological)',
       'Focus on achievements, not daily duties'
-    ]
+    ],
+    aiPromptExamples: [
+      "Add quantified metrics",
+      "ATS optimize this role",
+      "Highlight technical skills",
+      "Emphasize leadership"
+    ],
+    characterTarget: [3, 5]
   },
   education: {
     stepId: 'education',
@@ -101,6 +124,11 @@ const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
       'Specify your role (solo project, team lead, contributor)',
       'Quantify impact (users, performance gains, revenue)',
       'Link to live demo or GitHub repo if available'
+    ],
+    aiPromptExamples: [
+      "Turn into impact bullets",
+      "Emphasize outcomes",
+      "Highlight tech stack"
     ]
   },
   achievements: {
@@ -148,6 +176,14 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
   });
 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [aiModalPrompt, setAiModalPrompt] = useState<string | null>(null);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  
+  const { resumeData, setResumeData } = useResume();
+  const { currentJob } = useJob();
+  
+  // Check if JD is linked
+  const hasLinkedJD = !!currentJob && !!currentJob.title;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -164,6 +200,30 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
 
   const toggleExpanded = () => {
     setIsExpanded(prev => !prev);
+  };
+
+  const handleAIPromptClick = (prompt: string) => {
+    setAiModalPrompt(prompt);
+    setIsAIModalOpen(true);
+  };
+
+  const handleAIEnhance = (enhancedData: any) => {
+    setResumeData(enhancedData);
+    setIsAIModalOpen(false);
+  };
+
+  const getSectionTypeFromStepId = (stepId: string): string => {
+    // Map step IDs to section types for AIEnhanceModal
+    const mapping: Record<string, string> = {
+      summary: 'summary',
+      experience: 'experience',
+      education: 'education',
+      skills: 'skills',
+      projects: 'projects',
+      achievements: 'achievements',
+      certifications: 'certifications'
+    };
+    return mapping[stepId] || 'summary';
   };
 
   return (
@@ -228,6 +288,44 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
                         </ul>
                       }
                     />
+
+                    {/* AI Quick Actions for relevant steps */}
+                    {content.aiPromptExamples && (
+                      <AIPromptCard
+                        examples={content.aiPromptExamples}
+                        onApply={handleAIPromptClick}
+                      />
+                    )}
+
+                    {/* Character Guidance for Summary step */}
+                    {currentStepId === 'summary' && resumeData.summary && (
+                      <CharacterGuidance
+                        currentLength={resumeData.summary.split(/\s+/).filter(w => w).length}
+                        targetRange={[100, 150]}
+                        unit="words"
+                        guidanceText="3-4 lines, 100-150 words. Focus on value proposition."
+                      />
+                    )}
+
+                    {/* Character Guidance for Experience step */}
+                    {currentStepId === 'experience' && resumeData.experience && resumeData.experience.length > 0 && (
+                      <CharacterGuidance
+                        currentLength={resumeData.experience[0]?.description?.split('\n').filter(b => b.trim()).length || 0}
+                        targetRange={[3, 5]}
+                        unit="bullets"
+                        guidanceText="3-5 bullet points per role. Start with action verbs."
+                      />
+                    )}
+
+                    {/* JD Keyword Hints for Summary, Experience, Skills steps */}
+                    {hasLinkedJD && ['summary', 'experience', 'skills'].includes(currentStepId) && (
+                      <JDKeywordHints currentSection={currentStepId as any} />
+                    )}
+
+                    {/* JD Match Snapshot for Review step */}
+                    {currentStepId === 'review' && hasLinkedJD && (
+                      <JDMatchSnapshot />
+                    )}
                   </div>
                 </ScrollArea>
               </motion.div>
@@ -235,6 +333,16 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
           </AnimatePresence>
         </CollapsibleContent>
       </Collapsible>
+
+      {/* AI Enhance Modal */}
+      <AIEnhanceModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        resumeData={resumeData}
+        onEnhance={handleAIEnhance}
+        initialPrompt={aiModalPrompt}
+        step={getSectionTypeFromStepId(currentStepId)}
+      />
     </div>
   );
 };
