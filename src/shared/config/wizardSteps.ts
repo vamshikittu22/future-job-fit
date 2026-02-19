@@ -15,6 +15,7 @@ export interface WizardStep {
   fields: string[];
   helpText?: string;
   atsWeight: number;
+  atsWeightReason?: string;
 }
 
 // Base steps that should always be present (except review which is handled separately)
@@ -51,6 +52,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     fields: ['summary'],
     helpText: 'Write a compelling 100-150 word summary',
     atsWeight: 15,
+    atsWeightReason: 'ATS systems analyze summaries for job title matches and keyword density',
   },
   {
     id: 'experience',
@@ -62,6 +64,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     fields: ['experience'],
     helpText: 'Add your work history with achievements',
     atsWeight: 30,
+    atsWeightReason: 'Highest ATS weight - work history titles, companies, and achievements are heavily parsed',
   },
   {
     id: 'education',
@@ -73,6 +76,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     fields: ['education'],
     helpText: 'Add your educational background',
     atsWeight: 10,
+    atsWeightReason: 'Degree titles and institutions are matched against job requirements',
   },
   {
     id: 'skills',
@@ -84,6 +88,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     fields: ['skills'],
     helpText: 'List your technical and soft skills',
     atsWeight: 25,
+    atsWeightReason: 'ATS systems extract and match skill keywords directly from this section',
   },
   {
     id: 'projects',
@@ -95,6 +100,7 @@ export const BASE_WIZARD_STEPS: WizardStep[] = [
     fields: ['projects'],
     helpText: 'Showcase your notable projects',
     atsWeight: 10,
+    atsWeightReason: 'Project descriptions provide additional keyword signals for ATS',
   },
   {
     id: 'achievements',
