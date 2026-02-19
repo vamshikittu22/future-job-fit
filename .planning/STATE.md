@@ -21,7 +21,7 @@
 ## Current Position
 
 **Current Phase:** Phase 4 — Resume Wizard Redesign  
-**Current Plan:** 04-05 (5 of 6 plans)
+**Current Plan:** 04-06 (6 of 6 plans)
 **Status:** 🔄 IN PROGRESS
 
 ```
@@ -30,7 +30,7 @@ Phase 0:  [██████████] 100% (4/4 plans complete) ✅
 Phase 1:  [██████████] 100% (6/6 plans complete) ✅
 Phase 2:  [██████████] 100% (6/6 plans complete) ✅
 Phase 3:  [██████████] 100% (6/6 plans complete) ✅
-Phase 4:  [████████░░]  67% (4/6 plans complete) 🔄
+Phase 4:  [█████████░]  83% (5/6 plans complete) 🔄
 ```
 
 ---
@@ -136,7 +136,7 @@ Phase 4:  [████████░░]  67% (4/6 plans complete) 🔄
 
 ---
 
-## Phase 4: Resume Wizard Redesign (IN PROGRESS — 4/6 complete)
+## Phase 4: Resume Wizard Redesign (IN PROGRESS — 5/6 complete)
 
 **Goal:** Transform wizard UX from linear form-fill to modern guided experience with progressive disclosure and contextual assistance.
 
@@ -145,7 +145,7 @@ Phase 4:  [████████░░]  67% (4/6 plans complete) 🔄
 - [x] 04-02-PLAN.md — Helper rail with step-specific guidance ✅
 - [x] 04-03-PLAN.md — Smart content guidance (AI prompts, character counts) ✅
 - [x] 04-04-PLAN.md — Job description awareness (linked badge, keyword hints, match snapshot) ✅
-- [ ] 04-05-PLAN.md — Template-specific recommendations
+- [x] 04-05-PLAN.md — Mobile optimization (progress bar, action bar, Sheet drawers) ✅
 - [ ] 04-06-PLAN.md — Final integration & polish
 
 ### Key Technical Decisions
@@ -160,17 +160,17 @@ Phase 4:  [████████░░]  67% (4/6 plans complete) 🔄
 
 ## Next Up
 
-**Phase 4 Plan 04 COMPLETE ✅**
-Job description awareness integrated: Linked JD badge in header, missing keyword hints per step (Summary/Experience/Skills), match score snapshot in Review step.
+**Phase 4 Plan 05 COMPLETE ✅**
+Mobile wizard optimization complete: Sticky progress bar at top, action bar at bottom, Sheet-based drawers for sidebar/preview, accordion helper rail for efficient mobile navigation.
 
 **Immediate:**
-1. **Continue Phase 4** → Execute plan 04-05 (Template-specific recommendations)
-   - Build on JD awareness and helper rail foundations
-   - Provide template-specific optimization suggestions
+1. **Complete Phase 4** → Execute plan 04-06 (Final integration & polish)
+   - Last plan in wizard redesign phase
+   - Polish and finalize all wizard UX improvements
 
 **Soon:**
-2. Complete final Phase 4 plan (04-06: Final integration & polish)
-3. Run phase verification after 04-06 completion
+2. Run phase verification after 04-06 completion
+3. Consider next phase planning
 
 ---
 
@@ -233,6 +233,7 @@ Job description awareness integrated: Linked JD badge in header, missing keyword
 | **2026-02-19** | **04-02 Helper rail integration** | **Collapsible helper panel (30% desktop width) with step-specific guidance, localStorage persistence, preview takes precedence, mobile accordion** |
 | **2026-02-19** | **04-03 Smart content guidance** | **AIPromptCard for quick AI actions, CharacterGuidance for length feedback with ATS-optimized ranges** |
 | **2026-02-19** | **04-04 JD awareness integration** | **Linked JD badge in header, JDKeywordHints per step (5-8 missing keywords), JDMatchSnapshot in review (match % + skill breakdown)** |
+| **2026-02-19** | **04-05 Mobile wizard optimization** | **Sticky MobileProgressBar (top) and MobileActionBar (bottom), Sheet-based drawers for sidebar/preview, Accordion helper rail, 44px touch targets** |
 | Phase 01-ats-simulation P06 | 10min | 4 tasks | 4 files |
 | Phase 03 P01 | 6 min | 3 tasks | 3 files |
 | Phase 03 P02 | 2 min | 2 tasks | 2 files |
@@ -243,6 +244,7 @@ Job description awareness integrated: Linked JD badge in header, missing keyword
 | Phase 04-resume-wizard-redesign P02 | 4min | 3 tasks | 3 files |
 | Phase 04-resume-wizard-redesign P01 | 6 min | 3 tasks | 3 files |
 | Phase 04-resume-wizard-redesign P04-04 | 6min | 3 tasks | 4 files |
+| Phase 04-resume-wizard-redesign P05 | 4min | 3 tasks | 3 files |
 
 ### Pivot Rationale
 
