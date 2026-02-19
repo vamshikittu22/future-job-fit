@@ -59,6 +59,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
+import { Progress } from '@/shared/ui/progress';
 import { cn } from '@/shared/lib/utils';
 import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
@@ -120,9 +121,9 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
   const getStatusIcon = (stepId: string) => {
     const completion = getStepCompletion(stepId);
-    if (completion === 100) return <CheckCircle2 className="h-3 w-3 text-green-500" />;
-    if (completion > 0) return <Circle className="h-3 w-3 fill-current text-yellow-500" />;
-    return <Circle className="h-3 w-3 text-muted-foreground" />;
+    if (completion === 100) return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (completion > 0) return <Circle className="h-4 w-4 fill-current text-yellow-500" />;
+    return <Circle className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getATSScoreColor = (score: number) => {
@@ -395,6 +396,22 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-6 p-4">
+          {/* Overall Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Overall Progress</h3>
+              <span className="text-xs font-bold text-foreground">
+                {steps.filter(s => getStepCompletion(s.id) === 100).length} / {steps.length}
+              </span>
+            </div>
+            <Progress 
+              value={(steps.filter(s => getStepCompletion(s.id) === 100).length / steps.length) * 100} 
+              className="h-2"
+            />
+          </div>
+
+          <Separator />
+
           {/* Section List */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -434,17 +451,19 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
                     return (
                       <SortableItem key={step.id} id={step.id}>
-                        <div
+                        <motion.div
+                          whileHover={canNavigate && !isActive ? { x: 4 } : {}}
+                          transition={{ duration: 0.2 }}
                           className={cn(
-                            'relative flex items-center gap-2 p-2 rounded-md transition-all group',
-                            isActive ? 'bg-accent shadow-sm' : 'hover:bg-accent/50',
+                            'relative flex items-center gap-3 p-3 rounded-md transition-all group',
+                            isActive ? 'bg-accent shadow-sm' : canNavigate && 'hover:bg-accent/50',
                             'cursor-pointer',
                             !canNavigate && 'opacity-50 cursor-not-allowed'
                           )}
                           onClick={() => canNavigate && goToStep(step.id)}
                         >
-                          <div className="flex-1 flex items-center gap-2 min-w-0 ml-4">
-                            <div>{getStatusIcon(step.id)}</div>
+                          <div className="flex-1 flex items-center gap-3 min-w-0 ml-4">
+                            <div className="shrink-0">{getStatusIcon(step.id)}</div>
                             {isCustomStep && editingSectionId === sectionId ? (
                               <input
                                 ref={inputRef}
@@ -453,27 +472,58 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                                 onChange={(e) => setSectionTitle(e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, sectionId, sectionIndex)}
                                 onBlur={() => handleBlur(sectionId, sectionIndex)}
-                                className="w-full bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
+                                className="flex-1 bg-transparent border-b border-primary focus:outline-none focus:border-primary text-sm font-medium text-foreground"
                                 autoFocus
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
-                              <TooltipProvider delayDuration={300}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className={cn('truncate text-sm block max-w-[120px] xl:max-w-[150px]', isActive ? 'font-semibold' : 'font-medium')}>
-                                      {sectionName}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="right" sideOffset={8}>
-                                    <p className="font-medium">{sectionName}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {completion === 100 ? '✓ Complete' :
-                                        completion > 0 ? `${completion}% complete` : 'Click to start'}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <TooltipProvider delayDuration={300}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className={cn('truncate text-sm block max-w-[120px] xl:max-w-[140px]', isActive ? 'font-semibold' : 'font-medium')}>
+                                          {sectionName}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" sideOffset={8}>
+                                        <p className="font-medium">{sectionName}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {completion === 100 ? '✓ Complete' :
+                                            completion > 0 ? `${completion}% complete` : 'Click to start'}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  {/* ATS Weight Badge - Show if >= 20% */}
+                                  {step.atsWeight >= 20 && (
+                                    <TooltipProvider delayDuration={200}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4 font-bold">
+                                            {step.atsWeight}%
+                                          </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="max-w-[200px]">
+                                          <p className="text-xs font-semibold">ATS Impact: {step.atsWeight}%</p>
+                                          <p className="text-[10px] text-muted-foreground">High priority for ATS optimization</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+
+                                  {/* Required Step Warning - Show if required and incomplete */}
+                                  {step.isRequired && completion < 100 && (
+                                    <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                  )}
+                                </div>
+
+                                {/* Mini Progress Bar - Show if 0 < completion < 100 */}
+                                {completion > 0 && completion < 100 && (
+                                  <Progress value={completion} className="h-1 mt-1.5" />
+                                )}
+                              </div>
                             )}
                           </div>
 
@@ -481,7 +531,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditSection(sectionId, section?.title || '');
@@ -490,16 +540,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                               <Edit className="h-3 w-3" />
                             </Button>
                           )}
-
-                          <div className="w-10 ml-auto">
-                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={cn('h-full transition-all duration-500', getStatusColor(step.id))}
-                                style={{ width: `${completion}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
+                        </motion.div>
                       </SortableItem>
                     );
                   })}
