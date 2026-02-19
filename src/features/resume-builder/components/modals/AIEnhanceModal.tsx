@@ -1,5 +1,5 @@
 import { Plus, Sparkles, Zap, Target, Shield, Check, Loader2, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -29,6 +29,7 @@ interface AIEnhanceModalProps {
   step?: 'summary' | 'experience' | 'skills' | 'projects' | 'education' | 'achievements' | 'certifications' | string | null;
   targetItemIndex?: number | null;
   targetField?: string | null;
+  initialPrompt?: string | null;
 }
 
 const tonePresets = [
@@ -74,7 +75,8 @@ export default function AIEnhanceModal({
   onEnhance,
   step = null,
   targetItemIndex = null,
-  targetField = null
+  targetField = null,
+  initialPrompt = null
 }: AIEnhanceModalProps) {
   const [selectedTone, setSelectedTone] = useState<string[]>(['Modern']);
   const [selectedFocus, setSelectedFocus] = useState<string[]>(['Technical Skills']);
@@ -88,6 +90,14 @@ export default function AIEnhanceModal({
   const [showConnectionModal, setShowConnectionModal] = useState(false);
 
   const { toast } = useToast();
+
+  // Handle initial prompt pre-fill
+  useEffect(() => {
+    if (initialPrompt && open) {
+      setRestrictions(initialPrompt);
+      setCurrentTab('custom'); // Switch to custom tab
+    }
+  }, [initialPrompt, open]);
 
   const handleToneToggle = (toneId: string) => {
     setSelectedTone(prev =>
