@@ -2,7 +2,7 @@
 
 **Project:** Future Job Fit — ATS Optimization Authority  
 **Core Value:** The most accurate ATS simulation engine for job applications — works offline.  
-**Last Updated:** 2026-02-18
+**Last Updated:** 2026-02-19
 **Strategy:** Plan A (Pivot from Career Super App)
 
 ---
@@ -20,8 +20,9 @@
 
 ## Current Position
 
-**Current Phase:** Phase 3 — Job Optimizer UI  
-**Status:** ✅ COMPLETE — 6 of 6 plans complete
+**Current Phase:** Phase 4 — Resume Wizard Redesign  
+**Current Plan:** 04-02 (2 of 6 plans)
+**Status:** 🔄 IN PROGRESS
 
 ```
 Progress: [██████████] 100% (23/23 requirements)
@@ -29,6 +30,7 @@ Phase 0:  [██████████] 100% (4/4 plans complete) ✅
 Phase 1:  [██████████] 100% (6/6 plans complete) ✅
 Phase 2:  [██████████] 100% (6/6 plans complete) ✅
 Phase 3:  [██████████] 100% (6/6 plans complete) ✅
+Phase 4:  [██░░░░░░░░]  17% (1/6 plans complete) 🔄
 ```
 
 ---
@@ -134,19 +136,39 @@ Phase 3:  [██████████] 100% (6/6 plans complete) ✅
 
 ---
 
+## Phase 4: Resume Wizard Redesign (IN PROGRESS — 1/6 complete)
+
+**Goal:** Transform wizard UX from linear form-fill to modern guided experience with progressive disclosure and contextual assistance.
+
+### Plans
+- [x] 04-01-PLAN.md — Modern vertical stepper with completion states & ATS badges ✅
+- [ ] 04-02-PLAN.md — AI-powered section suggestions
+- [ ] 04-03-PLAN.md — Smart content guidance
+- [ ] 04-04-PLAN.md — Section reordering improvements
+- [ ] 04-05-PLAN.md — Template-specific recommendations
+- [ ] 04-06-PLAN.md — Final integration & polish
+
+### Key Technical Decisions
+1. **Non-linear navigation** — Allow free navigation with gentle warnings, not blocking
+2. **ATS weight visibility** — Show badges only for steps >=20% (Experience, Skills, Summary)
+3. **Visual completion states** — Green check (100%), yellow circle (partial), grey circle (empty)
+4. **Motion feedback** — whileHover micro-interactions for navigable items
+
+---
+
 ## Next Up
 
-**Phase 3 COMPLETE ✅**
-All 6 plans completed, including final human-verification fixes from 03-06.
+**Phase 4 Plan 01 COMPLETE ✅**
+Modern vertical stepper with visual completion states and ATS weight indicators.
 
 **Immediate:**
-1. **Run phase verification pass** → `/gsd-verify-work 03-job-optimizer-ui`
-   - Confirm final UX fixes in 03-06 meet acceptance criteria
-   - Capture any residual polish work as post-phase backlog
+1. **Continue Phase 4** → Execute plan 04-02 (AI-powered section suggestions)
+   - Build on completion tracking foundation from 04-01
+   - Add intelligent suggestions for incomplete sections
 
 **Soon:**
-2. Plan next phase sequence and dependencies
-3. Continue roadmap execution after Phase 3 closeout
+2. Complete remaining Phase 4 plans (04-03 through 04-06)
+3. Run phase verification after 04-06 completion
 
 ---
 
@@ -215,6 +237,7 @@ All 6 plans completed, including final human-verification fixes from 03-06.
 | Phase 03 P05 | 1 min | 2 tasks | 2 files |
 | Phase 03 P06 | 8 min | 1 tasks | 2 files |
 | Phase 04-resume-wizard-redesign P02 | 4min | 3 tasks | 3 files |
+| Phase 04-resume-wizard-redesign P01 | 6 min | 3 tasks | 3 files |
 
 ### Pivot Rationale
 
