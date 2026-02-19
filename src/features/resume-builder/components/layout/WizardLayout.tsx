@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Eye, Home, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, Eye, Home, Sparkles, ChevronDown, ChevronUp, Link2, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/utils';
 import { WizardProvider, useWizard } from '@/shared/contexts/WizardContext';
 import { ATSProvider } from '@/shared/contexts/ATSContext';
 import { useResume } from '@/shared/contexts/ResumeContext';
+import { useJob } from '@/shared/contexts/JobContext';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useToast } from '@/shared/ui/use-toast';
 import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
 import { WizardSidebar } from '@/features/resume-builder/components/layout/WizardSidebar';
 import WizardPreview from '@/features/resume-builder/components/layout/WizardPreview';
 import { WizardHelperRail } from '@/features/resume-builder/components/layout/WizardHelperRail';
@@ -27,6 +29,13 @@ const WizardLayoutContent: React.FC = () => {
   const { currentStep } = useWizard();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const location = useLocation();
+  const navigate = useNavigate();
+  const { resumeData, setResumeData } = useResume();
+  const { toast } = useToast();
+  const { currentJob } = useJob();
+  
+  // Check if JD is linked
+  const hasLinkedJD = !!currentJob && !!currentJob.title;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
@@ -47,10 +56,6 @@ const WizardLayoutContent: React.FC = () => {
       setLastStepId(currentStep.id);
     }
   }, [currentStep?.id]);
-
-  const { resumeData, setResumeData } = useResume();
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Reset click count after delay
   useEffect(() => {
@@ -153,7 +158,7 @@ const WizardLayoutContent: React.FC = () => {
             )}
           >
             <div className="flex items-center justify-between border-b bg-card p-4 flex-shrink-0">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {isMobile && (
                   <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed((prev) => !prev)}>
                     <Menu className="h-5 w-5" />
@@ -186,9 +191,23 @@ const WizardLayoutContent: React.FC = () => {
                     AI
                   </span>
                 </Button>
+                <h1 className="text-lg font-semibold">Resume Wizard</h1>
+                
+                {/* Linked JD Badge */}
+                {hasLinkedJD && (
+                  <Badge 
+                    variant="secondary" 
+                    className="flex items-center gap-1.5 px-2 py-1 cursor-pointer hover:bg-secondary/80 transition-colors"
+                    onClick={() => navigate('/job-optimizer')}
+                  >
+                    <Link2 className="h-3 w-3" />
+                    <span className="text-xs max-w-[200px] truncate">
+                      Linked: {currentJob.title}
+                    </span>
+                    <ExternalLink className="h-3 w-3" />
+                  </Badge>
+                )}
               </div>
-
-              <h1 className="text-lg font-semibold">Resume Wizard</h1>
 
               <div className="flex items-center space-x-2">
                 <Button
