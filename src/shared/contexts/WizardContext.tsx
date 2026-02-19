@@ -5,6 +5,7 @@ import { useResume } from '@/shared/contexts/ResumeContext';
 import { BASE_WIZARD_STEPS, getWizardSteps, validateStep, calculateStepCompletion, getStepStatus, type WizardStep } from '@/shared/config/wizardSteps';
 import { Folder } from 'lucide-react';
 import debounce from 'lodash/debounce';
+import { useToast } from '@/shared/hooks/use-toast';
 
 // Wizard-specific state
 export interface WizardState {
@@ -42,6 +43,7 @@ interface WizardContextType {
   setSelectedTemplate: (templateId: string) => void;
   saveCurrentProgress: () => void;
   loadDraft: (draftId: string) => void;
+  getStepATSWeight: (stepId: string) => number;
 
   // Auto-save
   triggerAutoSave: () => void;
@@ -56,6 +58,7 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const navigate = useNavigate();
   const location = useLocation();
   const { resumeData, updateResumeData } = useResume();
+  const { toast } = useToast();
 
   // Initialize wizard state
   const [wizardState, setWizardState] = useState<WizardState>(() => {
@@ -241,12 +244,27 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
 
+    // Check if leaving an incomplete required step (gentle warning, not blocking)
+    const currentCompletion = calculateStepCompletion(currentStep.id, {
+      ...resumeData,
+      selectedTemplate: wizardState.selectedTemplate,
+    });
+    
+    if (currentStep.isRequired && currentCompletion < 100 && currentStep.id !== stepId) {
+      toast({
+        title: "Step incomplete",
+        description: `${currentStep.title} has required fields. You can come back to finish it.`,
+        variant: "default",
+        duration: 4000,
+      });
+    }
+
     const stepIndex = steps.findIndex(s => s.id === stepId);
     if (stepIndex !== -1) {
       setWizardState(prev => ({ ...prev, currentStepIndex: stepIndex }));
       navigate(steps[stepIndex].path);
     }
-  }, [canNavigateToStep, navigate, steps]);
+  }, [canNavigateToStep, navigate, steps, currentStep, resumeData, wizardState.selectedTemplate, toast]);
 
   // Validate current step
   const validateCurrentStep = useCallback((): { isValid: boolean; errors: string[] } => {
@@ -367,6 +385,12 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, []);
 
+  // Get ATS weight for a specific step
+  const getStepATSWeight = useCallback((stepId: string): number => {
+    const step = steps.find(s => s.id === stepId);
+    return step?.atsWeight || 0;
+  }, [steps]);
+
   // Sync current step with URL
   useEffect(() => {
     const currentPath = location.pathname;
@@ -401,6 +425,7 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     saveCurrentProgress,
     loadDraft,
     triggerAutoSave,
+    getStepATSWeight,
   };
 
   return (
