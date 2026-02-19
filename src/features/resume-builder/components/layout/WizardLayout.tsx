@@ -13,6 +13,7 @@ import { useToast } from '@/shared/ui/use-toast';
 import { Button } from '@/shared/ui/button';
 import { WizardSidebar } from '@/features/resume-builder/components/layout/WizardSidebar';
 import WizardPreview from '@/features/resume-builder/components/layout/WizardPreview';
+import { WizardHelperRail } from '@/features/resume-builder/components/layout/WizardHelperRail';
 import QuickActionsBar from '@/features/resume-builder/components/editor/QuickActionsBar';
 import SampleDataLoader from '@/features/resume-builder/components/editor/SampleDataLoader';
 import AIEnhanceModal from '@/features/resume-builder/components/modals/AIEnhanceModal';
@@ -20,6 +21,7 @@ import APIKeySettingsModal from '@/features/resume-builder/components/modals/API
 import { ExportResumeModal } from '@/features/resume-builder/components/editor/ExportResumeModal';
 import ImportResumeModal from '@/features/resume-builder/components/modals/ImportResumeModal';
 import GodModePanel from '@/features/resume-builder/components/editor/GodModePanel';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
 
 const WizardLayoutContent: React.FC = () => {
   const { currentStep } = useWizard();
@@ -236,6 +238,13 @@ const WizardLayoutContent: React.FC = () => {
             </div>
           </div>
 
+          {/* Helper Rail Panel (Right Side - Desktop Only) */}
+          {!isMobile && !isPreviewVisible && (
+            <div className="border-l bg-muted/20 flex-shrink-0 overflow-y-auto w-[30%]">
+              <WizardHelperRail currentStepId={currentStep?.id || 'personal'} />
+            </div>
+          )}
+
           {/* Preview Panel (Right Side) - Slides in from right */}
           <AnimatePresence>
             {!isMobile && isPreviewVisible && (
@@ -275,6 +284,20 @@ const WizardLayoutContent: React.FC = () => {
 
         <APIKeySettingsModal open={isAPIKeyModalOpen} onOpenChange={setIsAPIKeyModalOpen} />
       </div>
+
+      {/* Mobile Helper Rail Accordion (Bottom) */}
+      {isMobile && (
+        <Accordion type="single" collapsible className="border-t bg-background">
+          <AccordionItem value="helper">
+            <AccordionTrigger className="px-4 py-2 text-xs font-medium">
+              Step Guide
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <WizardHelperRail currentStepId={currentStep?.id || 'personal'} />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
 
       {isMobile && (
         <Button
