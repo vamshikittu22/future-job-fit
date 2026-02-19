@@ -206,6 +206,7 @@ All 6 plans completed, including final human-verification fixes from 03-06.
 | **2026-02-18** | **03-05 mobile navigation pattern** | **Switched to tabbed single-panel mobile flow with AnimatePresence transitions for sub-768px screens** |
 | **2026-02-18** | **03-06 JD input discoverability** | **Embedded visible JD paste textarea directly in JDAnalyzerPanel and synchronized updates via JobContext** |
 | **2026-02-18** | **03-06 header overlap fix** | **Adjusted JobInputPage spacing/responsive header controls to avoid subtitle/control overlap under fixed navigation** |
+| **2026-02-19** | **04-02 Helper rail integration** | **Collapsible helper panel (30% desktop width) with step-specific guidance, localStorage persistence, preview takes precedence, mobile accordion** |
 | Phase 01-ats-simulation P06 | 10min | 4 tasks | 4 files |
 | Phase 03 P01 | 6 min | 3 tasks | 3 files |
 | Phase 03 P02 | 2 min | 2 tasks | 2 files |
@@ -213,6 +214,7 @@ All 6 plans completed, including final human-verification fixes from 03-06.
 | Phase 03 P04 | 3 min | 2 tasks | 2 files |
 | Phase 03 P05 | 1 min | 2 tasks | 2 files |
 | Phase 03 P06 | 8 min | 1 tasks | 2 files |
+| Phase 04-resume-wizard-redesign P02 | 4min | 3 tasks | 3 files |
 
 ### Pivot Rationale
 
