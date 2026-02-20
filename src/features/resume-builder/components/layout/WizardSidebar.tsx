@@ -61,7 +61,7 @@ import {
 } from '@/shared/ui/tooltip';
 import { Progress } from '@/shared/ui/progress';
 import { cn } from '@/shared/lib/utils';
-import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Circle, Sparkles, Plus, Edit, Save, Layout, GripVertical, ChevronDown, ChevronUp, PanelLeftClose, PanelLeft, Lightbulb } from 'lucide-react';
 import { SectionAIAnalysis } from '@/features/resume-builder/components/editor/SectionAIAnalysis';
 import { SectionScoreInfoModal } from '@/features/resume-builder/components/modals/SectionScoreInfoModal';
 import { AIConnectionModal } from '@/features/resume-builder/components/modals/AIConnectionModal';
@@ -71,9 +71,11 @@ import { useMediaQuery } from '@/shared/hooks/use-media-query';
 interface WizardSidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  onToggleHelper?: () => void;
+  isHelperOpen?: boolean;
 }
 
-export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onToggle }) => {
+export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onToggle, onToggleHelper, isHelperOpen = false }) => {
   const { resumeData, addCustomSection, updateCustomSection, updateResumeData, reorderSections } = useResume();
   const { wizardState, steps, currentStep, goToStep, canNavigateToStep, getStepCompletion, setSelectedTemplate } = useWizard();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -836,6 +838,19 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
 
           {/* Footer Save Info */}
           <div className="pt-4 border-t space-y-2">
+            {/* Helper Guide Toggle Button */}
+            {onToggleHelper && !isCollapsed && (
+              <Button
+                variant={isHelperOpen ? "secondary" : "ghost"}
+                size="sm"
+                onClick={onToggleHelper}
+                className="w-full justify-start text-xs gap-2"
+              >
+                <Lightbulb className={cn("h-4 w-4", isHelperOpen && "text-amber-600")} />
+                <span>{isHelperOpen ? "Hide" : "Show"} Step Guide</span>
+              </Button>
+            )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                 <div className={cn(

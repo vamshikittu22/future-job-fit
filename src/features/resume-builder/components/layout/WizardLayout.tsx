@@ -41,6 +41,11 @@ const WizardLayoutContent: React.FC = () => {
   const hasLinkedJD = !!currentJob && !!currentJob.title;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isHelperOpen, setIsHelperOpen] = useState(() => {
+    // Load helper state from localStorage (default: closed)
+    const saved = localStorage.getItem('wizard-helper-panel-open');
+    return saved === 'true';
+  });
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSampleDataModalOpen, setIsSampleDataModalOpen] = useState(false);
@@ -53,6 +58,15 @@ const WizardLayoutContent: React.FC = () => {
   // God Mode State
   const [isGodMode, setIsGodMode] = useState(false);
   const [logoClickCount, setLogoClickCount] = useState(0);
+
+  // Persist helper panel state
+  useEffect(() => {
+    localStorage.setItem('wizard-helper-panel-open', String(isHelperOpen));
+  }, [isHelperOpen]);
+
+  const toggleHelper = () => {
+    setIsHelperOpen(prev => !prev);
+  };
 
   useEffect(() => {
     if (currentStep?.id) {
@@ -148,9 +162,26 @@ const WizardLayoutContent: React.FC = () => {
               <WizardSidebar
                 isCollapsed={isSidebarCollapsed}
                 onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+                onToggleHelper={toggleHelper}
+                isHelperOpen={isHelperOpen}
               />
             </div>
           )}
+
+          {/* Helper Panel (Floating Left Side) - Slides in between Sidebar and Editor */}
+          <AnimatePresence>
+            {!isMobile && isHelperOpen && (
+              <motion.div
+                initial={prefersReducedMotion ? {} : { opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={prefersReducedMotion ? {} : { opacity: 0, x: -20 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="w-[300px] border-r bg-background flex-shrink-0 overflow-y-auto"
+              >
+                <WizardHelperRail currentStepId={currentStep?.id || 'personal'} showCollapseButton={false} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Editor Panel (Center) */}
           <div
@@ -260,31 +291,26 @@ const WizardLayoutContent: React.FC = () => {
             </div>
           </div>
 
-          {/* Helper Rail Panel (Right Side - Desktop Only) */}
-          {!isMobile && !isPreviewVisible && (
-            <div className="border-l bg-muted/20 flex-shrink-0 overflow-y-auto w-[30%]">
-              <WizardHelperRail currentStepId={currentStep?.id || 'personal'} />
-            </div>
+          {/* Preview Panel (Right Side) - Always visible on desktop */}
+          {!isMobile && (
+            <AnimatePresence mode="wait">
+              {isPreviewVisible && (
+                <motion.div
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 300 }}
+                  transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className={cn(
+                    'bg-muted/30 flex-shrink-0 overflow-y-auto scrollbar-hide border-l',
+                    getPreviewWidth(),
+                    'flex flex-col min-w-0'
+                  )}
+                >
+                  <WizardPreview />
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
-
-          {/* Preview Panel (Right Side) - Slides in from right */}
-          <AnimatePresence>
-            {!isMobile && isPreviewVisible && (
-              <motion.div
-                initial={{ opacity: 0, x: 300 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 300 }}
-                transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className={cn(
-                  'bg-muted/30 flex-shrink-0 overflow-y-auto scrollbar-hide border-l',
-                  getPreviewWidth(),
-                  'flex flex-col min-w-0'
-                )}
-              >
-                <WizardPreview />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <SampleDataLoader open={isSampleDataModalOpen} onOpenChange={setIsSampleDataModalOpen} />

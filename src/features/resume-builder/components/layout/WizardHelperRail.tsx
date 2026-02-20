@@ -25,6 +25,7 @@ interface HelperContent {
 
 interface WizardHelperRailProps {
   currentStepId: string;
+  showCollapseButton?: boolean;
 }
 
 const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
@@ -169,7 +170,7 @@ const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
   }
 };
 
-export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepId }) => {
+export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepId, showCollapseButton = true }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     const saved = localStorage.getItem('wizard-helper-rail-collapsed');
     return saved !== 'true'; // Default to expanded (true)
@@ -234,19 +235,21 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
           <Lightbulb className="h-4 w-4 text-amber-600" />
           <span className="text-sm font-semibold">Step Guide</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleExpanded}
-          className="h-8 w-8"
-          title={isExpanded ? 'Collapse helper rail' : 'Expand helper rail'}
-        >
-          {isExpanded ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+        {showCollapseButton && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleExpanded}
+            className="h-8 w-8"
+            title={isExpanded ? 'Collapse helper rail' : 'Expand helper rail'}
+          >
+            {isExpanded ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Content area with collapse animation */}
