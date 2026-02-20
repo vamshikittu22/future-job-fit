@@ -94,11 +94,14 @@ export const usePyNLP = () => {
                 setStatus('ready');
                 return py;
             } catch (err: any) {
-                console.error('Pyodide Initialization Failed:', err);
+                // Silent failure - Pyodide is optional, not critical
+                console.warn('[Pyodide] Initialization failed (non-critical):', err);
+                console.warn('[Pyodide] Offline NLP unavailable. Using cloud AI for analysis.');
                 setError(err.message);
                 setStatus('error');
                 initializationPromise = null;
-                throw err;
+                // Don't throw - graceful degradation
+                return null as any;
             }
         })();
 

@@ -238,20 +238,19 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Pyodide Status Indicator - Show on wide screens */}
-          {showNLPStatus && (
+          {/* Pyodide Status Indicator - Only show when ready (hide loading/error states) */}
+          {showNLPStatus && pyStatus === 'ready' && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-1 ml-2 rounded-full bg-muted/30 border border-muted select-none cursor-help">
-                  <div className={cn("h-2 w-2 rounded-full", getPyStatusColor().split(' ')[0])} />
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
                   <span className="text-[10px] font-mono tracking-tighter uppercase text-muted-foreground whitespace-nowrap">
                     NLP Core
                   </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p className="text-xs">{getPyStatusLabel()}</p>
-                {pyError && <p className="text-[10px] text-red-400 mt-1">{pyError}</p>}
+                <p className="text-xs">Offline NLP Engine Active</p>
               </TooltipContent>
             </Tooltip>
           )}
