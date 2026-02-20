@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, memo } from 'react';
+import React, { useEffect, useCallback, memo, useState, useRef } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Separator } from '@/shared/ui/separator';
 import { useResume } from '@/shared/contexts/ResumeContext';
@@ -22,6 +22,7 @@ import {
   Key,
   Trash2,
   Upload,
+  MoreVertical,
 } from 'lucide-react';
 import { usePyNLP } from '@/shared/hooks/usePyNLP';
 import { cn } from '@/shared/lib/utils';
@@ -31,6 +32,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shared/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
 
 interface QuickActionsBarProps {
   onLoadSample: () => void;
@@ -61,6 +69,23 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
   const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [localSaving, setLocalSaving] = React.useState(false);
+  
+  // Track container width for responsive button visibility
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // ResizeObserver to detect actual container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const handleSave = useCallback(async () => {
     try {
@@ -144,10 +169,19 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
     return null; // Don't show on mobile to save space
   }
 
+  // Responsive breakpoints based on container width
+  const showNLPStatus = containerWidth > 1000;
+  const showAllButtons = containerWidth > 900;
+  const showMostButtons = containerWidth > 700;
+  const showBasicButtons = containerWidth > 500;
+
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b bg-card/80 backdrop-blur-sm px-4 py-2 shadow-sm">
-        {/* Left Actions */}
+      <div 
+        ref={containerRef}
+        className="sticky top-0 z-20 flex items-center justify-between border-b bg-card/80 backdrop-blur-sm px-4 py-2 shadow-sm"
+      >
+        {/* Left Actions - Critical controls (always visible) */}
         <div className="flex items-center gap-1">
           {/* Undo/Redo */}
           <Tooltip>
@@ -186,45 +220,7 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
 
           <Separator orientation="vertical" className="h-6 mx-2" />
 
-          {/* Load Sample */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLoadSample}
-                className="h-9 px-3"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                <span className="hidden md:inline">Sample</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Load sample resume data</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Import */}
-          {onLoadImport && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onLoadImport}
-                  className="h-9 px-3"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  <span className="hidden md:inline">Import</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Import from PDF / DOCX / TXT</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* AI Enhance */}
+          {/* AI Enhance - Critical for main workflow */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -242,98 +238,52 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Pyodide Status Indicator */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 px-3 py-1 ml-2 rounded-full bg-muted/30 border border-muted select-none cursor-help">
-                <div className={cn("h-2 w-2 rounded-full", getPyStatusColor().split(' ')[0])} />
-                <span className="text-[10px] font-mono tracking-tighter uppercase text-muted-foreground whitespace-nowrap">
-                  NLP Core
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{getPyStatusLabel()}</p>
-              {pyError && <p className="text-[10px] text-red-400 mt-1">{pyError}</p>}
-            </TooltipContent>
-          </Tooltip>
-
-          {/* API Key Settings */}
-          {onAPIKeySettings && (
+          {/* Pyodide Status Indicator - Show on wide screens */}
+          {showNLPStatus && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onAPIKeySettings}
-                  className={cn(
-                    "h-9 px-3",
-                    isUsingCustomKey && "text-green-500 hover:text-green-600"
-                  )}
-                >
-                  <Key className="h-4 w-4 mr-2" />
-                  <span className="hidden md:inline">
-                    {isUsingCustomKey ? 'API Key ✓' : 'API Key'}
+                <div className="flex items-center gap-2 px-3 py-1 ml-2 rounded-full bg-muted/30 border border-muted select-none cursor-help">
+                  <div className={cn("h-2 w-2 rounded-full", getPyStatusColor().split(' ')[0])} />
+                  <span className="text-[10px] font-mono tracking-tighter uppercase text-muted-foreground whitespace-nowrap">
+                    NLP Core
                   </span>
-                </Button>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>
-                  {isUsingCustomKey
-                    ? `Using your ${keyState.provider.toUpperCase()} key`
-                    : 'Configure your own API key'
-                  }
-                </p>
+                <p className="text-xs">{getPyStatusLabel()}</p>
+                {pyError && <p className="text-[10px] text-red-400 mt-1">{pyError}</p>}
               </TooltipContent>
             </Tooltip>
           )}
-
-          <Separator orientation="vertical" className="h-6 mx-2" />
-
-          {/* Clear All */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearForm}
-                className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                <span className="hidden md:inline">Clear All</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Clear all resume data</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
-        {/* Center - Auto-save Status */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {wizardState.autoSaveStatus === 'saving' && (
-            <>
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span>Saving...</span>
-            </>
-          )}
-          {wizardState.autoSaveStatus === 'saved' && (
-            <>
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span>All changes saved</span>
-            </>
-          )}
-          {wizardState.autoSaveStatus === 'error' && (
-            <>
-              <div className="h-2 w-2 rounded-full bg-red-500" />
-              <span>Save failed</span>
-            </>
-          )}
-        </div>
+        {/* Center - Auto-save Status (show on wide screens) */}
+        {showAllButtons && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {wizardState.autoSaveStatus === 'saving' && (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Saving...</span>
+              </>
+            )}
+            {wizardState.autoSaveStatus === 'saved' && (
+              <>
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span>All changes saved</span>
+              </>
+            )}
+            {wizardState.autoSaveStatus === 'error' && (
+              <>
+                <div className="h-2 w-2 rounded-full bg-red-500" />
+                <span>Save failed</span>
+              </>
+            )}
+          </div>
+        )}
 
-        {/* Right Actions */}
+        {/* Right Actions - Essential controls + Overflow */}
         <div className="flex items-center gap-1">
-          {/* Toggle Preview */}
+          {/* Toggle Preview - Always visible (critical) */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -360,32 +310,7 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
             </TooltipContent>
           </Tooltip>
 
-          <Separator orientation="vertical" className="h-6 mx-2" />
-
-          {/* Save */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSave}
-                disabled={localSaving || isSaving}
-                className="h-9 px-3"
-              >
-                {localSaving || isSaving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                <span className="hidden md:inline">Save</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Save draft (Ctrl+S)</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Export */}
+          {/* Export - Always visible (critical) */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -405,26 +330,115 @@ const QuickActionsBarComponent: React.FC<QuickActionsBarProps> = ({
 
           <Separator orientation="vertical" className="h-6 mx-2" />
 
-          {/* Theme Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="h-9 px-3"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4" />
+          {/* Theme Toggle - Show on basic+ screens */}
+          {showBasicButtons && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 px-3"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Toggle theme</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Overflow Menu - Contains secondary actions */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-3"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>More actions</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <DropdownMenuContent align="end" className="w-56">
+              {/* File Actions */}
+              <DropdownMenuItem onClick={onLoadSample}>
+                <FileText className="h-4 w-4 mr-2" />
+                Load Sample Resume
+              </DropdownMenuItem>
+
+              {onLoadImport && (
+                <DropdownMenuItem onClick={onLoadImport}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import from File
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuItem onClick={handleSave} disabled={localSaving || isSaving}>
+                {localSaving || isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Moon className="h-4 w-4" />
+                  <Save className="h-4 w-4 mr-2" />
                 )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Toggle theme</p>
-            </TooltipContent>
-          </Tooltip>
+                Save Draft (Ctrl+S)
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              {/* Settings */}
+              {onAPIKeySettings && (
+                <DropdownMenuItem onClick={onAPIKeySettings}>
+                  <Key className="h-4 w-4 mr-2" />
+                  <span className={cn(isUsingCustomKey && "text-green-500")}>
+                    {isUsingCustomKey 
+                      ? `API Key (${keyState.provider.toUpperCase()}) ✓` 
+                      : 'Configure API Key'
+                    }
+                  </span>
+                </DropdownMenuItem>
+              )}
+
+              {/* Show theme toggle in menu on narrow screens */}
+              {!showBasicButtons && (
+                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4 mr-2" />
+                      Switch to Light Mode
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4 mr-2" />
+                      Switch to Dark Mode
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuSeparator />
+
+              {/* Destructive Action */}
+              <DropdownMenuItem 
+                onClick={clearForm}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear All Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </TooltipProvider>
