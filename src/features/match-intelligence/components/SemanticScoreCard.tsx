@@ -6,8 +6,8 @@
  */
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
-import { Progress } from '@/shared/ui/Progress';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/card';
+import { Progress } from '@/shared/ui/progress';
 import type { SemanticScore } from '../types';
 
 interface SemanticScoreCardProps {
