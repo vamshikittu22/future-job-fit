@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
-import { Lightbulb, ChevronRight, ChevronLeft, Info, Target, CheckCircle } from 'lucide-react';
+import { Lightbulb, ChevronRight, ChevronLeft, Info, Target, CheckCircle, X } from 'lucide-react';
 import { StepGuideCard } from '@/features/resume-builder/components/helpers/StepGuideCard';
 import { AIPromptCard } from '@/features/resume-builder/components/helpers/AIPromptCard';
 import { CharacterGuidance } from '@/features/resume-builder/components/helpers/CharacterGuidance';
@@ -26,6 +26,7 @@ interface HelperContent {
 interface WizardHelperRailProps {
   currentStepId: string;
   showCollapseButton?: boolean;
+  onClose?: () => void;
 }
 
 const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
@@ -170,7 +171,7 @@ const STEP_HELPER_CONTENT: Record<string, HelperContent> = {
   }
 };
 
-export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepId, showCollapseButton = true }) => {
+export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepId, showCollapseButton = true, onClose }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     const saved = localStorage.getItem('wizard-helper-rail-collapsed');
     return saved !== 'true'; // Default to expanded (true)
@@ -229,27 +230,42 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header with toggle */}
+      {/* Header with toggle and close button */}
       <div className="sticky top-0 z-10 h-14 flex items-center justify-between px-4 border-b bg-background">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-amber-600" />
-          <span className="text-sm font-semibold">Step Guide</span>
+          <span className="text-sm font-semibold">📘 Step Guide</span>
         </div>
-        {showCollapseButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleExpanded}
-            className="h-8 w-8"
-            title={isExpanded ? 'Collapse helper rail' : 'Expand helper rail'}
-          >
-            {isExpanded ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {/* Close button - appears when onClose is provided */}
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8"
+              title="Close step guide"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          {/* Collapse button - appears when showCollapseButton is true */}
+          {showCollapseButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleExpanded}
+              className="h-8 w-8"
+              title={isExpanded ? 'Collapse helper rail' : 'Expand helper rail'}
+            >
+              {isExpanded ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Content area with collapse animation */}

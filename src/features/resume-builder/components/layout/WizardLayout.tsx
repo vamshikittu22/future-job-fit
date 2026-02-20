@@ -178,7 +178,11 @@ const WizardLayoutContent: React.FC = () => {
                 transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="w-[300px] border-r bg-background flex-shrink-0 overflow-y-auto"
               >
-                <WizardHelperRail currentStepId={currentStep?.id || 'personal'} showCollapseButton={false} />
+                <WizardHelperRail 
+                  currentStepId={currentStep?.id || 'personal'} 
+                  showCollapseButton={false} 
+                  onClose={toggleHelper}
+                />
               </motion.div>
             )}
           </AnimatePresence>
