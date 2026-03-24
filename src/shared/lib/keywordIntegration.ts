@@ -434,10 +434,3 @@ export function validateKeywordIntegration(
 
   return { valid: issues.length === 0, issues };
 }
-
-export {
-  scoreKeywordIntegration,
-  getIntegrationCategoryColor,
-  detectKeywordDumping,
-  type IntegrationScore
-};
