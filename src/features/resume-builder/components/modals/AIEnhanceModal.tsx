@@ -1,4 +1,4 @@
-import { Plus, Sparkles, Zap, Target, Shield, Check, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Sparkles, Zap, Target, Shield, Check, Loader2, RefreshCw, Wand2, ListPlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
@@ -7,19 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Badge } from "@/shared/ui/badge";
 import { Textarea } from "@/shared/ui/textarea";
 import { Label } from "@/shared/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { HelpCircle, Info } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resumeAI, EnhancementResponse, EnhancementRequest } from "@/shared/api/resumeAI";
 import { cn } from "@/shared/lib/utils";
 import { FullPreviewModal } from '@/features/resume-builder/components/modals/FullPreviewModal';
 import { AIConnectionModal } from '@/features/resume-builder/components/modals/AIConnectionModal';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
-import { HelpCircle, Info } from "lucide-react";
+import { INTEGRATION_MODES, type IntegrationMode } from "@/shared/lib/keywordIntegration";
 
 interface AIEnhanceModalProps {
   open: boolean;
@@ -88,6 +85,7 @@ export default function AIEnhanceModal({
   const [aiNotes, setAiNotes] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState('presets');
   const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [integrationMode, setIntegrationMode] = useState<IntegrationMode>('smart');
 
   const { toast } = useToast();
 
@@ -153,13 +151,14 @@ export default function AIEnhanceModal({
         originalText = getSectionData(step || 'summary');
       }
 
-      const request: EnhancementRequest = {
-        section_type: (step?.startsWith('custom:') ? 'experience' : step || 'summary') as any,
-        original_text: originalText,
-        industry_keywords: keywords,
-        restrictions: restrictions,
-        ...params
-      };
+    const request: EnhancementRequest = {
+      section_type: (step?.startsWith('custom:') ? 'experience' : step || 'summary') as any,
+      original_text: originalText,
+      industry_keywords: keywords,
+      restrictions: restrictions,
+      integration_mode: integrationMode,
+      ...params
+    };
 
       const result = await resumeAI.enhanceSection(request);
 
@@ -298,10 +297,17 @@ export default function AIEnhanceModal({
   const renderVariants = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
-          Choose a Variation
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            Choose a Variation
+          </h3>
+          {integrationMode === 'smart' && keywords && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Keywords integrated via Smart Rewrite mode
+            </p>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -532,30 +538,103 @@ export default function AIEnhanceModal({
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="keywords" className="font-bold">Industry Keywords</Label>
-                      <Textarea
-                        id="keywords"
-                        placeholder="React, Leadership, Agile..."
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        className="h-24 resize-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="restrictions" className="font-bold">Restrictions (Optional)</Label>
-                      <Textarea
-                        id="restrictions"
-                        placeholder="Keep under 200 words, avoid 'synergy'..."
-                        value={restrictions}
-                        onChange={(e) => setRestrictions(e.target.value)}
-                        className="h-24 resize-none"
-                      />
-                    </div>
-                  </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="keywords" className="font-bold">Industry Keywords</Label>
+            <Textarea
+              id="keywords"
+              placeholder="React, Leadership, Agile..."
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              className="h-24 resize-none"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="restrictions" className="font-bold">Restrictions (Optional)</Label>
+            <Textarea
+              id="restrictions"
+              placeholder="Keep under 200 words, avoid 'synergy'..."
+              value={restrictions}
+              onChange={(e) => setRestrictions(e.target.value)}
+              className="h-24 resize-none"
+            />
+          </div>
+        </div>
 
-                  <div className="flex justify-end gap-3 pt-4 border-t">
+        {/* Integration Mode Selection */}
+        <div className="space-y-3 pt-4 border-t">
+          <Label className="text-base font-bold flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-primary" />
+            Keyword Integration Mode
+          </Label>
+
+          <RadioGroup
+            value={integrationMode}
+            onValueChange={(value) => setIntegrationMode(value as IntegrationMode)}
+            className="grid gap-3"
+          >
+            {INTEGRATION_MODES.map((mode) => (
+              <div key={mode.id} className="relative">
+                <RadioGroupItem
+                  value={mode.id}
+                  id={mode.id}
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor={mode.id}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all",
+                    "hover:border-primary/30",
+                    integrationMode === mode.id
+                      ? "border-primary bg-primary/5"
+                      : "border-muted",
+                    mode.recommended && "ring-1 ring-primary/20"
+                  )}
+                >
+                  <div className="mt-0.5">
+                    {mode.id === 'smart' && <Sparkles className="w-5 h-5 text-primary" />}
+                    {mode.id === 'suggest' && <Target className="w-5 h-5 text-blue-500" />}
+                    {mode.id === 'append' && <ListPlus className="w-5 h-5 text-orange-500" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{mode.label}</span>
+                      {mode.recommended && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {mode.description}
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-1",
+                    integrationMode === mode.id
+                      ? "bg-primary border-primary"
+                      : "border-muted"
+                  )}>
+                    {integrationMode === mode.id && (
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    )}
+                  </div>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+
+          {integrationMode === 'append' && (
+            <Alert className="bg-orange-50 border-orange-200">
+              <Info className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-xs text-orange-700">
+                Append mode may reduce readability. Consider Smart Rewrite for better ATS results.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                       Cancel
                     </Button>
