@@ -214,6 +214,177 @@ export const INTEGRATION_MODES: IntegrationModeOption[] = [
 ];
 
 /**
+ * Score the quality of keyword integration (0-100)
+ */
+export interface IntegrationScore {
+  score: number;
+  category: 'excellent' | 'good' | 'fair' | 'poor';
+  found: string[];
+  missing: string[];
+  issues: string[];
+}
+
+export function scoreKeywordIntegration(
+  text: string,
+  keywords: string[]
+): IntegrationScore {
+  const found: string[] = [];
+  const missing: string[] = [];
+  const issues: string[] = [];
+  let score = 0;
+
+  const textLower = text.toLowerCase();
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+
+  keywords.forEach(keyword => {
+    const keywordLower = keyword.toLowerCase();
+
+    if (!textLower.includes(keywordLower)) {
+      missing.push(keyword);
+      return;
+    }
+
+    found.push(keyword);
+
+    // Find sentences containing keyword
+    const sentencesWithKeyword = sentences.filter(s =>
+      s.toLowerCase().includes(keywordLower)
+    );
+
+    if (sentencesWithKeyword.length === 0) {
+      issues.push(`"${keyword}" appears but not in a complete sentence`);
+      score += 20; // Partial credit
+      return;
+    }
+
+    // Check integration quality in each sentence
+    sentencesWithKeyword.forEach(sentence => {
+      const words = sentence.split(/\s+/);
+      const keywordIndex = words.findIndex(w =>
+        w.toLowerCase().replace(/[^\w]/g, '') === keywordLower
+      );
+
+      if (keywordIndex === -1) {
+        score += 20;
+        return;
+      }
+
+      // Score based on context
+      let sentenceScore = 50; // Base score for being in sentence
+
+      // Bonus if not at start or end
+      if (keywordIndex > 1 && keywordIndex < words.length - 2) {
+        sentenceScore += 15;
+      }
+
+      // Bonus if surrounded by meaningful words (not standalone)
+      const prevWord = words[keywordIndex - 1]?.toLowerCase() || '';
+      const nextWord = words[keywordIndex + 1]?.toLowerCase() || '';
+
+      const goodContextWords = ['using', 'with', 'via', 'through', 'leveraging', 'implementing', 'developed', 'built', 'created'];
+      if (goodContextWords.some(w => prevWord.includes(w) || nextWord.includes(w))) {
+        sentenceScore += 20;
+      }
+
+      // Penalty if keyword is standalone (short sentence)
+      if (words.length < 5) {
+        sentenceScore -= 20;
+        issues.push(`"${keyword}" appears in a very short phrase - may be standalone`);
+      }
+
+      score += sentenceScore;
+    });
+  });
+
+  // Normalize score
+  const maxScore = keywords.length * 100;
+  const normalizedScore = maxScore > 0 ? Math.min(100, Math.round((score / maxScore) * 100)) : 0;
+
+  // Determine category
+  let category: IntegrationScore['category'] = 'poor';
+  if (normalizedScore >= 90) category = 'excellent';
+  else if (normalizedScore >= 70) category = 'good';
+  else if (normalizedScore >= 50) category = 'fair';
+
+  return {
+    score: normalizedScore,
+    category,
+    found,
+    missing,
+    issues
+  };
+}
+
+/**
+ * Get color for integration category
+ */
+export function getIntegrationCategoryColor(category: IntegrationScore['category']): {
+  bg: string;
+  text: string;
+  border: string;
+} {
+  switch (category) {
+    case 'excellent':
+      return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' };
+    case 'good':
+      return { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200' };
+    case 'fair':
+      return { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200' };
+    case 'poor':
+      return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200' };
+  }
+}
+
+/**
+ * Check if text appears to be keyword dumping
+ */
+export function detectKeywordDumping(text: string): {
+  isDumping: boolean;
+  confidence: 'high' | 'medium' | 'low';
+  reasons: string[];
+} {
+  const reasons: string[] = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Check for list patterns
+  const listPatterns = [
+    /^[•\-\*]\s*[A-Z][a-z]+\s*,\s*[A-Z][a-z]+/, // Bullet followed by comma-separated
+    /:\s*[A-Z][a-z]+\s*,\s*[A-Z][a-z]+\s*,\s*[A-Z][a-z]+/, // Colon followed by comma list
+    /^[A-Z][a-z]+\s*,\s*[A-Z][a-z]+\s*,\s*[A-Z][a-z]+\.?$/ // Just comma-separated words
+  ];
+
+  let listPatternMatches = 0;
+  lines.forEach(line => {
+    listPatterns.forEach(pattern => {
+      if (pattern.test(line)) listPatternMatches++;
+    });
+  });
+
+  if (listPatternMatches > 0) {
+    reasons.push(`${listPatternMatches} potential keyword list patterns detected`);
+  }
+
+  // Check for very short sentences (likely standalone keywords)
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+  const shortSentences = sentences.filter(s => s.split(/\s+/).length <= 3);
+  if (shortSentences.length > sentences.length * 0.3) {
+    reasons.push(`${shortSentences.length} very short sentences (possible standalone keywords)`);
+  }
+
+  // Check for keyword density (too many caps words)
+  const words = text.split(/\s+/);
+  const capitalizedWords = words.filter(w => /^[A-Z][a-z]+$/.test(w));
+  if (capitalizedWords.length > words.length * 0.3) {
+    reasons.push('High density of capitalized words (possible keyword stuffing)');
+  }
+
+  const isDumping = reasons.length >= 2;
+  const confidence = reasons.length >= 3 ? 'high' : reasons.length >= 2 ? 'medium' : 'low';
+
+  return { isDumping, confidence, reasons };
+}
+
+/**
  * Validate if keywords are properly integrated (not just appended)
  */
 export function validateKeywordIntegration(
@@ -263,3 +434,10 @@ export function validateKeywordIntegration(
 
   return { valid: issues.length === 0, issues };
 }
+
+export {
+  scoreKeywordIntegration,
+  getIntegrationCategoryColor,
+  detectKeywordDumping,
+  type IntegrationScore
+};
