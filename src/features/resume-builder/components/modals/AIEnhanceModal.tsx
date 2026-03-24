@@ -1,4 +1,4 @@
-import { Plus, Sparkles, Zap, Target, Shield, Check, Loader2, RefreshCw, Wand2, ListPlus } from "lucide-react";
+import { Plus, Sparkles, Zap, Target, Shield, Check, Loader2, RefreshCw, Wand2, ListPlus, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
@@ -16,7 +16,7 @@ import { resumeAI, EnhancementResponse, EnhancementRequest } from "@/shared/api/
 import { cn } from "@/shared/lib/utils";
 import { FullPreviewModal } from '@/features/resume-builder/components/modals/FullPreviewModal';
 import { AIConnectionModal } from '@/features/resume-builder/components/modals/AIConnectionModal';
-import { INTEGRATION_MODES, type IntegrationMode } from "@/shared/lib/keywordIntegration";
+import { INTEGRATION_MODES, type IntegrationMode, validateKeywordIntegration } from "@/shared/lib/keywordIntegration";
 
 interface AIEnhanceModalProps {
   open: boolean;
@@ -43,6 +43,117 @@ const focusAreas = [
   { id: 'Results & Impact', label: 'Results & Impact', icon: Sparkles },
   { id: 'Collaboration', label: 'Collaboration', icon: Shield },
 ];
+
+// Component to highlight keywords in variant text
+interface KeywordHighlighterProps {
+  text: string;
+  keywords: string[];
+}
+
+const KeywordHighlighter: React.FC<KeywordHighlighterProps> = ({ text, keywords }) => {
+  if (!keywords.length) return <span>{text}</span>;
+
+  // Create regex to match any of the keywords
+  const escapedKeywords = keywords.map(k =>
+    k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+  const pattern = new RegExp(`\\b(${escapedKeywords.join('|')})\\b`, 'gi');
+
+  // Split text by keywords and map with highlighting
+  const parts = text.split(pattern);
+  const matches = text.match(pattern) || [];
+
+  return (
+    <span>
+      {parts.map((part, i) => (
+        <React.Fragment key={i}>
+          {part}
+          {matches[i] && (
+            <mark className="bg-green-200 dark:bg-green-900 px-0.5 rounded font-medium">
+              {matches[i]}
+            </mark>
+          )}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+};
+
+// Component to show keyword integration status
+interface KeywordIntegrationStatusProps {
+  variant: string;
+  keywords: string[];
+}
+
+const KeywordIntegrationStatus: React.FC<KeywordIntegrationStatusProps> = ({ variant, keywords }) => {
+  const keywordList = keywords.filter(k => k.trim());
+  if (!keywordList.length) return null;
+
+  const foundKeywords = keywordList.filter(k =>
+    variant.toLowerCase().includes(k.toLowerCase())
+  );
+
+  const missingKeywords = keywordList.filter(k =>
+    !variant.toLowerCase().includes(k.toLowerCase())
+  );
+
+  const validation = validateKeywordIntegration(variant, foundKeywords);
+
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        {foundKeywords.map(kw => (
+          <Badge
+            key={kw}
+            variant="outline"
+            className="bg-green-50 dark:bg-green-950 border-green-200 text-green-700 text-xs"
+          >
+            <Check className="w-3 h-3 mr-1" />
+            {kw}
+          </Badge>
+        ))}
+        {missingKeywords.map(kw => (
+          <Badge
+            key={kw}
+            variant="outline"
+            className="bg-red-50 dark:bg-red-950 border-red-200 text-red-700 text-xs"
+          >
+            <X className="w-3 h-3 mr-1" />
+            {kw}
+          </Badge>
+        ))}
+      </div>
+
+      {!validation.valid && validation.issues.length > 0 && (
+        <p className="text-xs text-amber-600">
+          ⚠️ {validation.issues[0]}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Component to show keyword variant quality
+const KeywordVariantQuality: React.FC<{ variant: string; keywords: string[] }> = ({
+  variant, keywords
+}) => {
+  if (!keywords.length) return null;
+
+  const foundCount = keywords.filter(k =>
+    variant.toLowerCase().includes(k.toLowerCase())
+  ).length;
+  const percentage = Math.round((foundCount / keywords.length) * 100);
+
+  let color = "bg-red-100 text-red-700 border-red-200";
+  if (percentage >= 80) color = "bg-green-100 text-green-700 border-green-200";
+  else if (percentage >= 50) color = "bg-amber-100 text-amber-700 border-amber-200";
+
+  return (
+    <Badge variant="outline" className={cn("text-[10px]", color)}>
+      {foundCount}/{keywords.length} keywords
+    </Badge>
+  );
+};
 
 const strategyPresets = [
   {
@@ -294,8 +405,12 @@ export default function AIEnhanceModal({
     }
   };
 
-  const renderVariants = () => (
+const renderVariants = () => {
+  const keywordList = keywords.split(/[,;|]/).map(k => k.trim()).filter(Boolean);
+
+  return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -319,6 +434,22 @@ export default function AIEnhanceModal({
         </Button>
       </div>
 
+      {/* Keyword Legend */}
+      {keywordList.length > 0 && (
+        <div className="flex items-center gap-3 text-xs bg-muted/50 p-2 rounded">
+          <span className="text-muted-foreground">Keyword indicators:</span>
+          <span className="flex items-center gap-1">
+            <mark className="bg-green-200 dark:bg-green-900 px-1 rounded">keyword</mark>
+            = integrated
+          </span>
+          <span className="flex items-center gap-1 text-amber-600">
+            <X className="w-3 h-3" />
+            = missing
+          </span>
+        </div>
+      )}
+
+      {/* Variants */}
       <div className="grid gap-4">
         {variants.map((variant, index) => (
           <Card
@@ -337,11 +468,26 @@ export default function AIEnhanceModal({
                   <Badge variant={selectedIndex === index ? "default" : "outline"}>
                     Option {index + 1}
                   </Badge>
+                  {/* Quality indicator */}
+                  {keywordList.length > 0 && (
+                    <KeywordVariantQuality variant={variant} keywords={keywordList} />
+                  )}
                 </div>
+
                 <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-                  {variant}
+                  <KeywordHighlighter
+                    text={variant}
+                    keywords={keywordList.filter(k =>
+                      variant.toLowerCase().includes(k.toLowerCase())
+                    )}
+                  />
                 </p>
+
+                {/* Keyword integration status */}
+                <KeywordIntegrationStatus variant={variant} keywords={keywordList} />
               </div>
+
+              {/* Selection indicator */}
               <div className={cn(
                 "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1",
                 selectedIndex === index ? "bg-primary border-primary" : "border-muted"
@@ -353,6 +499,7 @@ export default function AIEnhanceModal({
         ))}
       </div>
 
+      {/* AI Notes */}
       {aiNotes && (
         <Alert className="bg-muted/50 border-none">
           <Shield className="h-4 w-4" />
@@ -362,6 +509,7 @@ export default function AIEnhanceModal({
         </Alert>
       )}
 
+      {/* Action buttons */}
       <div className="flex justify-end gap-3 pt-4 border-t">
         <Button variant="outline" onClick={() => { setVariants([]); setSelectedIndex(null); }}>
           Back
@@ -372,6 +520,7 @@ export default function AIEnhanceModal({
       </div>
     </div>
   );
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
