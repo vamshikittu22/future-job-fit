@@ -22,6 +22,7 @@ export interface EnhancementRequest {
   restrictions?: string;
   job_description?: string;
   target_role?: string;
+  integration_mode?: 'smart' | 'append' | 'suggest'; // Controls how keywords are integrated
 }
 
 export interface EnhancementResponse {
@@ -161,18 +162,97 @@ export class ResumeAIService {
 
     let prompt = '';
     if (task === 'enhanceSection') {
-      prompt = `You are a professional resume writer. Enhance the following ${data.section_type} section.
-Original text: ${data.original_text}
-${data.quick_preset ? `Style: ${data.quick_preset}` : ''}
-${data.tone_style?.length ? `Tone: ${data.tone_style.join(', ')}` : ''}
-${data.industry_keywords ? `Include keywords: ${data.industry_keywords}` : ''}
+      const integrationMode = data.integration_mode || 'smart';
 
-Provide 3 enhanced variants. Return as JSON: {"variants": ["variant1", "variant2", "variant3"], "notes": "brief explanation"}`;
+      // Handle 'suggest' mode - skip AI call, return local suggestions
+      if (integrationMode === 'suggest') {
+        return this.getSuggestModeResponse(data);
+      }
+
+      // Build prompt based on integration mode
+      const keywordsList = data.industry_keywords
+        ? data.industry_keywords.split(/[,;|]/).map((k: string) => k.trim()).filter(Boolean)
+        : [];
+
+      // Different keyword instructions based on mode
+      let keywordsInstruction = '';
+      if (keywordsList.length > 0) {
+        if (integrationMode === 'smart') {
+          keywordsInstruction = `
+
+CRITICAL - KEYWORD INTEGRATION (Smart Rewrite Mode):
+- MUST naturally weave these keywords INTO sentences: ${keywordsList.join(', ')}
+- DO NOT append keywords as a list
+- DO NOT create separate "Skills:" lines just to add keywords
+- Rewrite existing sentences to incorporate keywords contextually
+- Example BAD: "Led team. React, TypeScript."
+- Example GOOD: "Led cross-functional team using React and TypeScript to deliver features 40% faster."`;
+        } else if (integrationMode === 'append') {
+          keywordsInstruction = `
+
+KEYWORD INTEGRATION (Append Mode):
+- Include these keywords: ${keywordsList.join(', ')}
+- You MAY append keywords as a list at the end if needed
+- Prefer weaving into sentences when possible, but appending is acceptable in this mode`;
+        }
+      }
+
+      const taskVerb = integrationMode === 'smart' ? 'REWRITE' : 'Enhance';
+      const basePrompt = `You are a professional resume writer specializing in ATS-optimized content.
+
+Your task: ${taskVerb} the following content to be more impactful and ATS-friendly.
+
+Original text: ${data.original_text}
+
+${data.quick_preset ? `Style Preset: ${data.quick_preset}` : ''}
+${data.tone_style?.length ? `Tone: ${data.tone_style.join(', ')}` : ''}
+${keywordsInstruction}
+
+${integrationMode === 'smart' ? `REWRITING RULES:
+1. REWRITE the content - do not just polish or rephrase slightly
+2. Use strong action verbs (Spearheaded, Architected, Delivered)
+3. Include quantifiable metrics (%, $, time saved, scale)
+4. Maintain factual accuracy - never invent data
+5. Keep similar length to original (±20%)
+6. Ensure natural flow and readability` : `ENHANCEMENT RULES:
+1. Improve the content while preserving structure
+2. Use strong action verbs
+3. Include quantifiable metrics where possible
+4. Maintain factual accuracy
+5. Ensure readability`}
+
+Provide 3 DISTINCT variants that take different approaches:
+- Variant 1: Focus on technical depth and specific tools
+- Variant 2: Focus on leadership and impact
+- Variant 3: Focus on efficiency and process improvements
+
+Return ONLY this JSON format:
+{
+  "variants": ["variant1", "variant2", "variant3"],
+  "notes": "Brief explanation of ${integrationMode === 'smart' ? 'how keywords were integrated' : 'enhancement strategy'}"
+}`;
+
+      prompt = basePrompt;
     } else if (task === 'analyzeSection') {
-      prompt = `Analyze this resume section and provide feedback.
+      prompt = `Analyze this resume section and provide specific feedback.
+
 Content: ${data.content}
 
-Return as JSON: {"score": 0-100, "strengths": ["..."], "weaknesses": ["..."], "suggestions": ["..."]}`;
+Evaluate:
+1. Overall strength and clarity
+2. Action verb usage
+3. Quantifiable achievements
+4. Keyword integration quality (if keywords mentioned)
+5. ATS compatibility
+
+Return as JSON:
+{
+  "score": 0-100,
+  "strengths": ["..."],
+  "weaknesses": ["..."],
+  "suggestions": ["..."],
+  "keywordIntegration": "good|awkward|missing - brief assessment"
+}`;
     } else if (task === 'evaluateResume') {
       prompt = `Evaluate this resume for ATS compatibility.
 Resume: ${data.resumeText}
@@ -272,14 +352,57 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   private getDemoResponse(task: string, data: any): any {
     if (task === 'enhanceSection') {
       const original = data.original_text || '';
+      const keywords = data.industry_keywords
+        ? data.industry_keywords.split(/[,;|]/).map((k: string) => k.trim()).filter(Boolean)
+        : [];
+      const integrationMode = data.integration_mode || 'smart';
 
-      // Basic lexical variations for demo mode
+      // Generate contextual variants based on keywords
+      const generateVariant = (variantNum: number): string => {
+        if (!original) return 'Enhanced content will appear here when you add content.';
+
+        // Base text with natural language variations
+        let base = original
+          .replace(/Experienced/i, 'A seasoned')
+          .replace(/Building/i, 'Architecting')
+          .replace(/Expert/i, 'Strategist');
+
+        // Integrate keywords contextually if present
+        if (keywords.length > 0 && integrationMode === 'smart') {
+          const kw1 = keywords[0];
+          const kw2 = keywords[1] || '';
+
+          if (variantNum === 1) {
+            // Technical focus - integrate into achievement
+            if (base.toLowerCase().includes('led') || base.toLowerCase().includes('managed')) {
+              base = base.replace(/(led|managed)/i, `$1 ${kw1}${kw2 ? ` and ${kw2}` : ''} initiatives`);
+            } else {
+              base = `${base} Leveraged ${kw1}${kw2 ? ` and ${kw2}` : ''} to deliver measurable results.`;
+            }
+          } else if (variantNum === 2) {
+            // Leadership focus - integrate into scope
+            base = `Orchestrated cross-functional efforts${kw1 ? ` using ${kw1}` : ''}${kw2 ? ` and ${kw2}` : ''}, driving team alignment and accelerating delivery by 30%.`;
+          } else {
+            // Efficiency focus - integrate into outcomes
+            base = `Optimized workflows${kw1 ? ` through ${kw1}` : ''}${kw2 ? ` and ${kw2} adoption` : ''}, reducing operational overhead by 25%.`;
+          }
+        } else if (keywords.length > 0 && integrationMode === 'append') {
+          // Append mode - just add keywords at end
+          base = `${base} Skills: ${keywords.slice(0, 3).join(', ')}.`;
+        }
+
+        return base;
+      };
+
       const variants = [
-        original.replace(/Experienced/i, 'A seasoned').replace(/Building/i, 'Architecting').replace(/Expert/i, 'Strategist'),
-        `Accomplished professional with a proven track record in ${original.toLowerCase()}.`,
-        `Dynamic individual leveraging expertise to drive results in ${original.toLowerCase()}.`,
-        `Focused on delivering high-quality solutions through ${original.toLowerCase()}.`
+        generateVariant(1),
+        generateVariant(2),
+        generateVariant(3)
       ];
+
+      const keywordNote = keywords.length > 0
+        ? ` Keywords (${keywords.join(', ')}) integrated via ${integrationMode} mode.`
+        : '';
 
       return {
         section_type: data.section_type,
@@ -287,7 +410,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         applied_tone_style: data.tone_style || [],
         applied_highlight_areas: data.highlight_areas || [],
         variants: variants,
-        notes: 'Demo mode: These are sample enhancements. Connect Supabase for AI-powered results.'
+        notes: `Demo mode: Sample enhancements.${keywordNote} Connect Supabase for AI-powered results.`
       };
     }
 
@@ -304,12 +427,17 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
       const original = data.resumeText || '';
       const missing = ['Cloud Architecture', 'Agile Methodology', 'Team Leadership'];
 
-      // Basic simulated optimization for demo mode
+      // Simulate contextual keyword integration in demo
       let optimized = original;
-      if (original.toLowerCase().includes('skills')) {
-        optimized = original.replace(/skills/i, `SKILLS\n${missing.join(', ')}, `);
-      } else {
-        optimized = `${original}\n\nSKILLS\n${missing.join(', ')}`;
+      if (original.toLowerCase().includes('experience')) {
+        // Don't just append - weave into existing content
+        optimized = original.replace(
+          /experience/gi,
+          `experience leveraging Cloud Architecture and Agile Methodology`
+        );
+      } else if (original.length > 50) {
+        // Add as contextual enhancement, not list
+        optimized = `${original} Specialized in Cloud Architecture with Agile Methodology expertise.`;
       }
 
       return {
@@ -321,7 +449,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
           'Use stronger action verbs at the start of each bullet (e.g., Orchestrated instead of Worked)'
         ],
         rewrittenResume: optimized,
-        improvements: ['Injected critical industry keywords', 'Reformated skills for ATS scanning']
+        improvements: ['Integrated Cloud Architecture and Agile Methodology contextually', 'Reformatted skills for ATS scanning']
       };
     }
 
@@ -608,6 +736,40 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
     if (message.includes('rate')) return 'rate_limit';
     if (message.includes('network')) return 'network';
     return 'unknown';
+  }
+
+  /**
+   * Generate suggestions for keyword placement without AI call
+   */
+  private getSuggestModeResponse(data: any): any {
+    const original = data.original_text || '';
+    const keywords = data.industry_keywords
+      ? data.industry_keywords.split(/[,;|]/).map((k: string) => k.trim()).filter(Boolean)
+      : [];
+
+    // Generate suggestions using local logic
+    const suggestions = keywords.flatMap((keyword: string) => {
+      const sentences = original.split(/[.!?]+/).filter((s: string) => s.trim().length > 0);
+      return sentences
+        .filter((s: string) => !s.toLowerCase().includes(keyword.toLowerCase()))
+        .slice(0, 2)
+        .map((sentence: string) => ({
+          original: sentence.trim(),
+          suggestion: `${sentence.trim()} leveraging ${keyword}.`,
+          keyword
+        }));
+    });
+
+    return {
+      section_type: data.section_type,
+      preset_used: data.quick_preset || null,
+      applied_tone_style: data.tone_style || [],
+      applied_highlight_areas: data.highlight_areas || [],
+      variants: suggestions.length > 0
+        ? suggestions.map((s: any) => `Suggestion: ${s.suggestion}`)
+        : ['No suggestions available. Try Smart Rewrite mode for AI-generated variants.'],
+      notes: `Suggest Mode: ${suggestions.length} placement suggestions based on your text and keywords.`
+    };
   }
 
   /**
