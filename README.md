@@ -1,38 +1,99 @@
-# 🚀 Future Job Fit: AI-Powered Career Intelligence
+# FutureJobFit — AI-Powered Career Intelligence
 
 > **Empowering professionals to bridge the gap between their experience and their dream career with a state-of-the-art, AI-driven recruitment intelligence platform.**
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![React](https://img.shields.io/badge/frontend-React%20%2B%20Vite-blue)
+![React](https://img.shields.io/badge/frontend-React%2018%20%2B%20Vite%205-blue)
 ![AI](https://img.shields.io/badge/AI-Multi--Model-purple)
+![Design](https://img.shields.io/badge/design-Swiss%20%2B%20Futuristic-blueviolet)
 
 ---
 
-## 📖 Platform Briefing
+## Platform Briefing
 
-**Future Job Fit** is not just a document editor; it is a high-performance career companion designed for the modern job market. In an era where 75% of resumes are rejected by Applicant Tracking Systems (ATS) before a human ever sees them, our platform provides users with the tools to **fight back**.
+**FutureJobFit** is not just a document editor — it is a high-performance career companion built for the modern job market. In an era where 75% of resumes are rejected by Applicant Tracking Systems (ATS) before a human ever sees them, this platform gives you the tools to fight back.
 
-By combining **Swiss-inspired minimalist design** with **multi-model AI intelligence**, we've created a seamless workflow that lets you build, optimize, and preview your professional brand in real-time.
+By combining **Minimal Futuristic Swiss design** with **multi-model AI intelligence**, the platform provides a seamless workflow for building, optimizing, and previewing your professional brand in real-time — in under 5 minutes.
 
 ---
 
-## 🧭 Complete Application Walkthrough
+## Design System
 
-### 🏠 Home Page (`/`)
-The landing page showcases the platform's capabilities with:
-- **Hero Section**: Introduction to the platform with CTAs to start building or optimizing
-- **Feature Grid**: Quick overview of key capabilities (Resume Wizard, Job Optimizer, AI Enhancement)
-- **Workflow Preview**: Visual guide to usage patterns
-- **Navigation**: Direct access to Resume Wizard and Job Optimizer
+The interface follows a **Minimal Futuristic Swiss** design language, informed by the [ui-ux-pro-max](./design-system/futurejobfit/MASTER.md) skill output:
 
-### 📝 Resume Wizard (`/resume-wizard`)
+| Token | Value |
+|-------|-------|
+| **Style** | Exaggerated Minimalism + Swiss Grid |
+| **Primary accent** | Electric Blue `hsl(231 100% 62%)` |
+| **Secondary accent** | Vibrant Violet `hsl(265 90% 60%)` |
+| **Tertiary** | Cyan `hsl(195 100% 50%)` |
+| **Dark background** | OLED near-black `hsl(220 20% 4%)` |
+| **Typography** | Inter — oversized, tight tracking (`-0.03em`), Swiss editorial scale |
+| **Card effect** | Glassmorphism — `backdrop-filter: blur(16px)` + gradient borders on hover |
+| **CTAs** | Electric blue → violet → cyan animated gradient with neon glow |
+| **Navbar** | Floating pill — glassmorphic, centered, `max-w-5xl` |
+
+### Design Tokens (`src/app/styles/index.css`)
+
+```css
+/* Core palette */
+--primary:  231 100% 62%;   /* Electric Blue  */
+--accent:   265 90%  60%;   /* Vibrant Violet */
+--background: 220 20%  4%;  /* OLED Black     */
+
+/* Gradients */
+--gradient-accent:   linear-gradient(135deg, hsl(231 100% 62%) 0%, hsl(265 90% 60%) 100%);
+--gradient-vibrant:  linear-gradient(135deg, hsl(231 100% 62%) 0%, hsl(265 90% 60%) 50%, hsl(195 100% 50%) 100%);
+--gradient-border:   linear-gradient(135deg, hsl(231 100% 62%), hsl(265 90% 60%), hsl(195 100% 50%));
+
+/* Effects */
+--shadow-accent: 0 0 32px hsl(231 100% 65% / 0.3), 0 4px 16px hsl(231 100% 65% / 0.2);
+--shadow-glass:  0 8px 32px rgb(0 0 0 / 0.6), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+```
+
+### CSS Component Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.swiss-container` | Centered max-width layout container |
+| `.swiss-section` | Consistent section vertical padding |
+| `.swiss-divider` | Horizontal rule with gradient accent indicator |
+| `.glass-card` | Glassmorphic card with blur + border |
+| `.feature-card` | Hover-lift card with gradient border on hover |
+| `.gradient-border-card` | CSS `::before` gradient border mask |
+| `.neon-pill` | Badge with glow shadow |
+| `.icon-container` | Square icon wrapper with accent tint |
+| `.step-number` | Gradient-filled numbered circle |
+| `.nav-floating` | Floating pill navigation bar |
+| `.overline` | Uppercase tracking label above headings |
+| `.brand-logo` | Gradient-clipped text for brand mark |
+| `.gradient-text-animated` | Animated shifting gradient text |
+
+---
+
+## Application Walkthrough
+
+### Home Page (`/`)
+
+The landing page features:
+
+- **Floating pill navbar** — glassmorphic, centered, links to all major routes
+- **Hero Section** — oversized animated gradient headline, ambient orb backgrounds, dual CTA buttons
+- **Stats Bar** — key metrics (3× interviews, 98% ATS pass rate, < 5 min build time)
+- **Platform Capabilities grid** — 6 feature cards with gradient borders and icon containers
+- **How It Works** — 4-step Swiss grid with numbered step indicators (01–04) and a gradient connector line
+- **Final CTA** — glowing section with pulsing gradient button
+- **Footer** — brand-consistent with Swiss divider accent
+
+### Resume Wizard (`/resume-wizard`)
+
 A comprehensive 10-step guided experience for building professional resumes:
 
 | Step | Route | Description |
 |------|-------|-------------|
 | 1. Template | `/resume-wizard/template` | Choose from Modern, Professional, Minimal, or Creative templates |
-| 2. Personal Info | `/resume-wizard/personal` | Contact details, location, and social links (LinkedIn, GitHub, Portfolio) |
+| 2. Personal Info | `/resume-wizard/personal` | Contact details, location, and social links |
 | 3. Summary | `/resume-wizard/summary` | Professional profile with AI enhancement presets |
 | 4. Experience | `/resume-wizard/experience` | Work history with impact-focused bullet points and AI rewriting |
 | 5. Education | `/resume-wizard/education` | Degrees, institutions, and academic achievements |
@@ -42,59 +103,58 @@ A comprehensive 10-step guided experience for building professional resumes:
 | 9. Certifications | `/resume-wizard/certifications` | Professional licenses and courses |
 | 10. Review | `/resume-wizard/review` | Final ATS check, live preview, and multi-format export |
 
-**Key Features in the Wizard:**
-- ✅ **Real-time Preview**: See changes instantly in the side panel
-- ✅ **Auto-Save**: Changes persist automatically to browser storage
-- ✅ **Undo/Redo**: Full history navigation (last 100 changes)
-- ✅ **AI Enhancement**: One-click content improvement at each step
-- ✅ **Custom Sections**: Create unlimited custom sections via `/resume-wizard/custom/:id`
+**Key Features:**
 
-### 💼 Job Optimizer (`/input` → `/results`)
+- Real-time Preview — see changes instantly in the side panel
+- Auto-Save — changes persist automatically to browser storage
+- Undo/Redo — full history navigation (last 100 changes)
+- AI Enhancement — one-click content improvement at each step
+- Custom Sections — unlimited via `/resume-wizard/custom/:id`
 
-**Step 1: Job Input** (`/input`)
+### Job Optimizer (`/input` → `/results`)
+
+**Step 1 — Job Input (`/input`)**
+
 - Paste a job description into the text area
-- The system automatically retrieves your current resume from local storage
+- The system retrieves your current resume from local storage
 - Click "Analyze" to start the evaluation
 
-**Step 2: Analysis Results** (`/results`)
-- **ATS Score Dashboard**: Overall compatibility score (0-100%)
-- **Keyword Match Breakdown**: Visual representation of matching vs. missing keywords
-- **Gap Analysis**: Critical keywords in the JD missing from your resume
-- **AI-Powered Suggestions**: Contextual rewrites for experience bullets
-- **Optimized Resume**: Download an AI-rewritten version tailored to the job
+**Step 2 — Analysis Results (`/results`)**
 
-### ℹ️ About Platform (`/about-platform`)
-Technical showcase page featuring:
-- Platform vision and philosophy
-- Intelligence architecture breakdown
-- Performance metrics and Lighthouse scores
-- Data models and privacy practices
+- ATS Score Dashboard — overall compatibility score (0–100%)
+- Keyword Match Breakdown — visual representation of matching vs. missing keywords
+- Gap Analysis — critical keywords in the JD missing from your resume
+- AI-Powered Suggestions — contextual rewrites for experience bullets
+- Optimized Resume — download an AI-rewritten version tailored to the job
+
+### Match Intelligence (`/match-intelligence`)
+
+Deep-dive resume-to-job compatibility analysis with scoring breakdowns, skill gap visualization, and AI-guided recommendations.
+
+### About Platform (`/about-platform`)
+
+Technical showcase featuring platform vision, intelligence architecture breakdown, performance metrics, and data models.
 
 ---
 
-## 🌐 Online vs. Offline: How It Works
+## Online vs. Offline Architecture
 
-The platform is designed with a **hybrid intelligence architecture** that works both online and offline:
+The platform uses a **hybrid intelligence architecture** that works both online and offline.
 
-### 🔌 Online Mode (Full Features)
-
-When connected to the internet:
+### Online Mode (Full Features)
 
 | Feature | How It Works | Provider |
 |---------|--------------|----------|
 | **AI Enhancement** | Rewrites bullet points with contextual improvements | Gemini 1.5 Flash / GPT-4o-mini / Llama 3.3 |
 | **Summary Generation** | Creates professional summaries from your data | Cloud LLM via Supabase Edge Function |
 | **Full Resume Rewrite** | Generates a complete optimized resume for a specific job | Cloud LLM |
-| **Pyodide Initialization** | Downloads Python/WebAssembly runtime from CDN | jsdelivr CDN |
+| **Pyodide Initialization** | Downloads Python/WebAssembly runtime from CDN | jsDelivr CDN |
 
-**Architecture Flow:**
 ```
 User Input → Frontend → Supabase Edge Function → AI Provider API → Response
 ```
 
-### 📴 Offline Mode (Core Features)
-
-When disconnected or API is unavailable:
+### Offline Mode (Core Features)
 
 | Feature | How It Works | Technology |
 |---------|--------------|------------|
@@ -106,52 +166,38 @@ When disconnected or API is unavailable:
 | **Keyword Extraction** | Identify skills and keywords from text | Regex + pattern matching |
 | **Export (All Formats)** | PDF, DOCX, HTML, LaTeX, JSON, Markdown, TXT | Client-side generation |
 
-**Architecture Flow (Offline):**
 ```
 User Input → Local NLP (Pyodide) → Structured JSON → UI Update
 ```
 
-### 🔄 Hybrid Intelligence System
+### Three-Tier Intelligence System
 
-The platform uses a three-tier intelligence system:
+| Tier | Engine | Availability | Latency |
+|------|--------|-------------|---------|
+| **Tier 1** | Local pattern matching (Regex) | Always | < 10ms |
+| **Tier 2** | Pyodide NLP (Python/WASM) | Offline-capable | < 50ms |
+| **Tier 3** | Cloud LLM (Gemini / GPT-4o / Groq) | Online only | 1–3s |
 
-1. **Tier 1: Local Pattern Matching** (Always Available)
-   - Regex-based keyword extraction
-   - Real-time skill categorization
-   - Latency: < 10ms
+### Progressive Web App (PWA)
 
-2. **Tier 2: Pyodide NLP Engine** (Offline Capable)
-   - Python running in WebAssembly
-   - ATS scoring and keyword matching
-   - Resume parsing and section identification
-   - Latency: < 50ms
-   - **Service Worker Cached** for offline use
-
-3. **Tier 3: Cloud LLM** (Online Only)
-   - Complex content rewriting
-   - Summary generation
-   - Contextual improvements
-   - Latency: 1-3 seconds
-
-### 📱 Progressive Web App (PWA)
-
-The application is a **fully installable PWA** with:
-- ✅ **Offline Support**: Core features work without internet
-- ✅ **Install Prompt**: Add to home screen on mobile/desktop
-- ✅ **Asset Caching**: JavaScript, CSS, and NLP scripts cached
-- ✅ **Pyodide Caching**: WebAssembly runtime cached for 1 year
+- Offline Support — core features work without internet
+- Install Prompt — add to home screen on mobile/desktop
+- Asset Caching — JavaScript, CSS, and NLP scripts cached
+- Pyodide Caching — WebAssembly runtime cached for 1 year
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18.0 or higher)
+
+- [Node.js](https://nodejs.org/) v18.0+
 - [npm](https://www.npmjs.com/) or [Bun](https://bun.sh/)
 
 ### Quick Installation
 
 1. **Clone & Install**
+
    ```bash
    git clone https://github.com/vamshikittu22/future-job-fit.git
    cd future-job-fit
@@ -159,63 +205,58 @@ The application is a **fully installable PWA** with:
    ```
 
 2. **Environment Setup**
-   
-   Copy the example environment file:
+
    ```bash
    cp .env.example .env.local
    ```
-   
-   Configure your settings in `.env.local`:
+
+   Configure `.env.local`:
+
    ```env
    # Supabase (Required for AI features)
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
-   
+
    # AI Provider Selection
    VITE_AI_PROVIDER=gemini
-   
+
    # Offline-first mode (recommended for testing)
    VITE_PREFER_OFFLINE_ATS=true
    ```
 
-3. **Launch Application**
+3. **Launch**
+
    ```bash
    npm run dev
    ```
+
    Open `http://localhost:8080` to start building.
 
 ### Backend Configuration (Optional)
 
-For full AI features, deploy the Supabase Edge Function:
+```bash
+# Install Supabase CLI
+npm install -g supabase
+supabase login
 
-1. **Install Supabase CLI**
-   ```bash
-   npm install -g supabase
-   supabase login
-   ```
+# Set AI secrets
+supabase secrets set GOOGLE_AI_API_KEY=your_gemini_key
+supabase secrets set OPENAI_API_KEY=your_openai_key   # Optional
+supabase secrets set GROQ_API_KEY=your_groq_key       # Optional
 
-2. **Set Secrets**
-   ```bash
-   supabase secrets set GOOGLE_AI_API_KEY=your_gemini_key
-   supabase secrets set OPENAI_API_KEY=your_openai_key  # Optional
-   supabase secrets set GROQ_API_KEY=your_groq_key      # Optional
-   ```
+# Deploy Edge Function
+supabase functions deploy resume-ai --no-verify-jwt
+```
 
-3. **Deploy Edge Function**
-   ```bash
-   supabase functions deploy resume-ai --no-verify-jwt
-   ```
+Windows setup script:
 
-For Windows users, use the setup script:
 ```powershell
 ./scripts/setup_ai_backend.ps1
 ```
 
 ---
 
-## 📤 Export Formats
-
-The platform supports 7+ export formats, all generated client-side:
+## Export Formats
 
 | Format | Description | Use Case |
 |--------|-------------|----------|
@@ -230,29 +271,29 @@ The platform supports 7+ export formats, all generated client-side:
 
 ---
 
-## 🛡️ Privacy & Security
+## Privacy & Security
 
-- **No Data Collection**: Your resume data never leaves your browser
-- **Local Storage Only**: All data persists in browser localStorage
-- **Server-Side AI Keys**: API keys for LLM providers are stored securely in Supabase Secrets
-- **Client-Side Exports**: All document generation happens in-browser
-- **Optional API Key**: Users can provide their own API keys (stored in sessionStorage only)
+- **No Data Collection** — your resume data never leaves your browser
+- **Local Storage Only** — all data persists in browser localStorage
+- **Server-Side AI Keys** — API keys stored securely in Supabase Secrets
+- **Client-Side Exports** — all document generation happens in-browser
+- **Optional API Key** — users can provide their own keys (sessionStorage only)
 
 ---
 
-## 📖 Documentation & Guides
+## Documentation & Guides
 
-Learn more about the platform's core modules:
 - [AI Integration Guide](./docs/AI_INTEGRATION.md) — Multi-tier intelligence architecture
 - [Supabase Setup](./docs/SUPABASE_SETUP.md) — Edge Functions and AI gateway config
 - [NLP & Offline Parser](./docs/NLP_SETUP.md) — Private, local resume analysis
 - [Resume Wizard](./docs/RESUME_WIZARD.md) — Guided step-by-step experience
 - [Job Optimizer](./docs/JOB_OPTIMIZER.md) — ATS scoring and keyword matching
 - [Architecture](./ARCHITECTURE.md) — Full technical documentation
+- [Design System](./design-system/futurejobfit/MASTER.md) — UI/UX design tokens and guidelines
 
 ---
 
-## 🛠️ Available Scripts
+## Available Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -265,13 +306,14 @@ Learn more about the platform's core modules:
 
 ---
 
-## 🧰 Technology Stack
+## Technology Stack
 
 | Category | Technologies |
-|----------|--------------|
+|----------|-------------|
 | **Frontend** | React 18, TypeScript 5, Vite 5 |
 | **Styling** | Tailwind CSS 3, Shadcn/UI, Radix Primitives |
-| **Animation** | Framer Motion 10 |
+| **Design System** | Custom Swiss/Futuristic tokens, Glassmorphism, OLED palette |
+| **Animation** | Framer Motion 10, CSS keyframes (`pulse-glow`, `gradient-shift`, `float`) |
 | **State** | React Context, TanStack Query |
 | **Forms** | react-hook-form + Zod validation |
 | **AI** | Google Gemini, OpenAI, Groq (via Supabase Edge) |
@@ -281,20 +323,21 @@ Learn more about the platform's core modules:
 
 ---
 
-## 🤝 Roadmap
+## Roadmap
 
-- [x] **Modular Architecture Refactor**: All major pages componentized for scalability
-- [x] **Secure AI Gateway**: Server-side key management via Supabase
-- [x] **Browser-Native NLP**: Pyodide integration for offline parsing and scoring
-- [x] **Import from PDF**: Advanced parsing using the local NLP suite
-- [x] **PWA Support**: Installable app with offline capabilities
-- [x] **Multi-Format Export**: 7+ formats with template support
-- [ ] **Tailored Cover Letter Generator**
-- [ ] **LinkedIn Profile Sync**
-- [ ] **Interview Prep Module**
+- [x] Modular architecture refactor — all major pages componentized
+- [x] Secure AI gateway — server-side key management via Supabase
+- [x] Browser-native NLP — Pyodide integration for offline parsing
+- [x] Import from PDF — advanced parsing using the local NLP suite
+- [x] PWA support — installable app with offline capabilities
+- [x] Multi-format export — 7+ formats with template support
+- [x] **Minimal Futuristic Swiss redesign** — OLED palette, glassmorphism, animated gradients
+- [ ] Tailored Cover Letter Generator
+- [ ] LinkedIn Profile Sync
+- [ ] Interview Prep Module
 
 ---
 
-## 📄 License
+## License
 
-MIT License - Developed with ❤️ for the high-performance career seeker.
+MIT License — Built with precision for the high-performance career seeker.

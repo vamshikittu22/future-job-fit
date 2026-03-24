@@ -1,7 +1,10 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { ArrowLeft, Save, Eye, Download, Upload, Sparkles, Target, RotateCcw, RotateCw, Trash2, History, MoreHorizontal } from "lucide-react";
+import {
+  ArrowLeft, Save, Eye, Download, Upload, Sparkles,
+  RotateCcw, RotateCw, Trash2, History, MoreHorizontal, Zap
+} from "lucide-react";
 import ThemeToggle from "@/shared/components/common/ThemeToggle";
 import {
   DropdownMenu,
@@ -11,7 +14,7 @@ import {
   DropdownMenuSeparator,
 } from "@/shared/ui/dropdown-menu";
 
-// Error boundary wrapper for Navigation
+// ─── Error Boundary ───────────────────────────────────────────
 class NavigationErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean }
@@ -20,38 +23,35 @@ class NavigationErrorBoundary extends React.Component<
     super(props);
     this.state = { hasError: false };
   }
-
   static getDerivedStateFromError(_: Error) {
     return { hasError: true };
   }
-
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Navigation Error:', error, errorInfo);
+    console.error("Navigation Error:", error, errorInfo);
   }
-
   render() {
     if (this.state.hasError) {
       return (
-        <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold">ResumeAI</h1>
-              <div className="text-sm text-muted-foreground">Navigation temporarily unavailable</div>
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl">
+          <nav className="nav-floating px-6 py-3">
+            <div className="flex items-center justify-between">
+              <span className="brand-logo">FutureJobFit</span>
+              <span className="text-sm text-muted-foreground">Navigation temporarily unavailable</span>
             </div>
-          </div>
-        </nav>
+          </nav>
+        </div>
       );
     }
-
     return this.props.children;
   }
 }
 
+// ─── Types ────────────────────────────────────────────────────
 interface SavedVersion {
   id: string;
   name: string;
   timestamp: string;
-  data: any;
+  data: unknown;
 }
 
 interface BuilderToolsProps {
@@ -75,95 +75,159 @@ interface AppNavigationProps {
   builderTools?: BuilderToolsProps;
 }
 
+// ─── Nav Links ────────────────────────────────────────────────
+const NAV_LINKS = [
+  { to: "/input", label: "Job Optimizer" },
+  { to: "/match-intelligence", label: "Match AI" },
+  { to: "/resume-wizard", label: "Resume Wizard" },
+  { to: "/about-platform", label: "Architecture" },
+];
+
+// ─── NavigationContent ───────────────────────────────────────
 function NavigationContent({ builderTools }: AppNavigationProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isWizard = location.pathname.startsWith("/resume-wizard");
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
-            <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-              ResumeAI
-            </h1>
+    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-5xl pointer-events-none">
+      <nav className="nav-floating pointer-events-auto">
+        <div className="flex items-center gap-3 px-4 py-2.5">
+          {/* ── Brand ────────────────────────────────── */}
+          <Link
+            to="/"
+            className="flex items-center gap-2 flex-shrink-0 group cursor-pointer"
+          >
+            <div className="w-7 h-7 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+              <Zap className="w-4 h-4 text-white" aria-hidden="true" />
+            </div>
+            <span className="brand-logo hidden sm:block">FutureJobFit</span>
           </Link>
 
-          {/* Builder Tools (conditionally rendered) */}
-          {builderTools && location.pathname === "/create-resume" ? null : builderTools && (
-            <div className="flex flex-1 items-center justify-end gap-2 overflow-x-auto py-1 scrollbar-hide">
-              {/* Primary Actions */}
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={builderTools.onSave}>
-                  <Save className="w-4 h-4 mr-1" /> Save
-                </Button>
+          {/* ── Divider ──────────────────────────────── */}
+          <div className="hidden md:block h-5 w-px bg-border mx-1 flex-shrink-0" />
 
-                <Button variant="outline" size="sm" onClick={builderTools.onPreview}>
-                  <Eye className="w-4 h-4 mr-1" />
-                  <span className="hidden sm:inline">{builderTools.showPreview ? "Hide" : "Show"} Preview</span>
-                </Button>
+          {/* ── Nav Links (home page only) ───────────── */}
+          {isHome && (
+            <div className="hidden md:flex items-center gap-1 flex-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-180 cursor-pointer"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
 
-                <Button variant="secondary" size="sm" onClick={builderTools.onExport}>
-                  <Download className="w-4 h-4 mr-1" /> Export
-                </Button>
-              </div>
+          {/* ── Spacer ───────────────────────────────── */}
+          <div className="flex-1" />
 
-              {/* Secondary Actions Dropdown */}
+          {/* ── Builder Tools ────────────────────────── */}
+          {builderTools && !isWizard && (
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={builderTools.onSave}
+                className="cursor-pointer flex-shrink-0 h-8 text-xs"
+              >
+                <Save className="w-3.5 h-3.5 mr-1" />
+                Save
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={builderTools.onPreview}
+                className="cursor-pointer flex-shrink-0 h-8 text-xs"
+              >
+                <Eye className="w-3.5 h-3.5 mr-1" />
+                <span className="hidden sm:inline">
+                  {builderTools.showPreview ? "Hide" : "Show"} Preview
+                </span>
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={builderTools.onExport}
+                className="cursor-pointer flex-shrink-0 h-8 text-xs bg-gradient-accent border-0 hover:opacity-90"
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                Export
+              </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                    <MoreHorizontal className="h-4 h-4" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer h-8 w-8 p-0 flex-shrink-0"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
                     <span className="sr-only">More actions</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={builderTools.onImport}>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    onClick={builderTools.onImport}
+                    className="cursor-pointer"
+                  >
                     <Upload className="w-4 h-4 mr-2" /> Import
                   </DropdownMenuItem>
-
                   {builderTools.onUndo && builderTools.onRedo && (
                     <>
                       <DropdownMenuItem
                         onClick={builderTools.onUndo}
                         disabled={!builderTools.canUndo}
+                        className="cursor-pointer"
                       >
                         <RotateCcw className="w-4 h-4 mr-2" /> Undo
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={builderTools.onRedo}
                         disabled={!builderTools.canRedo}
+                        className="cursor-pointer"
                       >
                         <RotateCw className="w-4 h-4 mr-2" /> Redo
                       </DropdownMenuItem>
                     </>
                   )}
-
-                  <DropdownMenuItem onClick={builderTools.onEnhanceAI}>
+                  <DropdownMenuItem
+                    onClick={builderTools.onEnhanceAI}
+                    className="cursor-pointer"
+                  >
                     <Sparkles className="w-4 h-4 mr-2" /> Enhance with AI
                   </DropdownMenuItem>
-
                   {builderTools.onClearForm && (
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={builderTools.onClearForm}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Clear Form
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onClick={builderTools.onClearForm}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Clear Form
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Saved Versions Dropdown */}
               {builderTools.savedVersions && builderTools.savedVersions.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <History className="w-4 h-4 mr-1" /> Versions
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer flex-shrink-0 h-8 text-xs"
+                    >
+                      <History className="w-3.5 h-3.5 mr-1" /> Versions
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
-                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground overline">
                       Saved Versions
                     </div>
                     <DropdownMenuSeparator />
@@ -171,9 +235,9 @@ function NavigationContent({ builderTools }: AppNavigationProps) {
                       <DropdownMenuItem
                         key={version.id}
                         onClick={() => builderTools.onRestoreVersion?.(version)}
-                        className="flex flex-col items-start py-2"
+                        className="flex flex-col items-start py-2 cursor-pointer"
                       >
-                        <div className="font-medium">{version.name}</div>
+                        <div className="font-medium text-sm">{version.name}</div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(version.timestamp).toLocaleString()}
                         </div>
@@ -185,47 +249,40 @@ function NavigationContent({ builderTools }: AppNavigationProps) {
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex items-center gap-2 ml-auto">
+          {/* ── Right Actions ─────────────────────────── */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <ThemeToggle />
             {!isHome && (
-              <Button variant="ghost" size="sm" asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="cursor-pointer h-8 text-xs"
+              >
                 <Link to="/">
-                  <ArrowLeft className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">Home</span>
+                  <ArrowLeft className="w-3.5 h-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Home</span>
                 </Link>
               </Button>
             )}
             {location.pathname !== "/input" && (
-              <Button variant="outline" size="sm" asChild>
+              <Button
+                size="sm"
+                asChild
+                className="cursor-pointer h-8 text-xs bg-gradient-accent border-0 hover:opacity-90 hidden sm:flex"
+              >
                 <Link to="/input">New Analysis</Link>
               </Button>
             )}
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
 
+// ─── Export ───────────────────────────────────────────────────
 export default function AppNavigation(props: AppNavigationProps) {
-  // Add scrollbar hide styles to the document head
-  React.useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .scrollbar-hide {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-      }
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;  /* Chrome, Safari and Opera */
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   return (
     <NavigationErrorBoundary>
       <NavigationContent {...props} />
