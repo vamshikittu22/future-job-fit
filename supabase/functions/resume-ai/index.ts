@@ -75,8 +75,10 @@ interface EnhancementRequest {
   quick_preset?: 'ATS Optimized' | 'Concise Professional' | 'Maximum Impact' | null;
   tone_style?: string[];
   highlight_areas?: string[];
+  industry_keywords?: string;
   job_description?: string;
   target_role?: string;
+  integration_mode?: 'smart' | 'append' | 'suggest';
 }
 
 interface AnalysisRequest {
@@ -490,8 +492,68 @@ async function callGemini(prompt: string, temperature = 0.8): Promise<string> {
 }
 
 const getEnhancementSystemPrompt = (payload: EnhancementRequest): string => {
-  return `You are a Career Expert & Resume Strategist. 
-Your task is to rewrite the following resume content into 3 distinct, high-quality variations.
+  const integrationMode = payload.integration_mode || 'smart';
+  const keywordsList = payload.industry_keywords
+    ? payload.industry_keywords.split(/[,;|]/).map(k => k.trim()).filter(Boolean)
+    : [];
+  const hasKeywords = keywordsList.length > 0;
+
+  // Return simple suggestion structure for 'suggest' mode
+  if (integrationMode === 'suggest') {
+    return `You are a Career Expert & Resume Strategist.
+Suggest where these keywords could fit naturally in the existing content:
+Keywords: ${keywordsList.join(', ')}
+Content: ${payload.original_text}
+
+Return JSON with insertion suggestions:
+{
+  "suggestions": [
+    {"keyword": "keyword", "location": "sentence context", "suggestedInsertion": "how to add it"}
+  ],
+  "notes": "Brief analysis"
+}`;
+  }
+
+  // Build keyword section based on mode
+  let keywordSection = '';
+  if (hasKeywords && integrationMode === 'smart') {
+    keywordSection = `
+KEYWORD INTEGRATION (CRITICAL - Smart Rewrite Mode):
+- MUST naturally weave these keywords INTO sentences: ${keywordsList.join(', ')}
+- DO NOT append keywords as a list at the end
+- DO NOT create separate "Skills" or "Keywords" sections just to add them
+- Rewrite existing sentences to incorporate keywords contextually
+- Keywords should feel like natural part of the narrative
+
+EXAMPLES OF BAD vs GOOD:
+BAD: "Led development team. React, TypeScript."
+GOOD: "Led 5-person development team using React and TypeScript to ship features 40% faster."`;
+  } else if (hasKeywords && integrationMode === 'append') {
+    keywordSection = `
+KEYWORD INTEGRATION (Append Mode):
+- Include these keywords: ${keywordsList.join(', ')}
+- Prefer weaving into sentences, but appending is acceptable
+- Can add as a skills list at the end if appropriate`;
+  }
+
+  const taskVerb = integrationMode === 'smart' ? 'REWRITE' : 'Enhance';
+  const rewriteRules = integrationMode === 'smart'
+    ? `REWRITING RULES:
+1. REWRITE the content - don't just polish or rephrase slightly
+2. Preserve all factual data (dates, tech, metrics). NEVER hallucinate details.
+3. Use strong action verbs (Spearheaded, Architected, Orchestrated, Delivered).
+4. Quantify achievements (%, $, time saved, team size, scale).
+5. Ensure the 3 variations are DISTINCT from each other.
+6. Keep similar length to original (±20%)
+${hasKeywords ? '7. Keywords must be naturally integrated - not appended as a list' : ''}`
+    : `ENHANCEMENT RULES:
+1. Improve the content while preserving structure
+2. Use strong action verbs and quantify where possible
+3. Maintain factual accuracy
+4. Ensure readability`;
+
+  return `You are a Career Expert & Resume Strategist.
+Your task is to ${taskVerb} the following resume content into 3 distinct, high-quality variations.
 
 INPUT CONTENT:
 ${payload.original_text}
@@ -500,20 +562,20 @@ CONTEXT:
 - Section: ${payload.section_type}
 - Preset: ${payload.quick_preset || 'Standard'}
 - Tone: ${payload.tone_style?.join(', ') || 'Professional'}
+- Mode: ${integrationMode}
+${keywordSection}
 
-RULES:
-1. Preserve all factual data (dates, tech, metrics). NEVER hallucinate details.
-2. Use strong action verbs (Spearheaded, Architected, Orchestrated).
-3. Quantify achievements whenever possible.
-4. Ensure the 3 variations are DISTINCT from each other in structure and phrasing.
-5. Variation 1: Focus on Keywords & ATS.
-6. Variation 2: Focus on Leadership & Impact.
-7. Variation 3: Focus on Conciseness & Clarity.
+${rewriteRules}
+
+Provide 3 DISTINCT variants:
+- Variant 1: Focus on technical depth and specific tools
+- Variant 2: Focus on leadership and impact
+- Variant 3: Focus on efficiency and process improvements
 
 RESPONSE FORMAT (JSON ONLY):
 {
-  "variants": ["string", "string", "string"],
-  "notes": "string explaining the strategy used"
+  "variants": ["string - first variant", "string - second variant", "string - third variant"],
+  "notes": "Brief strategy explanation${hasKeywords && integrationMode === 'smart' ? ' including how keywords were integrated' : ''}"
 }`;
 };
 
@@ -563,7 +625,7 @@ CONTENT: ${content}`;
     } else if (task === 'evaluateResume') {
       const { resumeText, jobDescription } = body as EvaluationRequest;
       const prompt = `You are an expert ATS Resume Optimizer.
-Evaluate the following resume against the job description and provide a high-quality optimization.
+Evaluate the following resume against the job description and provide optimization guidance.
 
 RESUME:
 ${resumeText}
@@ -572,20 +634,22 @@ JOB DESCRIPTION:
 ${jobDescription || 'N/A'}
 
 TASK:
-1. Identify missing keywords (technologies, skills).
-2. Calculate ATS score (0-100).
+1. Identify missing keywords (technologies, skills) from the job description.
+2. Calculate ATS score (0-100) based on keyword coverage and formatting.
 3. Provide 3-5 concrete suggestions for improvement.
-4. Provide a FULLY REWRITTEN and OPTIMIZED version of the entire resume text.
-   - INTEGRATE missing keywords naturally into the experience bullet points where they fit.
-   - Use high-impact action verbs.
-   - Maintain all original factual data.
+4. Provide a REWRITTEN version that integrates missing keywords NATURALLY:
+- Weave keywords into existing bullet points
+- DO NOT create keyword lists or append skills at the end
+- Rewrite sentences to include relevant keywords contextually
+- Maintain natural flow and readability
+- Example: Instead of "Led team. React." write "Led 5-person team using React to build scalable web applications."
 
 Return ONLY a JSON object:
 {
   "atsScore": number,
-  "missingKeywords": ["..."],
-  "suggestions": ["..."],
-  "rewrittenResume": "string (the full optimized resume text)"
+  "missingKeywords": ["keyword1", "keyword2"],
+  "suggestions": ["specific actionable suggestion"],
+  "rewrittenResume": "the full optimized resume text with keywords naturally integrated"
 }`;
       const text = await callGemini(prompt, 0.5);
       responseData = JSON.parse(text.replace(/```json|```/g, '').trim());
