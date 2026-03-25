@@ -2,411 +2,466 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1600">
-<title>FutureJobFit Architecture</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #090912;
-    width: 1600px;
-    height: 920px;
-    font-family: 'Segoe UI', Inter, sans-serif;
-    color: #fff;
-    overflow: hidden;
-    position: relative;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#07080f;
+  width:1600px; height:960px;
+  font-family:'Segoe UI',Inter,system-ui,sans-serif;
+  color:#fff;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
 
-  /* === LAYOUT === */
-  .diagram {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 28px 28px;
-    height: 100%;
-    position: relative;
-  }
+/* ── TITLE ── */
+.title {
+  text-align:center;
+  padding:18px 0 6px;
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.35);
+}
+.subtitle {
+  text-align:center;
+  font-size:11px;
+  color:rgba(255,255,255,.2);
+  letter-spacing:.08em;
+  margin-bottom:16px;
+}
 
-  /* === ZONES === */
-  .zone {
-    border-radius: 14px;
-    border: 1.5px dashed rgba(255,255,255,0.18);
-    padding: 14px 12px 12px;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .zone-label {
-    position: absolute;
-    top: -11px; left: 14px;
-    background: #090912;
-    padding: 0 8px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-  }
+/* ── MAIN FLOW LAYOUT ── */
+.flow {
+  display:flex;
+  align-items:stretch;
+  gap:0;
+  padding:0 28px 0;
+  position:relative;
+  flex:1;
+  min-height:0;
+}
 
-  /* === USER COLUMN === */
-  .user-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 68px;
-  }
-  .user-avatar {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #6366f1);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
-    box-shadow: 0 0 18px rgba(99,102,241,0.45);
-  }
-  .user-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+/* ── COLUMN ── */
+.col {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  height:100%;
+}
 
-  /* === BROWSER ZONE === */
-  .browser-zone {
-    border-color: rgba(99,102,241,0.4);
-    width: 620px;
-    height: 846px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+/* ── CONNECTOR ARROWS ── */
+.connector {
+  display:flex;
+  align-items:center;
+  align-self:flex-start;
+  margin-top:31px;   /* vertically center with first box */
+  flex-shrink:0;
+}
+.arrow-line {
+  height:2px;
+  background:rgba(255,255,255,.22);
+  position:relative;
+}
+.arrow-line::after {
+  content:'';
+  position:absolute;
+  right:-7px; top:-4px;
+  border:5px solid transparent;
+  border-left:8px solid rgba(255,255,255,.35);
+}
+/* labeled connector */
+.label-arrow {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+}
+.arrow-tag {
+  font-size:9px;
+  color:rgba(255,255,255,.35);
+  letter-spacing:.05em;
+  white-space:nowrap;
+  background:rgba(255,255,255,.05);
+  border-radius:4px;
+  padding:2px 7px;
+}
 
-  /* === CLOUD ZONE === */
-  .cloud-zone {
-    border-color: rgba(139,92,246,0.45);
-    width: 390px;
-    height: 846px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+/* ── START / END CAPSULES ── */
+.capsule {
+  border-radius:30px;
+  padding:10px 18px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  text-align:center;
+}
+.capsule-start {
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  box-shadow:0 0 22px rgba(99,102,241,.5);
+}
+.capsule-end {
+  background:linear-gradient(135deg,#10b981,#059669);
+  box-shadow:0 0 22px rgba(16,185,129,.5);
+}
 
-  /* === SUB-GROUPS === */
-  .group {
-    border-radius: 10px;
-    border: 1.5px dashed rgba(255,255,255,0.2);
-    padding: 10px 10px 8px;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .group-label {
-    position: absolute;
-    top: -10px; left: 12px;
-    background: #090912;
-    padding: 0 6px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .group-sub {
-    font-size: 9px;
-    font-weight: 500;
-    opacity: 0.6;
-    margin-top: 2px;
-    letter-spacing: 0.04em;
-  }
+/* ── USER NODE ── */
+.user-node {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  width:72px;
+}
+.avatar {
+  width:52px;height:52px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 0 20px rgba(99,102,241,.4);
+}
+.user-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,.75); }
 
-  /* Group color variants */
-  .group-blue   { border-color: rgba(59,130,246,0.45); }
-  .group-blue   .group-label { color: #60a5fa; }
-  .group-cyan   { border-color: rgba(0,212,255,0.45); }
-  .group-cyan   .group-label { color: #00d4ff; }
-  .group-green  { border-color: rgba(34,197,94,0.45); }
-  .group-green  .group-label { color: #4ade80; }
-  .group-orange { border-color: rgba(251,146,60,0.4); }
-  .group-orange .group-label { color: #fb923c; }
-  .group-grey   { border-color: rgba(148,163,184,0.3); }
-  .group-grey   .group-label { color: #94a3b8; }
-  .group-violet { border-color: rgba(167,139,250,0.4); }
-  .group-violet .group-label { color: #a78bfa; }
+/* ── ZONE BOX ── */
+.zone {
+  border-radius:12px;
+  border:1.5px dashed rgba(255,255,255,.14);
+  padding:12px 10px 10px;
+  position:relative;
+  width:100%;
+}
+.zone-lbl {
+  position:absolute;
+  top:-10px;left:12px;
+  background:#07080f;
+  padding:0 7px;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.4);
+}
 
-  /* === COMPONENT BOX === */
-  .box {
-    border-radius: 7px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04);
-    padding: 7px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.88);
-    white-space: nowrap;
-  }
-  .box .icon { font-size: 16px; flex-shrink: 0; }
-  .box .sub  { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 1px; }
-  .box-col { flex-direction: column; align-items: flex-start; }
+/* ── COMPONENT BOX ── */
+.box {
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:500;
+  color:rgba(255,255,255,.85);
+  width:100%;
+}
+.box-icon { font-size:16px; flex-shrink:0; }
+.box-body { display:flex; flex-direction:column; gap:1px; }
+.box-title { font-size:11px; font-weight:600; line-height:1.3; }
+.box-sub   { font-size:9px;  color:rgba(255,255,255,.4); }
 
-  /* Row of boxes */
-  .row { display: flex; gap: 7px; flex-wrap: wrap; }
-  .col { display: flex; flex-direction: column; gap: 7px; }
+/* color variants */
+.blue   { border-color:rgba(59,130,246,.45);  background:rgba(59,130,246,.08); }
+.cyan   { border-color:rgba(0,212,255,.45);   background:rgba(0,212,255,.07); }
+.green  { border-color:rgba(34,197,94,.45);   background:rgba(34,197,94,.07); }
+.orange { border-color:rgba(251,146,60,.4);   background:rgba(251,146,60,.07); }
+.violet { border-color:rgba(167,139,250,.4);  background:rgba(167,139,250,.08); }
+.red    { border-color:rgba(239,68,68,.4);    background:rgba(239,68,68,.07); }
+.grey   { border-color:rgba(148,163,184,.25); background:rgba(148,163,184,.05); }
 
-  /* Color variants for boxes */
-  .box-blue   { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08); }
-  .box-cyan   { border-color: rgba(0,212,255,0.4);  background: rgba(0,212,255,0.07); }
-  .box-green  { border-color: rgba(34,197,94,0.4);  background: rgba(34,197,94,0.07); }
-  .box-orange { border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.07); }
-  .box-violet { border-color: rgba(167,139,250,0.4);background: rgba(167,139,250,0.08);}
-  .box-red    { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.07); }
-  .box-grey   { border-color: rgba(148,163,184,0.3);background: rgba(148,163,184,0.05);}
+/* zone border colors */
+.zone-blue   { border-color:rgba(59,130,246,.3);  }
+.zone-blue   .zone-lbl { color:#60a5fa; }
+.zone-cyan   { border-color:rgba(0,212,255,.3);   }
+.zone-cyan   .zone-lbl { color:#00d4ff; }
+.zone-green  { border-color:rgba(34,197,94,.3);   }
+.zone-green  .zone-lbl { color:#4ade80; }
+.zone-orange { border-color:rgba(251,146,60,.3);  }
+.zone-orange .zone-lbl { color:#fb923c; }
+.zone-violet { border-color:rgba(167,139,250,.3); }
+.zone-violet .zone-lbl { color:#a78bfa; }
+.zone-grey   { border-color:rgba(148,163,184,.2); }
+.zone-grey   .zone-lbl { color:#94a3b8; }
 
-  /* === ARROWS (SVG overlay) === */
-  .arrow-layer {
-    position: absolute;
-    top: 0; left: 0;
-    width: 1600px;
-    height: 920px;
-    pointer-events: none;
-  }
+/* ── STEP BADGE ── */
+.step-badge {
+  position:absolute;
+  top:-10px;right:10px;
+  background:#07080f;
+  padding:0 6px;
+  font-size:9px;
+  font-weight:800;
+  color:rgba(255,255,255,.3);
+  letter-spacing:.06em;
+  white-space:nowrap;
+}
 
-  /* === LEGEND === */
-  .legend {
-    position: absolute;
-    bottom: 18px; left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-  .pill {
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .pill-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .pill-cyan   { background: rgba(0,212,255,0.12); color: #00d4ff; }
-  .pill-green  { background: rgba(34,197,94,0.12);  color: #4ade80; }
-  .pill-orange { background: rgba(251,146,60,0.12); color: #fb923c; }
+/* ── OUTPUT CHIP ── */
+.output-chip {
+  border-radius:8px;
+  padding:7px 10px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:10px;
+  font-weight:600;
+  width:100%;
+  justify-content:center;
+}
+.chip-score  { background:rgba(239,68,68,.13);   border:1px solid rgba(239,68,68,.3);   color:#f87171; }
+.chip-badge  { background:rgba(0,212,255,.11);   border:1px solid rgba(0,212,255,.3);   color:#67e8f9; }
+.chip-ai     { background:rgba(167,139,250,.11); border:1px solid rgba(167,139,250,.3); color:#c4b5fd; }
+.chip-export { background:rgba(34,197,94,.11);   border:1px solid rgba(34,197,94,.3);   color:#6ee7b7; }
 
-  /* Title */
-  .title-bar {
-    position: absolute;
-    top: 10px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
-  }
+/* ── LEGEND ── */
+.legend {
+  position:absolute;
+  bottom:14px;left:50%;
+  transform:translateX(-50%);
+  display:flex;gap:20px;align-items:center;
+}
+.pill {
+  border-radius:20px;padding:4px 14px;
+  font-size:9px;font-weight:800;
+  letter-spacing:.07em;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.pdot { width:7px;height:7px;border-radius:50%; }
+
+/* ── VERTICAL SPLIT LABEL ── */
+.path-label {
+  font-size:9px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 10px;border-radius:4px;
+  text-align:center;white-space:nowrap;
+}
+.path-offline { background:rgba(0,212,255,.1);color:#00d4ff;border:1px solid rgba(0,212,255,.25); }
+.path-online  { background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.25); }
+
+/* ── SVG OVERLAY ── */
+.overlay {
+  position:fixed;top:0;left:0;
+  width:1600px;height:960px;
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
 
-<div class="title-bar">FutureJobFit — System Architecture</div>
+<div class="title">FutureJobFit — System Architecture &amp; Data Flow</div>
+<div class="subtitle">Read left → right &nbsp;·&nbsp; Offline path (cyan) &nbsp;·&nbsp; Online-only path (violet)</div>
 
-<div class="diagram">
+<!-- ═══════════════════════════════════════════════════ FLOW ═══ -->
+<div class="flow">
 
-  <!-- USER -->
-  <div class="user-col">
-    <div class="user-avatar">👤</div>
-    <div class="user-label">User</div>
+  <!-- ① START -->
+  <div class="col" style="width:88px;margin-top:12px">
+    <div class="capsule capsule-start" style="width:72px;font-size:9px">▶ Start</div>
+    <div style="height:8px"></div>
+    <div class="user-node">
+      <div class="avatar">👤</div>
+      <div class="user-lbl">User</div>
+    </div>
+    <div style="height:10px"></div>
+    <div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;line-height:1.5">
+      Pastes JD<br>+ Resume
+    </div>
   </div>
 
-  <!-- BROWSER ZONE -->
-  <div class="zone browser-zone">
-    <div class="zone-label">🌐 Browser Client</div>
+  <!-- → arrow 1 -->
+  <div class="connector" style="width:36px">
+    <div class="label-arrow">
+      <div class="arrow-tag">input</div>
+      <div class="arrow-line" style="width:36px"></div>
+    </div>
+  </div>
 
-    <!-- UI Layer -->
-    <div class="group group-blue" style="margin-top:8px">
-      <div class="group-label">React 18 + Vite 5 — UI Layer</div>
-      <div class="row" style="margin-top:6px">
-        <div class="box box-blue"><span class="icon">🏠</span>Home</div>
-        <div class="box box-blue"><span class="icon">📝</span>Resume Wizard</div>
-        <div class="box box-orange"><span class="icon">🎯</span>Job Optimizer</div>
-        <div class="box box-violet"><span class="icon">🧠</span>Match Intelligence</div>
-        <div class="box box-grey"><span class="icon">ℹ️</span>About Platform</div>
+  <!-- ② UI LAYER -->
+  <div class="col" style="width:168px;margin-top:4px">
+    <div class="step-badge" style="position:relative;top:auto;right:auto;text-align:center;width:100%;padding:0 0 6px">STEP 1</div>
+    <div class="zone zone-blue" style="gap:7px;display:flex;flex-direction:column">
+      <div class="zone-lbl">🌐 React 18 UI</div>
+      <div style="height:4px"></div>
+      <div class="box blue"><span class="box-icon">🏠</span><div class="box-body"><div class="box-title">Home</div></div></div>
+      <div class="box orange"><span class="box-icon">🎯</span><div class="box-body"><div class="box-title">Job Optimizer</div><div class="box-sub">/input → /results</div></div></div>
+      <div class="box blue"><span class="box-icon">📝</span><div class="box-body"><div class="box-title">Resume Wizard</div></div></div>
+      <div class="box violet"><span class="box-icon">🧠</span><div class="box-body"><div class="box-title">Match Intelligence</div></div></div>
+    </div>
+    <div class="zone zone-grey" style="margin-top:2px">
+      <div class="zone-lbl">State</div>
+      <div style="height:6px"></div>
+      <div class="box grey" style="font-size:10px"><span class="box-icon">💾</span>ResumeContext + JobContext</div>
+      <div class="box grey" style="margin-top:6px;font-size:10px"><span class="box-icon">🗃️</span>localStorage + Zod</div>
+    </div>
+  </div>
+
+  <!-- → arrow 2 (splits into two paths) -->
+  <div class="connector" style="width:22px;flex-direction:column;gap:4px;margin-top:45px;align-self:flex-start">
+    <div class="path-label path-offline" style="writing-mode:horizontal-tb;font-size:8px">offline</div>
+    <div class="arrow-line" style="width:22px"></div>
+    <div style="height:160px"></div>
+    <div class="path-label path-online" style="writing-mode:horizontal-tb;font-size:8px">online</div>
+    <div class="arrow-line" style="width:22px"></div>
+  </div>
+
+  <!-- ③ OFFLINE ANALYSIS COLUMN -->
+  <div class="col" style="width:210px;margin-top:4px">
+
+    <!-- T1 ATS -->
+    <div style="width:100%">
+      <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:#00d4ff;margin-bottom:6px;text-transform:uppercase">STEP 2 — ATS Engine (Tier 1)</div>
+      <div class="zone zone-cyan" style="display:flex;flex-direction:column;gap:6px">
+        <div class="zone-lbl">🔍 Always-on · &lt;10ms</div>
+        <div style="height:4px"></div>
+        <div class="box cyan"><span class="box-icon">⚙️</span><div class="box-body"><div class="box-title">extractCategorisedATSKeywords</div><div class="box-sub">ATS_KEYWORDS dictionary</div></div></div>
+        <div class="box cyan"><span class="box-icon">⚙️</span><div class="box-body"><div class="box-title">extractRequirements</div><div class="box-sub">section-aware JD parser</div></div></div>
+        <div class="box cyan"><span class="box-icon">📊</span><div class="box-body"><div class="box-title">useMatchComparison</div><div class="box-sub">weighted gap analysis</div></div></div>
+        <div class="box cyan"><span class="box-icon">🔎</span><div class="box-body"><div class="box-title">useJobAnalyzer</div><div class="box-sub">role &amp; insight detection</div></div></div>
       </div>
     </div>
 
-    <!-- State -->
-    <div class="group group-grey">
-      <div class="group-label">State &amp; Context</div>
-      <div class="row" style="margin-top:6px">
-        <div class="box box-grey"><span class="icon">🔄</span>ResumeContext</div>
-        <div class="box box-grey"><span class="icon">💼</span>JobContext</div>
-        <div class="box box-grey"><span class="icon">💾</span>localStorage + Zod</div>
-        <div class="box box-grey"><span class="icon">🔃</span>TanStack Query</div>
+    <!-- T2 Pyodide -->
+    <div style="width:100%;margin-top:10px">
+      <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:#4ade80;margin-bottom:6px;text-transform:uppercase">STEP 3 — Pyodide NLP (Tier 2)</div>
+      <div class="zone zone-green" style="display:flex;flex-direction:column;gap:6px">
+        <div class="zone-lbl">🐍 Offline-capable · &lt;50ms</div>
+        <div style="height:4px"></div>
+        <div class="box green"><span class="box-icon">🐍</span><div class="box-body"><div class="box-title">Python 3.11 / WebAssembly</div><div class="box-sub">nlp_core.py · pdfjs-dist</div></div></div>
+        <div class="box green"><span class="box-icon">📑</span><div class="box-body"><div class="box-title">PDF Resume Parse</div><div class="box-sub">Structured JSON output</div></div></div>
       </div>
     </div>
 
-    <!-- ATS Engine T1 -->
-    <div class="group group-cyan">
-      <div class="group-label">🔍 ATS Engine — Tier 1</div>
-      <div class="group-sub" style="margin:14px 0 6px 2px; color:#00d4ff; opacity:0.7; font-size:9px">Always-on · &lt;10ms latency</div>
-      <div class="row">
-        <div class="box box-cyan col" style="flex:1; min-width:130px">
-          <span class="icon">⚙️</span>
-          <div>
-            <div>extractCategorisedATSKeywords</div>
-            <div class="sub">ATS_KEYWORDS dictionary</div>
-          </div>
-        </div>
-        <div class="box box-cyan col" style="flex:1; min-width:110px">
-          <span class="icon">⚙️</span>
-          <div>
-            <div>extractRequirements</div>
-            <div class="sub">section-aware JD parser</div>
-          </div>
-        </div>
-        <div class="box box-cyan col" style="flex:1; min-width:110px">
-          <span class="icon">📊</span>
-          <div>
-            <div>useMatchComparison</div>
-            <div class="sub">weighted gap analysis</div>
-          </div>
-        </div>
-        <div class="box box-cyan col" style="flex:1; min-width:100px">
-          <span class="icon">🔎</span>
-          <div>
-            <div>useJobAnalyzer</div>
-            <div class="sub">role &amp; insight detection</div>
-          </div>
+  </div>
+
+  <!-- → arrow 3 -->
+  <div class="connector" style="width:28px;margin-top:45px;flex-direction:column;gap:100px">
+    <div class="label-arrow">
+      <div class="arrow-tag">results</div>
+      <div class="arrow-line" style="width:28px"></div>
+    </div>
+    <div class="label-arrow" style="margin-top:48px">
+      <div class="arrow-tag">parsed</div>
+      <div class="arrow-line" style="width:28px"></div>
+    </div>
+  </div>
+
+  <!-- ④ OUTPUTS LEFT COLUMN -->
+  <div class="col" style="width:160px;margin-top:4px">
+    <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:6px;text-transform:uppercase">Offline Outputs</div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%">
+      <div class="output-chip chip-score">📊 ATS Score</div>
+      <div class="output-chip chip-badge">🏷️ Required Keywords</div>
+      <div class="output-chip chip-badge">🏷️ Preferred Keywords</div>
+      <div class="output-chip chip-badge">🔴 Keyword Gaps</div>
+      <div class="output-chip chip-badge">📋 Resume Structured JSON</div>
+    </div>
+
+    <!-- Export Engine -->
+    <div style="width:100%;margin-top:16px">
+      <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:#fb923c;margin-bottom:6px;text-transform:uppercase">Export Engine</div>
+      <div class="zone zone-orange" style="display:flex;flex-direction:column;gap:6px">
+        <div class="zone-lbl">📤 Client-side</div>
+        <div style="height:4px"></div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <div class="box orange" style="width:auto;padding:5px 8px;font-size:10px">📕 PDF</div>
+          <div class="box orange" style="width:auto;padding:5px 8px;font-size:10px">📘 DOCX</div>
+          <div class="box orange" style="width:auto;padding:5px 8px;font-size:10px">🌐 HTML</div>
+          <div class="box orange" style="width:auto;padding:5px 8px;font-size:10px">📋 LaTeX</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Pyodide T2 -->
-    <div class="group group-green">
-      <div class="group-label">🐍 Pyodide NLP — Tier 2</div>
-      <div class="group-sub" style="margin:14px 0 6px 2px; color:#4ade80; opacity:0.7; font-size:9px">Offline-capable · &lt;50ms latency</div>
-      <div class="row">
-        <div class="box box-green"><span class="icon">🐍</span>Python 3.11 / WebAssembly</div>
-        <div class="box box-green"><span class="icon">📄</span>nlp_core.py</div>
-        <div class="box box-green"><span class="icon">📑</span>pdfjs-dist</div>
-      </div>
-    </div>
+  <!-- ──── VERTICAL DIVIDER ──── -->
+  <div style="width:1px;background:rgba(255,255,255,.07);align-self:stretch;margin:0 16px"></div>
 
-    <!-- Export + PWA -->
-    <div class="row">
-      <div class="group group-orange" style="flex:1">
-        <div class="group-label">📤 Export Engine</div>
-        <div class="row" style="margin-top:10px">
-          <div class="box box-orange"><span class="icon">📕</span>PDF</div>
-          <div class="box box-orange"><span class="icon">📘</span>DOCX</div>
-          <div class="box box-orange"><span class="icon">🌐</span>HTML</div>
-          <div class="box box-orange"><span class="icon">📋</span>LaTeX / JSON / TXT</div>
-        </div>
-      </div>
-      <div class="group group-grey" style="width:180px; flex-shrink:0">
-        <div class="group-label">📦 PWA</div>
-        <div class="col" style="margin-top:10px; gap:6px">
-          <div class="box box-grey"><span class="icon">🛡️</span>Workbox Service Worker</div>
-          <div class="box box-grey"><span class="icon">🗄️</span>Asset + Pyodide Cache (1yr)</div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /browser-zone -->
-
-  <!-- CLOUD ZONE -->
-  <div class="zone cloud-zone">
-    <div class="zone-label">☁️ Cloud — Online Only</div>
+  <!-- ⑤ CLOUD COLUMN -->
+  <div class="col" style="width:220px;margin-top:4px">
+    <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:#a78bfa;margin-bottom:6px;text-transform:uppercase">STEP 4 — Cloud (online only)</div>
 
     <!-- Supabase -->
-    <div class="group group-green" style="margin-top:8px">
-      <div class="group-label">Supabase Platform</div>
-      <div class="col" style="margin-top:10px; gap:7px">
-        <div class="box box-green">
-          <span class="icon">⚡</span>
-          <div><div>Edge Function — resume-ai</div><div class="sub">AI gateway · auth · routing</div></div>
-        </div>
-        <div class="row">
-          <div class="box box-red" style="flex:1"><span class="icon">🗃️</span>Postgres DB</div>
-          <div class="box box-grey" style="flex:1"><span class="icon">🔐</span>Auth</div>
-          <div class="box box-grey" style="flex:1"><span class="icon">🗂️</span>Storage</div>
-        </div>
+    <div class="zone zone-green" style="width:100%;display:flex;flex-direction:column;gap:6px">
+      <div class="zone-lbl">⚡ Supabase</div>
+      <div style="height:4px"></div>
+      <div class="box green"><span class="box-icon">⚡</span><div class="box-body"><div class="box-title">Edge Function — resume-ai</div><div class="box-sub">Auth · routing · model dispatch</div></div></div>
+      <div style="display:flex;gap:5px">
+        <div class="box red" style="flex:1;font-size:10px"><span class="box-icon">🗃️</span>Postgres DB</div>
+        <div class="box grey" style="flex:1;font-size:10px"><span class="box-icon">🔐</span>Auth</div>
       </div>
     </div>
 
-    <!-- AI Providers T3 -->
-    <div class="group group-orange">
-      <div class="group-label">🤖 AI Providers — Tier 3</div>
-      <div class="group-sub" style="margin:14px 0 6px 2px; color:#fb923c; opacity:0.7; font-size:9px">Online only · 1–3s latency</div>
-      <div class="col" style="gap:7px">
-        <div class="box box-orange">
-          <span class="icon">🔵</span>
-          <div><div>Google Gemini 1.5 Flash / 2.0</div><div class="sub">Primary LLM</div></div>
-        </div>
-        <div class="box box-green">
-          <span class="icon">🟢</span>
-          <div><div>OpenAI GPT-4o-mini</div><div class="sub">Fallback LLM</div></div>
-        </div>
-        <div class="box box-orange">
-          <span class="icon">⚡</span>
-          <div><div>Groq — Llama 3.3 70B</div><div class="sub">Fast inference fallback</div></div>
-        </div>
+    <!-- AI Providers -->
+    <div style="margin-top:10px;width:100%">
+      <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:#fb923c;margin-bottom:6px;text-transform:uppercase">AI Providers (Tier 3 · 1–3s)</div>
+      <div class="zone zone-orange" style="display:flex;flex-direction:column;gap:6px">
+        <div class="zone-lbl">🤖 Online only</div>
+        <div style="height:4px"></div>
+        <div class="box orange"><span class="box-icon">🔵</span><div class="box-body"><div class="box-title">Google Gemini 1.5 Flash / 2.0</div><div class="box-sub">Primary LLM</div></div></div>
+        <div class="box green"><span class="box-icon">🟢</span><div class="box-body"><div class="box-title">OpenAI GPT-4o-mini</div><div class="box-sub">Fallback LLM</div></div></div>
+        <div class="box orange"><span class="box-icon">⚡</span><div class="box-body"><div class="box-title">Groq — Llama 3.3 70B</div><div class="box-sub">Fast inference fallback</div></div></div>
       </div>
     </div>
 
     <!-- CDN -->
-    <div class="group group-blue">
-      <div class="group-label">jsDelivr CDN</div>
-      <div style="margin-top:10px">
-        <div class="box box-blue"><span class="icon">🌍</span>
-          <div><div>Pyodide WASM Runtime</div><div class="sub">Cached by Service Worker after first load</div></div>
-        </div>
-      </div>
+    <div class="zone zone-blue" style="margin-top:10px;width:100%">
+      <div class="zone-lbl">🌍 jsDelivr CDN</div>
+      <div style="height:8px"></div>
+      <div class="box blue"><span class="box-icon">📦</span><div class="box-body"><div class="box-title">Pyodide WASM Runtime</div><div class="box-sub">Cached by Service Worker after first load</div></div></div>
+    </div>
+  </div>
+
+  <!-- → arrow 4 -->
+  <div class="connector" style="width:22px;flex-direction:column;gap:70px;margin-top:45px">
+    <div class="label-arrow">
+      <div class="arrow-tag">enhanced</div>
+      <div class="arrow-line" style="width:22px"></div>
+    </div>
+  </div>
+
+  <!-- ⑥ AI OUTPUT + END -->
+  <div class="col" style="width:150px;margin-top:4px">
+    <div style="font-size:9px;text-align:center;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:6px;text-transform:uppercase">Online Outputs</div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%">
+      <div class="output-chip chip-ai">✨ Enhanced Bullets</div>
+      <div class="output-chip chip-ai">📝 AI Summary</div>
+      <div class="output-chip chip-ai">♻️ Full Rewrite</div>
     </div>
 
-  </div><!-- /cloud-zone -->
+    <!-- PWA -->
+    <div class="zone zone-grey" style="margin-top:16px;width:100%">
+      <div class="zone-lbl">📦 PWA</div>
+      <div style="height:8px"></div>
+      <div class="box grey" style="font-size:10px"><span class="box-icon">🛡️</span>Workbox Service Worker</div>
+      <div class="box grey" style="margin-top:6px;font-size:10px"><span class="box-icon">⏱️</span>Asset Cache · 1-yr TTL</div>
+    </div>
 
-</div><!-- /diagram -->
+    <div style="height:14px"></div>
+    <div class="capsule capsule-end" style="width:120px;font-size:9px">✅ Optimised Resume</div>
+  </div>
+
+</div><!-- /flow -->
 
 <!-- LEGEND -->
 <div class="legend">
-  <div class="pill pill-cyan"><div class="pill-dot" style="background:#00d4ff"></div>Tier 1 — Always Available</div>
-  <div class="pill pill-green"><div class="pill-dot" style="background:#4ade80"></div>Tier 2 — Offline Capable</div>
-  <div class="pill pill-orange"><div class="pill-dot" style="background:#fb923c"></div>Tier 3 — Online Only</div>
+  <div class="pill" style="background:rgba(0,212,255,.1);color:#00d4ff">
+    <div class="pdot" style="background:#00d4ff"></div>Tier 1 — Always Available (&lt;10ms)
+  </div>
+  <div class="pill" style="background:rgba(34,197,94,.1);color:#4ade80">
+    <div class="pdot" style="background:#4ade80"></div>Tier 2 — Offline Capable (&lt;50ms)
+  </div>
+  <div class="pill" style="background:rgba(167,139,250,.1);color:#a78bfa">
+    <div class="pdot" style="background:#a78bfa"></div>Tier 3 — Online Only (1–3s)
+  </div>
+  <div class="pill" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)">
+    Flow: User &nbsp;→&nbsp; UI &nbsp;→&nbsp; ATS/NLP &nbsp;→&nbsp; Results / AI Enhancement
+  </div>
 </div>
-
-<!-- ARROWS SVG OVERLAY -->
-<svg class="arrow-layer" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.45)"/>
-    </marker>
-    <marker id="arrow-cyan" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#00d4ff"/>
-    </marker>
-    <marker id="arrow-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#fb923c"/>
-    </marker>
-    <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#4ade80"/>
-    </marker>
-  </defs>
-
-  <!-- User → Browser UI -->
-  <line x1="80" y1="128" x2="110" y2="128" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="86" y="122" font-size="9" fill="rgba(255,255,255,0.5)" font-family="monospace">input</text>
-
-  <!-- Job Optimizer → ATS Engine (down arrow inside browser) -->
-  <path d="M 350 218 Q 350 260 350 295" stroke="#00d4ff" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
-  <text x="355" y="260" font-size="9" fill="#00d4ff" font-family="monospace">live analysis</text>
-
-  <!-- Browser → Cloud (AI Enhance) -->
-  <path d="M 730 190 Q 800 190 820 190" stroke="rgba(251,146,60,0.8)" stroke-width="1.5" fill="none" marker-end="url(#arrow-orange)"/>
-  <text x="735" y="184" font-size="9" fill="#fb923c" font-family="monospace">AI enhance (online)</text>
-
-  <!-- Edge Fn → AI Providers -->
-  <path d="M 1010 330 Q 1010 430 1010 470" stroke="rgba(251,146,60,0.7)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
-  <text x="1015" y="405" font-size="9" fill="#fb923c" font-family="monospace">model dispatch</text>
-
-  <!-- CDN → Pyodide (cross-zone) -->
-  <path d="M 1010 760 Q 940 760 880 600 Q 830 500 730 530" stroke="rgba(34,197,94,0.6)" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
-  <text x="860" y="680" font-size="9" fill="#4ade80" font-family="monospace">first load / cached</text>
-
-</svg>
 
 </body>
 </html>
