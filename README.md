@@ -135,48 +135,143 @@ Deep-dive resume-to-job compatibility analysis with scoring breakdowns, skill ga
 
 Technical showcase featuring platform vision, intelligence architecture breakdown, performance metrics, and data models.
 
----
+## System Architecture
 
-## Online vs. Offline Architecture
+```mermaid
+graph TB
+    subgraph Browser["🌐 Browser (Client)"]
+        direction TB
 
-The platform uses a **hybrid intelligence architecture** that works both online and offline.
+        subgraph UI["React 18 + Vite 5 — UI Layer"]
+            Home["🏠 Home / Landing"]
+            Wizard["📝 Resume Wizard\n(10-step guided flow)"]
+            Optimizer["🎯 Job Optimizer\n(/input → /results)"]
+            Intelligence["🧠 Match Intelligence"]
+            About["ℹ️ About Platform"]
+        end
 
-### Online Mode (Full Features)
+        subgraph State["State & Context"]
+            ResumeCtx["ResumeContext\n(global resume state)"]
+            JobCtx["JobContext\n(JD state)"]
+            TanStack["TanStack Query\n(server cache)"]
+            LocalStorage["localStorage\n(auto-save + Zod)"]
+        end
 
-| Feature | How It Works | Provider |
-|---------|--------------|----------|
-| **AI Enhancement** | Rewrites bullet points with contextual improvements | Gemini 1.5 Flash / GPT-4o-mini / Llama 3.3 |
-| **Summary Generation** | Creates professional summaries from your data | Cloud LLM via Supabase Edge Function |
-| **Full Resume Rewrite** | Generates a complete optimized resume for a specific job | Cloud LLM |
-| **Pyodide Initialization** | Downloads Python/WebAssembly runtime from CDN | jsDelivr CDN |
+        subgraph ATSEngine["🔍 ATS Engine (Tier 1 — always-on)"]
+            KWExtract["extractCategorisedATSKeywords\n(ATS_KEYWORDS dictionary)"]
+            ReqParse["extractRequirements\n(section-aware JD parser)"]
+            MatchComp["useMatchComparison\n(weighted gap analysis)"]
+            JobAnalyzer["useJobAnalyzer\n(role / insight detection)"]
+        end
 
-```
-User Input → Frontend → Supabase Edge Function → AI Provider API → Response
-```
+        subgraph NLP["🐍 Tier 2 — Pyodide NLP (WASM)"]
+            Pyodide["Python 3.11 in WebAssembly"]
+            NLPCore["nlp_core.py\n(resume parsing / scoring)"]
+            PDFParse["pdfjs-dist\n(PDF text extraction)"]
+        end
 
-### Offline Mode (Core Features)
+        subgraph Export["📤 Export Engine"]
+            PDF["jsPDF → PDF / ATS-PDF"]
+            DOCX["docx → .docx"]
+            HTML["html2canvas → HTML"]
+            Other["LaTeX / JSON / MD / TXT"]
+        end
 
-| Feature | How It Works | Technology |
-|---------|--------------|------------|
-| **Resume Building** | Full wizard functionality, all steps work offline | React + localStorage |
-| **Real-time Preview** | Live preview updates without network | Client-side rendering |
-| **Auto-Save** | All changes saved to browser storage | localStorage with Zod validation |
-| **ATS Scoring** | Local keyword matching and scoring | Pyodide (Python in WebAssembly) |
-| **Resume Parsing** | Extract contact info and skills from PDFs | pdfjs + local NLP |
-| **Keyword Extraction** | Identify skills and keywords from text | Regex + pattern matching |
-| **Export (All Formats)** | PDF, DOCX, HTML, LaTeX, JSON, Markdown, TXT | Client-side generation |
+        subgraph PWA["📦 PWA / Service Worker"]
+            SW["Workbox Service Worker"]
+            Cache["Asset + Pyodide Cache\n(1-year TTL)"]
+        end
+    end
 
-```
-User Input → Local NLP (Pyodide) → Structured JSON → UI Update
+    subgraph Cloud["☁️ Cloud (Online-only)"]
+        subgraph Supabase["Supabase Platform"]
+            EdgeFn["Edge Function\nresume-ai"]
+            DB["Postgres DB\n(user data)"]
+            Auth["Supabase Auth"]
+            Storage["Supabase Storage"]
+        end
+
+        subgraph Providers["AI Providers (Tier 3)"]
+            Gemini["Google Gemini\n1.5 Flash / 2.0"]
+            GPT["OpenAI GPT-4o-mini"]
+            Groq["Groq Llama 3.3"]
+        end
+
+        CDN["jsDelivr CDN\n(Pyodide WASM runtime)"]
+    end
+
+    %% Data flows
+    UI --> State
+    State --> LocalStorage
+    Optimizer --> ATSEngine
+    ATSEngine --> KWExtract & ReqParse & MatchComp & JobAnalyzer
+    Optimizer --> NLP
+    NLP --> Pyodide --> NLPCore
+    PDFParse --> NLPCore
+    Wizard --> Export
+    UI -->|"AI enhance / rewrite\n(online)"| Supabase
+    EdgeFn -->|"model dispatch"| Gemini & GPT & Groq
+    EdgeFn --> DB
+    PWA --> SW --> Cache
+    CDN -->|"first load"| Pyodide
+    Cache -->|"subsequent loads"| Pyodide
 ```
 
 ### Three-Tier Intelligence System
 
 | Tier | Engine | Availability | Latency |
 |------|--------|-------------|---------|
-| **Tier 1** | Local pattern matching (Regex) | Always | < 10ms |
+| **Tier 1** | ATS keyword matching (ATS_KEYWORDS + regex) | Always | < 10ms |
 | **Tier 2** | Pyodide NLP (Python/WASM) | Offline-capable | < 50ms |
 | **Tier 3** | Cloud LLM (Gemini / GPT-4o / Groq) | Online only | 1–3s |
+
+### Data Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as React UI
+    participant ATS as ATS Engine (T1)
+    participant Pyodide as Pyodide NLP (T2)
+    participant Edge as Supabase Edge Fn
+    participant LLM as AI Provider (T3)
+
+    User->>UI: Paste JD + Resume
+    UI->>ATS: extractCategorisedATSKeywords(JD)
+    ATS-->>UI: required[] + preferred[] keywords
+    UI->>ATS: useMatchComparison(resume, JD)
+    ATS-->>UI: ATS score + keyword gaps
+    UI-->>User: Live analysis panel (< 10ms)
+
+    opt PDF Upload
+        User->>UI: Upload resume PDF
+        UI->>Pyodide: nlp_core.py parse(pdf)
+        Pyodide-->>UI: Structured resume JSON
+    end
+
+    opt AI Enhancement (online)
+        User->>UI: Click "Enhance with AI"
+        UI->>Edge: POST /resume-ai {text, context}
+        Edge->>LLM: prompt(text)
+        LLM-->>Edge: improved content
+        Edge-->>UI: enhanced bullet / summary
+        UI-->>User: Updated resume
+    end
+```
+
+### Online vs. Offline Capabilities
+
+| Feature | Online | Offline |
+|---------|--------|---------|
+| Resume Builder (all steps) | ✅ | ✅ |
+| ATS Keyword Scoring | ✅ | ✅ |
+| Job Optimizer Analysis | ✅ | ✅ |
+| PDF Export | ✅ | ✅ |
+| All Export Formats | ✅ | ✅ |
+| Pyodide NLP Parsing | ✅ | ✅ (cached) |
+| AI Bullet Enhancement | ✅ | ❌ |
+| AI Summary Generation | ✅ | ❌ |
+| Full Resume Rewrite | ✅ | ❌ |
 
 ### Progressive Web App (PWA)
 
@@ -184,6 +279,7 @@ User Input → Local NLP (Pyodide) → Structured JSON → UI Update
 - Install Prompt — add to home screen on mobile/desktop
 - Asset Caching — JavaScript, CSS, and NLP scripts cached
 - Pyodide Caching — WebAssembly runtime cached for 1 year
+
 
 ---
 
