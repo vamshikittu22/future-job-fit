@@ -54,10 +54,22 @@ interface ExperienceItem {
     bullets: ParsedBullet[];
 }
 
-// Patterns for detecting section headers
-const EXPERIENCE_PATTERNS = /^(experience|work\s*history|employment|professional\s*experience|work\s*experience)/i;
-const PROJECTS_PATTERNS = /^(projects|personal\s*projects|key\s*projects|selected\s*projects)/i;
-const SKIP_SECTIONS = /^(skills|education|certifications|summary|objective|contact|interests|languages|references|awards|honors)/i;
+// Patterns for detecting section headers (handles ALL CAPS, Title Case, mixed case, with/without colon)
+const EXPERIENCE_PATTERNS = /^(experience|work\s*history|employment|employment\s*history|professional\s*experience|work\s*experience|career\s*history|relevant\s*experience)/i;
+const PROJECTS_PATTERNS = /^(projects|personal\s*projects|key\s*projects|selected\s*projects|notable\s*projects|side\s*projects|portfolio)/i;
+const SKIP_SECTIONS = /^(skills|technical\s*skills|core\s*skills|education|certifications|certification|summary|professional\s*summary|objective|career\s*objective|contact|contact\s*information|interests|languages|references|awards|honors|achievements|publications|volunteer|extracurricular)/i;
+
+/** Returns true if the trimmed line looks like a section header. */
+function isSectionHeader(line: string): boolean {
+    const cleaned = line.trim().replace(/:$/, '');
+    // ALL CAPS: e.g. "WORK EXPERIENCE"
+    if (/^[A-Z][A-Z\s]{2,}$/.test(cleaned)) return true;
+    // Title Case with optional colon: e.g. "Work Experience:"
+    if (/^[A-Z][a-zA-Z\s]{2,}:$/.test(line.trim())) return true;
+    // Common header pattern: short, no bullets, ends with optional colon
+    if (/^[A-Z][a-zA-Z\s]{2,30}$/.test(cleaned) && cleaned.split(' ').length <= 4) return true;
+    return false;
+}
 
 export default function KeywordIntegrationModal({
     open,
@@ -92,11 +104,8 @@ export default function KeywordIntegrationModal({
             const trimmed = line.trim();
             if (!trimmed) return;
 
-            // Detect section headers
-            const isHeader = trimmed.match(/^[A-Z][A-Z\s]+$/) ||
-                trimmed.match(/^[A-Z][A-Za-z\s]+:$/);
-
-            if (isHeader) {
+            // ── Section header detection (broad: ALL CAPS, Title Case, with/without colon) ──
+            if (isSectionHeader(trimmed)) {
                 const sectionName = trimmed.replace(/:$/, '').trim();
 
                 if (SKIP_SECTIONS.test(sectionName)) {
@@ -115,7 +124,8 @@ export default function KeywordIntegrationModal({
                     currentSectionType = 'projects';
                     currentItem = null;
                 } else {
-                    currentSectionType = null;
+                    // Unknown section — stop collecting bullets but don't blank sectionType
+                    // (some resume formats nest sub-headings inside experience)
                     currentItem = null;
                 }
                 return;
@@ -123,44 +133,64 @@ export default function KeywordIntegrationModal({
 
             if (inSkippedSection || !currentSectionType) return;
 
-            // Detect company/project title lines
-            // These typically: don't start with bullet, contain company-role pattern or dates
-            const isBullet = trimmed.match(/^[•\-\*]\s/);
-            const hasDatePattern = trimmed.match(/\d{4}/) ||
-                trimmed.match(/present/i) ||
-                trimmed.match(/current/i);
-            const hasDash = trimmed.includes(' - ') || trimmed.includes(' – ');
+            // ── Bullet point detection (•, -, *, or 2+ leading spaces) ──
+            const isBullet =
+                /^[•\-\*]\s/.test(trimmed) ||
+                /^\s{2,}[•\-\*]?\s*\S/.test(line); // indented lines
 
-            if (!isBullet && (hasDatePattern || hasDash) && trimmed.length < 120) {
-                // This is a company/project title line
-                const parts = trimmed.split(/\s*[-–]\s*/);
-                const title = parts[0].trim();
-                const subtitle = parts.slice(1).join(' - ').trim();
-
-                currentItem = {
-                    title,
-                    subtitle: subtitle || undefined,
-                    lineIndex: index,
-                    sectionType: currentSectionType,
-                    bullets: []
-                };
-                items.push(currentItem);
+            if (isBullet && currentItem) {
+                const bulletText = trimmed.replace(/^[•\-\*]\s*/, '').trim();
+                if (bulletText.length > 15) {
+                    currentItem.bullets.push({ text: bulletText, lineIndex: index });
+                }
                 return;
             }
 
-            // Detect bullet points
-            if (currentItem && isBullet) {
-                const bulletText = trimmed.replace(/^[•\-\*]\s*/, '');
-                if (bulletText.length > 20) {
-                    currentItem.bullets.push({
-                        text: bulletText,
-                        lineIndex: index
-                    });
-                }
+            if (isBullet) return; // bullet without a parent item — skip
+
+            // ── Experience/Project entry title detection ──
+            // Signals: date pattern, dash/pipe separator, role-indicator words, not too long
+            const hasDatePattern =
+                /\b(19|20)\d{2}\b/.test(trimmed) ||
+                /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(\d{4})?/i.test(trimmed) ||
+                /\bpresent\b|\bcurrent\b/i.test(trimmed);
+            const hasSeparator =
+                trimmed.includes(' - ') ||
+                trimmed.includes(' – ') ||
+                trimmed.includes(' | ') ||
+                trimmed.includes(' · ');
+            const hasRoleIndicator =
+                /\b(engineer|developer|manager|lead|analyst|designer|architect|consultant|intern|scientist|director|vp|cto|ceo|founder|co-?founder|specialist|coordinator|associate|principal|staff|senior|junior)\b/i.test(trimmed);
+            const hasCompanyIndicator =
+                /\b(at|@|for|with)\s+[A-Z]/m.test(trimmed) ||
+                /^[A-Z][A-Za-z0-9\s&.,'-]{1,60}\s*(\||–|-|,)\s*[A-Z]/.test(trimmed);
+
+            const looksLikeEntry =
+                trimmed.length < 150 &&
+                !hasDatePattern &&
+                (hasSeparator || hasRoleIndicator || hasCompanyIndicator || hasDatePattern);
+
+            if ((hasDatePattern || hasSeparator || hasRoleIndicator || hasCompanyIndicator) && trimmed.length < 150) {
+                // Split on common separators to get title / subtitle
+                const parts = trimmed.split(/\s*[|–-]\s*/);
+                const title = parts[0].trim() || trimmed;
+                const subtitle = parts.length > 1 ? parts.slice(1).join(' – ').trim() : undefined;
+
+                currentItem = {
+                    title,
+                    subtitle,
+                    lineIndex: index,
+                    sectionType: currentSectionType,
+                    bullets: [],
+                };
+                items.push(currentItem);
             }
+
+            // Suppress unused variable warning
+            void looksLikeEntry;
         });
 
-        return items.filter(item => item.title && item.title.length > 2);
+        return items.filter(item => item.title && item.title.trim().length > 2);
     }, [resumeText]);
 
     // Get available keywords for selection (excluding already selected)

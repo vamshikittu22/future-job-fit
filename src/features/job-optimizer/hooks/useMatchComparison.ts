@@ -1,6 +1,7 @@
 import { debounce } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 
+import { ATS_KEYWORDS } from '@/shared/lib/atsKeywords';
 import { calculateBreakdown, calculateWeightedKeywords } from '@/features/match-intelligence/utils/keywordWeighting';
 import { calculateSemanticSimilarity as calculateSemanticSimilarityV2 } from '@/features/match-intelligence/utils/similarityCalculator';
 
@@ -53,23 +54,6 @@ const EMPTY_BREAKDOWN: MatchBreakdown = {
 
 const REQUIRED_HINTS = ['required', 'must', 'minimum', 'need to', 'required qualifications'];
 const PREFERRED_HINTS = ['preferred', 'nice to have', 'bonus', 'plus', 'good to have'];
-const TECH_TERMS = [
-  'typescript',
-  'javascript',
-  'react',
-  'node.js',
-  'python',
-  'java',
-  'aws',
-  'docker',
-  'kubernetes',
-  'sql',
-  'graphql',
-  'leadership',
-  'communication',
-  'microservices',
-  'agile',
-];
 
 function clampScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -99,24 +83,20 @@ function extractCandidateKeywords(jobDescription: string): Array<{ keyword: stri
 
   for (const line of lines) {
     const weight = getKeywordWeight(line);
+    const lineLower = line.toLowerCase();
 
-    for (const term of TECH_TERMS) {
-      if (line.toLowerCase().includes(term)) {
-        candidates.push({
-          keyword: term,
-          weight,
-          line,
-        });
+    // Match against the full ATS keyword dictionary (clean atomic terms)
+    for (const kw of ATS_KEYWORDS) {
+      const kwLower = kw.toLowerCase();
+      const idx = lineLower.indexOf(kwLower);
+      if (idx === -1) continue;
+      const before = lineLower[idx - 1];
+      const after = lineLower[idx + kwLower.length];
+      const boundaryBefore = !before || /[^a-z0-9]/i.test(before);
+      const boundaryAfter = !after || /[^a-z0-9]/i.test(after);
+      if (boundaryBefore && boundaryAfter) {
+        candidates.push({ keyword: kw, weight, line });
       }
-    }
-
-    const nounPhrases = line.match(/\b[a-z][a-z0-9+#./-]{2,}(?:\s+[a-z][a-z0-9+#./-]{2,}){0,2}\b/gi) ?? [];
-    for (const phrase of nounPhrases.slice(0, 2)) {
-      const cleanedPhrase = phrase.toLowerCase();
-      if (cleanedPhrase.length < 4) {
-        continue;
-      }
-      candidates.push({ keyword: cleanedPhrase, weight, line });
     }
   }
 

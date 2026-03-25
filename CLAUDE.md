@@ -230,6 +230,10 @@ Triple-click the "AI" text in the wizard header to enable developer console show
 
 ## Notes for Development
 
+> ⚠️ **PORT: Always use http://localhost:8080** — The Vite dev server is configured to run on **port 8080**, NOT the default 5173. Never assume 5173. Always use 8080.
+
+- `npm run dev` → http://localhost:8080
+- All browser automation, testing, and browsing tasks must target **http://localhost:8080**
 - The app runs on port 8080 (not the default 5173)
 - All form state flows through ResumeContext - never bypass it
 - The preview panel uses real-time resume data - no manual refresh needed

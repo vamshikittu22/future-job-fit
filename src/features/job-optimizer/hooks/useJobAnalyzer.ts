@@ -1,5 +1,6 @@
 import { debounce } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
+import { ATS_KEYWORDS } from '@/shared/lib/atsKeywords';
 
 const STOP_WORDS = new Set([
   'a',
@@ -195,51 +196,86 @@ function extractOverview(text: string): OverviewData {
   };
 }
 
-function cleanRequirementLine(line: string): string {
-  return line
-    .replace(/^[-*•\d.)\s]+/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Build a plain-string set for fast membership checks
+const ATS_KW_SET = new Set(ATS_KEYWORDS.map(k => k.toLowerCase()));
+
+/**
+ * Extracts individual ATS keywords found in a requirement line.
+ * Returns an array of canonical keyword strings (original casing).
+ */
+function extractKeywordsFromLine(line: string): string[] {
+  const lineLower = line.toLowerCase();
+  const found: string[] = [];
+  for (const kw of ATS_KEYWORDS) {
+    const kwLower = kw.toLowerCase();
+    // Simple substring check with basic boundary guard
+    const idx = lineLower.indexOf(kwLower);
+    if (idx === -1) continue;
+    const before = lineLower[idx - 1];
+    const after = lineLower[idx + kwLower.length];
+    const boundaryBefore = !before || /[^a-z0-9]/i.test(before);
+    const boundaryAfter = !after || /[^a-z0-9]/i.test(after);
+    if (boundaryBefore && boundaryAfter) {
+      found.push(kw);
+    }
+  }
+  // Suppress unused set (kept for future use)
+  void ATS_KW_SET;
+  return found;
 }
 
 function extractRequirements(text: string): RequirementsData {
   const lines = text.split(/\r?\n/);
   const required = new Set<string>();
   const preferred = new Set<string>();
+
+  // Section keywords – expanded to cover real JD formats
+  const REQUIRED_SECTION = /^(required\s+qualifications?|requirements?|must[\s-]have|minimum\s+qualifications?|basic\s+qualifications?|what\s+you[\s'']+need|what\s+we[\s'']+need|you[\s'']+will\s+(need|have|bring)|your\s+qualifications?|qualifications?\s+required)/i;
+  const PREFERRED_SECTION = /^(preferred\s+qualifications?|nice[\s-]to[\s-]have|bonus|preferred|good[\s-]to[\s-]have|plus|ideally|what\s+would\s+be\s+(great|a\s+plus)|you[\s'']+might\s+also)/i;
+  const RESET_SECTION = /^(about\s+(us|the\s+(company|role|team|position))|responsibilities|what\s+you[\s'']+will|your\s+role|job\s+summary|overview|benefits|compensation|perks|job\s+description|the\s+role)/i;
+
+  // Inline signal regexes
+  const INLINE_REQUIRED = /\b(required|must(\s+have)?|mandatory|minimum|necessary|non[\s-]negotiable)\b/i;
+  const INLINE_PREFERRED = /\b(preferred?|nice[\s-]to[\s-]have|bonus|a\s+plus|ideally|advantageous|desirable)\b/i;
+  const IS_BULLET = /^[\u2022\-\*\u2013•]\s+|^\d+[.)]\s+/;
+
   let activeSection: 'required' | 'preferred' | null = null;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    if (!line) {
-      continue;
-    }
+    if (!line) continue;
 
-    const lower = line.toLowerCase();
-    if (
-      /^(required|requirements|must\s+have|required\s+qualifications|minimum\s+qualifications)\b/.test(lower)
-    ) {
-      activeSection = 'required';
-      continue;
-    }
+    // Detect section heading switches
+    if (REQUIRED_SECTION.test(line)) { activeSection = 'required'; continue; }
+    if (PREFERRED_SECTION.test(line)) { activeSection = 'preferred'; continue; }
+    if (RESET_SECTION.test(line)) { activeSection = null; continue; }
 
-    if (/^(preferred|nice\s+to\s+have|bonus|preferred\s+qualifications)\b/.test(lower)) {
-      activeSection = 'preferred';
-      continue;
-    }
+    // Extract individual ATS keywords from this line (not the full phrase)
+    const lineKeywords = extractKeywordsFromLine(line);
+    if (!lineKeywords.length) continue;
 
-    const cleaned = cleanRequirementLine(line);
-    if (cleaned.length < 3) {
-      continue;
-    }
+    // Determine category for this line
+    const lineIsRequired = activeSection === 'required' || INLINE_REQUIRED.test(line);
+    const lineIsPreferred = activeSection === 'preferred' || INLINE_PREFERRED.test(line);
+    const isBullet = IS_BULLET.test(rawLine);
 
-    if (activeSection === 'required' || /\b(must|required|minimum)\b/.test(lower)) {
-      required.add(cleaned);
-      continue;
+    for (const kw of lineKeywords) {
+      if (lineIsRequired && !preferred.has(kw)) {
+        required.add(kw);
+      } else if (lineIsPreferred && !required.has(kw)) {
+        preferred.add(kw);
+      } else if (!lineIsRequired && !lineIsPreferred && isBullet) {
+        // Uncategorised bullet — treat as preferred
+        preferred.add(kw);
+      }
     }
+  }
 
-    if (activeSection === 'preferred' || /\b(preferred|nice to have|bonus|plus)\b/.test(lower)) {
-      preferred.add(cleaned);
-    }
+  // If nothing required (single-section JD), promote first half of preferred
+  if (required.size === 0 && preferred.size > 0) {
+    const arr = [...preferred];
+    const splitAt = Math.ceil(arr.length / 2);
+    arr.slice(0, splitAt).forEach(r => { required.add(r); preferred.delete(r); });
   }
 
   return {
@@ -247,6 +283,7 @@ function extractRequirements(text: string): RequirementsData {
     preferred: [...preferred],
   };
 }
+
 
 function toLabel(token: string): string {
   const canonical = CANONICAL_TERMS[token.toLowerCase()];
