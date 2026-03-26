@@ -5,8 +5,8 @@ import { Card } from "@/shared/ui/card";
 import { Plus, X } from "lucide-react";
 
 interface EducationSectionProps {
-    education: any[];
-    updateResumeData: (section: string, data: any) => void;
+    education: unknown[];
+    updateResumeData: (section: string, data: unknown) => void;
 }
 
 export const EducationSection = ({ education, updateResumeData }: EducationSectionProps) => {
@@ -23,14 +23,14 @@ export const EducationSection = ({ education, updateResumeData }: EducationSecti
     };
 
     const updateEducation = (id: string, field: string, value: string) => {
-        const updated = (education || []).map((edu: any) =>
+        const updated = (education || []).map((edu: unknown) =>
             edu.id === id ? { ...edu, [field]: value } : edu
         );
         updateResumeData('education', updated);
     };
 
     const removeEducation = (id: string) => {
-        updateResumeData('education', (education || []).filter((edu: any) => edu.id !== id));
+        updateResumeData('education', (education || []).filter((edu: unknown) => edu.id !== id));
     };
 
     return (
@@ -45,7 +45,7 @@ export const EducationSection = ({ education, updateResumeData }: EducationSecti
                 Add Education
             </Button>
 
-            {(education || []).map((edu: any, index: number) => (
+            {(education || []).map((edu: unknown, index: number) => (
                 <Card key={edu.id} className="p-4">
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">

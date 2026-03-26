@@ -9,7 +9,7 @@ import { DialogFooter } from "@/shared/ui/dialog";
 interface EducationFormProps {
   education: Partial<Education>;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (field: keyof Education, value: any) => void;
+  onChange: (field: keyof Education, value: Education[keyof Education]) => void;
   onCancel: () => void;
   isEditing: boolean;
 }

@@ -1,3 +1,6 @@
+import React from 'react';
+import { ResumeData } from '@/shared/lib/initialData';
+import type { CustomSection, CustomField, CustomSectionEntry } from '@/shared/types/resume';
 import { z } from 'zod';
 import {
   User, FileText, Briefcase, GraduationCap, Code,
@@ -10,7 +13,7 @@ export interface WizardStep {
   title: string;
   label: string;  // Shorter label for sidebar
   path: string;
-  icon: any;
+  icon: React.ElementType;
   isRequired: boolean;
   fields: string[];
   helpText?: string;
@@ -140,7 +143,7 @@ const REVIEW_STEP: WizardStep = {
 };
 
 // Helper function to get all steps with custom sections in the correct order
-export const getWizardSteps = (customSections: any[] = [], sectionOrder: string[] = []): WizardStep[] => {
+export const getWizardSteps = (customSections: CustomSection[] = [], sectionOrder: string[] = []): WizardStep[] => {
   const steps: WizardStep[] = [];
 
   // 1. Template is always first
@@ -346,7 +349,7 @@ export const ATS_SCORING_WEIGHTS = {
 };
 
 // Validation helper functions
-export const validateStep = (stepId: string, data: any): { isValid: boolean; errors: string[] } => {
+export const validateStep = (stepId: string, data: ResumeData): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   try {
@@ -389,7 +392,7 @@ export const validateStep = (stepId: string, data: any): { isValid: boolean; err
 };
 
 // Calculate step completion percentage
-export const calculateStepCompletion = (stepId: string, data: any): number => {
+export const calculateStepCompletion = (stepId: string, data: ResumeData): number => {
   switch (stepId) {
     case 'template':
       return data.selectedTemplate ? 100 : 0;
@@ -411,7 +414,7 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
       if (!data.experience || data.experience.length === 0) return 0;
 
       // Check if all required fields are filled for at least one experience entry
-      const hasCompleteExperience = data.experience.some((exp: any) => {
+      const hasCompleteExperience = data.experience.some((exp: ResumeData['experience'][0]) => {
         return exp.title?.trim() &&
           exp.company?.trim() &&
           exp.startDate &&
@@ -423,7 +426,7 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
       if (hasCompleteExperience) return 100;
 
       // Otherwise, calculate partial completion
-      const expCompletion = data.experience.map((exp: any) => {
+      const expCompletion = data.experience.map((exp: ResumeData['experience'][0]) => {
         let entryScore = 0;
 
         // Check for required fields
@@ -471,7 +474,7 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
       // Handle custom sections
       if (stepId.startsWith('custom:')) {
         const sectionId = stepId.replace('custom:', '');
-        const section = data.customSections?.find((s: any) => s.id === sectionId);
+        const section = data.customSections?.find((s: CustomSection) => s.id === sectionId);
 
         if (!section) return 0;
 
@@ -490,13 +493,13 @@ export const calculateStepCompletion = (stepId: string, data: any): number => {
           completion += 30;
 
           // Check if all fields have names (20%)
-          const allFieldsHaveNames = section.fields.every((field: any) => field.name?.trim());
+          const allFieldsHaveNames = section.fields.every((field: CustomField) => field.name?.trim());
           if (allFieldsHaveNames) completion += 20;
 
           // Check for at least one complete entry (30%)
           if (section.entries?.length > 0) {
-            const hasCompleteEntry = section.entries.some((entry: any) => {
-              return section.fields.every((field: any) => {
+            const hasCompleteEntry = section.entries.some((entry: CustomSectionEntry) => {
+              return section.fields.every((field: CustomField) => {
                 const value = entry.values?.[field.id];
                 return value !== undefined &&
                   value !== null &&

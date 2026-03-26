@@ -74,7 +74,7 @@ const formatDate = (dateString?: string): string => {
 /**
  * Format skills into categorized groups
  */
-const formatSkills = (skills: any[]): Record<string, string[]> => {
+const formatSkills = (skills: Array<{ category?: string; name?: string; items?: string[] | string }>): Record<string, string[]> => {
   if (!Array.isArray(skills)) return {};
   
   return skills.reduce((acc, skill) => {
@@ -131,20 +131,20 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   };
 
   // Normalize personal links (website/linkedin + custom links[])
-  const rawLinks = Array.isArray((data as any).personal?.links) ? (data as any).personal.links : [];
+  const rawLinks = Array.isArray((data as unknown).personal?.links) ? (data as unknown).personal.links : [];
   const personalLinks: Array<{ label: string; url: string }> = [];
   if (personalExtended?.website) personalLinks.push({ label: 'Website', url: personalExtended.website });
   if (personalExtended?.linkedin) personalLinks.push({ label: 'LinkedIn', url: personalExtended.linkedin });
   if (personalExtended?.github) personalLinks.push({ label: 'GitHub', url: personalExtended.github });
   if (personalExtended?.portfolio) personalLinks.push({ label: 'Portfolio', url: personalExtended.portfolio });
-  rawLinks.forEach((l: any) => {
+  rawLinks.forEach((l: { label?: string; name?: string; url?: string; href?: string }) => {
     if (l && (l.url || l.href)) {
       personalLinks.push({ label: l.label || l.name || 'Link', url: l.url || l.href });
     }
   });
 
   // Format experience with extended properties for compatibility
-  const experience = (data.experience || []).map((exp: any) => {
+  const experience = (data.experience || []).map((exp: ResumeData['experience'][number]) => {
     // Accept `position` as alias for `title`
     const title = exp.title || exp.position || '';
     // Derive dates from `duration` if explicit dates are missing
@@ -167,7 +167,7 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   });
 
   // Format education with extended properties for compatibility
-  const education = (data.education || []).map((edu: any) => {
+  const education = (data.education || []).map((edu: ResumeData['education'][number]) => {
     // Handle both school and institution fields
     const school = edu.school || edu.institution || '';
     const location = edu.location || '';
@@ -203,7 +203,7 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   });
 
   // Format projects with extended properties for compatibility
-  const projects = (data.projects || []).map((project: any) => ({
+  const projects = (data.projects || []).map((project: ResumeData['projects'][number]) => ({
     name: project.name || '',
     description: project.description || '',
     technologies: Array.isArray(project.technologies)
@@ -214,7 +214,7 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   }));
 
   // Format certifications with extended properties for compatibility
-  const certifications = (data.certifications || []).map((cert: any) => ({
+  const certifications = (data.certifications || []).map((cert: ResumeData['certifications'][number]) => ({
     name: cert.name || '',
     issuer: cert.issuer || '',
     date: cert.date || '',
@@ -222,7 +222,7 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   }));
 
   // Achievements
-  const achievements = (data.achievements || []).map((ach: any) => {
+  const achievements = (data.achievements || []).map((ach: ResumeData['achievements'][number]) => {
     if (typeof ach === 'string') return ach;
     const text = ach?.title || ach?.text || '';
     const date = ach?.date ? ` (${ach.date})` : '';
@@ -230,16 +230,16 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   }).filter((s: string) => s);
 
   // Languages
-  const languages = ((data as any).languages || []).map((lng: any) => ({
+  const languages = ((data as unknown).languages || []).map((lng: unknown) => ({
     language: lng.language || lng.name || '',
     proficiency: lng.proficiency || lng.level || '',
-  })).filter((l: any) => l.language);
+  })).filter((l: unknown) => l.language);
 
   // Format custom sections with extended properties for compatibility
-  const customSections = (data.customSections || []).map((section: any) => {
+  const customSections = (data.customSections || []).map((section: unknown) => {
     if (Array.isArray(section.items) && section.items.length > 0) {
       // Flatten items to a readable string array
-      const contentList = section.items.map((item: any) => {
+      const contentList = section.items.map((item: unknown) => {
         const header = [item.title, item.subtitle, item.date].filter(Boolean).join(' | ');
         const desc = item.description ? `\n${item.description}` : '';
         const link = item.link ? `\nLink: ${item.link}` : '';
@@ -261,10 +261,10 @@ export const formatResumeData = (data: ResumeData): FormattedResumeData => {
   return {
     personalInfo,
     personalLinks,
-    summary: data.summary || (data.personal as any)?.summary || '',
+    summary: data.summary || (data.personal as unknown)?.summary || '',
     experience,
     education,
-    skills: formatSkills((data.skills as any) || []),
+    skills: formatSkills((data.skills as unknown) || []),
     projects,
     certifications,
     achievements,

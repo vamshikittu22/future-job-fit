@@ -15,7 +15,7 @@ import { cn } from '@/shared/lib/utils';
 interface SectionData {
   id: string;
   name: string;
-  data: any;
+  data: ResumeData;
   isCustom?: boolean;
 }
 

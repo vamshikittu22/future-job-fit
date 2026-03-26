@@ -1,35 +1,14 @@
-import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
 import { ResumeData } from '@/shared/types/resume';
 import { generateHTML } from './formats';
 
 /**
- * Generates a legacy/simple PDF based on text-drawing (ATS-friendly by default)
+ * Generates a simple ATS-friendly PDF. Delegates to generateFormattedPdf
+ * using the canonical html2pdf pipeline so only one PDF dependency is needed.
  */
-export const generatePdf = async (resumeData: any, template: string = 'minimal'): Promise<Blob> => {
-  const doc = new jsPDF();
-
-  doc.setFontSize(24);
-  doc.text(resumeData.personal?.name || 'Resume', 20, 20);
-
-  doc.setFontSize(12);
-  const contactInfo = [
-    resumeData.personal?.email,
-    resumeData.personal?.phone,
-    resumeData.personal?.location
-  ].filter(Boolean).join(' | ');
-
-  doc.text(contactInfo, 20, 30);
-
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.5);
-  doc.line(20, 35, 190, 35);
-
-  const yPos = 45;
-
-  // ... (keeping legacy logic for now, but usually generateFormattedPdf is preferred)
-  return doc.output('blob');
+export const generatePdf = async (resumeData: ResumeData, template: string = 'minimal'): Promise<Blob> => {
+  return generateFormattedPdf(resumeData, template);
 };
 
 /**

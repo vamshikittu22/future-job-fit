@@ -8,7 +8,7 @@ type Certification = ResumeData['certifications'][0];
 interface CertificationFormProps {
   certification: Partial<Certification>;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (field: keyof Certification, value: any) => void;
+  onChange: (field: keyof Certification, value: unknown) => void;
   onCancel: () => void;
   isEditing: boolean;
 }

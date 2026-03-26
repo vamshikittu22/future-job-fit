@@ -12,7 +12,7 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   resumeText: string;
   jobDescription: string;
-  customInstructions: any;
+  customInstructions: Record<string, unknown>;
   selectedModel: string;
 }
 

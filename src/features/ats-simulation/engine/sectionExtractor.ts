@@ -845,8 +845,8 @@ export function extractSections(resumeText: string): ExtractedSection[] {
   
   debugLog('Starting section extraction', { textLength: validatedInput.length });
   
-  // Detect section boundaries
-  const boundaries = detectSections(resumeText);
+  // Detect section boundaries using the validated, clean input
+  const boundaries = detectSections(validatedInput);
   
   if (boundaries.length === 0) {
     // No recognizable sections - return empty or create an unknown section
@@ -854,7 +854,7 @@ export function extractSections(resumeText: string): ExtractedSection[] {
   }
   
   // Extract content for each section
-  const sectionContents = extractSectionContents(resumeText, boundaries);
+  const sectionContents = extractSectionContents(validatedInput, boundaries);
   
   // Build extracted sections
   const sections: ExtractedSection[] = [];
@@ -909,16 +909,18 @@ function validateDateFormat(dateRange: DateRange): boolean {
     return false;
   }
   
-  // Check if year is reasonable (1950-2030)
+  // Check if year is reasonable (1950 to current year + 5 to allow future expiry/graduation dates)
+  const currentYear = new Date().getFullYear();
+  const maxYear = currentYear + 5;
   const year = dateRange.startDate.year;
-  if (year < 1950 || year > 2030) {
+  if (year < 1950 || year > maxYear) {
     return false;
   }
   
   // If end date is not 'present', validate it too
   if (dateRange.endDate !== 'present') {
     const endYear = dateRange.endDate.year;
-    if (endYear < 1950 || endYear > 2030) {
+    if (endYear < 1950 || endYear > maxYear) {
       return false;
     }
     

@@ -21,8 +21,8 @@ import { INTEGRATION_MODES, type IntegrationMode, validateKeywordIntegration } f
 interface AIEnhanceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  resumeData: any;
-  onEnhance: (enhancedData: any) => void;
+  resumeData: ResumeData;
+  onEnhance: (enhancedData: ResumeData) => void;
   step?: 'summary' | 'experience' | 'skills' | 'projects' | 'education' | 'achievements' | 'certifications' | string | null;
   targetItemIndex?: number | null;
   targetField?: string | null;
@@ -245,7 +245,7 @@ export default function AIEnhanceModal({
 
       if (step?.startsWith('custom:')) {
         const sectionId = step.replace('custom:', '');
-        const section = resumeData.customSections?.find((s: any) => s.id === sectionId);
+        const section = resumeData.customSections?.find((s: ResumeData['customSections'][number]) => s.id === sectionId);
         if (section && targetItemIndex !== null) {
           const entry = section.entries[targetItemIndex];
           if (targetField) originalText = entry.values[targetField] || "";

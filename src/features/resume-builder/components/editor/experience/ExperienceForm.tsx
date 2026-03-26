@@ -13,7 +13,7 @@ type Experience = ResumeData['experience'][number];
 interface ExperienceFormProps {
   experience: Partial<Experience>;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (field: keyof Experience, value: any) => void;
+  onChange: (field: keyof Experience, value: Experience[keyof Experience]) => void;
   isEditing: boolean;
   onCancel: () => void;
 }

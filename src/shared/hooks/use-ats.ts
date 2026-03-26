@@ -210,7 +210,7 @@ export const useATS = (
           },
           suggestions: missingSuggestions,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('[useATS] Structured evaluation failed:', err);
         setError(err.message || 'ATS evaluation failed');
         // Fall through to legacy scoring
@@ -229,7 +229,7 @@ export const useATS = (
     if (!resumeData || jobDescription) return;
 
     let totalScore = 0;
-    const newAnalysis: any = {
+    const newAnalysis: Record<string, unknown> = {
       keywords: { matched: [], total: KEYWORDS.technical.length },
       sections: {},
       suggestions: [],
@@ -275,7 +275,7 @@ export const useATS = (
     const uniqueVerbs: string[] = [];
     (resumeData.experience || []).forEach(exp => {
       const bullets = 'bullets' in exp ? exp.bullets || [] : [exp.description];
-      const expTech = 'technologies' in exp ? exp.technologies : (exp as any).tech || [];
+      const expTech = 'technologies' in exp ? exp.technologies : (exp as unknown).tech || [];
       const expText = [exp.title, exp.company, ...expTech, ...bullets].join(' ');
       const expMatch = countKeywords(expText, [...KEYWORDS.technical, ...KEYWORDS.actionVerbs]);
       experienceKeywordCount += expMatch.count;
@@ -290,7 +290,7 @@ export const useATS = (
     // 4. Projects Analysis
     let projectKeywordCount = 0;
     (resumeData.projects || []).forEach(proj => {
-      const projTech = 'technologies' in proj ? proj.technologies : (proj as any).tech || [];
+      const projTech = 'technologies' in proj ? proj.technologies : (proj as unknown).tech || [];
       const projText = [proj.name, proj.role || '', proj.description, ...projTech].join(' ');
       const projMatch = countKeywords(projText, [...KEYWORDS.technical, ...KEYWORDS.actionVerbs]);
       projectKeywordCount += projMatch.count;
@@ -308,7 +308,7 @@ export const useATS = (
       .map(edu => [
         edu.degree,
         edu.school,
-        edu.fieldOfStudy || (edu as any).field || '',
+        edu.fieldOfStudy || (edu as unknown).field || '',
         edu.description || ''
       ].join(' '))
       .join(' ');

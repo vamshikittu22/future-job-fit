@@ -5,8 +5,8 @@ import { Card } from "@/shared/ui/card";
 import { Plus, X } from "lucide-react";
 
 interface ExperienceSectionProps {
-    experience: any[];
-    updateResumeData: (section: string, data: any) => void;
+    experience: unknown[];
+    updateResumeData: (section: string, data: unknown) => void;
 }
 
 export const ExperienceSection = ({ experience, updateResumeData }: ExperienceSectionProps) => {
@@ -23,15 +23,15 @@ export const ExperienceSection = ({ experience, updateResumeData }: ExperienceSe
         updateResumeData('experience', [...(experience || []), newExp]);
     };
 
-    const updateExperience = (id: string, field: string, value: any) => {
-        const updated = (experience || []).map((exp: any) =>
+    const updateExperience = (id: string, field: string, value: unknown) => {
+        const updated = (experience || []).map((exp: unknown) =>
             exp.id === id ? { ...exp, [field]: value } : exp
         );
         updateResumeData('experience', updated);
     };
 
     const removeExperience = (id: string) => {
-        updateResumeData('experience', (experience || []).filter((exp: any) => exp.id !== id));
+        updateResumeData('experience', (experience || []).filter((exp: unknown) => exp.id !== id));
     };
 
     return (
@@ -46,7 +46,7 @@ export const ExperienceSection = ({ experience, updateResumeData }: ExperienceSe
                 Add Experience
             </Button>
 
-            {(experience || []).map((exp: any, index: number) => (
+            {(experience || []).map((exp: unknown, index: number) => (
                 <Card key={exp.id} className="p-4">
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">
@@ -126,7 +126,7 @@ export const ExperienceSection = ({ experience, updateResumeData }: ExperienceSe
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => updateExperience(exp.id, 'bullets', exp.bullets.filter((_: any, i: number) => i !== bulletIndex))}
+                                            onClick={() => updateExperience(exp.id, 'bullets', exp.bullets.filter((_: unknown, i: number) => i !== bulletIndex))}
                                         >
                                             <X className="w-4 h-4" />
                                         </Button>

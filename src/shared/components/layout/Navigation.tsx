@@ -51,7 +51,7 @@ interface SavedVersion {
   id: string;
   name: string;
   timestamp: string;
-  data: any;
+  data: unknown;
 }
 
 interface BuilderToolsProps {

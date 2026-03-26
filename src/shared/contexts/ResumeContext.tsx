@@ -26,7 +26,7 @@ interface HistoryState {
 
 type ResumeAction =
   | { type: 'SET_RESUME_DATA'; payload: ResumeData }
-  | { type: 'UPDATE_SECTION'; payload: { section: keyof ResumeData; data: any } }
+  | { type: 'UPDATE_SECTION'; payload: { section: keyof ResumeData; data: ResumeData[keyof ResumeData] } }
   | { type: 'ADD_SKILL'; payload: { category: 'languages' | 'frameworks' | 'tools'; skill: string } }
   | { type: 'REMOVE_SKILL'; payload: { category: 'languages' | 'frameworks' | 'tools'; index: number } }
   | { type: 'ADD_EXPERIENCE'; payload: ResumeData['experience'][0] }
@@ -41,7 +41,7 @@ type ResumeAction =
   | { type: 'ADD_ACHIEVEMENT'; payload: ResumeData['achievements'][0] }
   | { type: 'UPDATE_ACHIEVEMENT'; payload: { index: number; data: ResumeData['achievements'][0] } }
   | { type: 'REMOVE_ACHIEVEMENT'; payload: number }
-  | { type: 'ADD_CERTIFICATION'; payload: any }
+  | { type: 'ADD_CERTIFICATION'; payload: unknown }
   | { type: 'UPDATE_CERTIFICATION'; payload: { index: number; data: any } }
   | { type: 'REMOVE_CERTIFICATION'; payload: number }
   | { type: 'ADD_CUSTOM_SECTION'; payload: ResumeData['customSections'][0] }
@@ -64,7 +64,7 @@ type ResumeAction =
 interface ResumeContextType {
   resumeData: ResumeData;
   setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
-  updateResumeData: (section: keyof ResumeData, data: any) => void;
+  updateResumeData: (section: keyof ResumeData, data: ResumeData[keyof ResumeData]) => void;
   addSkill: (category: 'languages' | 'frameworks' | 'tools', skill: string) => void;
   removeSkill: (category: 'languages' | 'frameworks' | 'tools', index: number) => void;
   addExperience: (experience: ResumeData['experience'][0]) => void;
@@ -96,7 +96,7 @@ interface ResumeContextType {
   canUndo: boolean;
   canRedo: boolean;
   clearForm: () => void;
-  sections?: any[];
+  sections?: CustomSection[];
 }
 
 export const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -541,7 +541,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
 
   const dispatch = useCallback((action: ResumeAction) => {
     const pastLimit = past.length >= 100; // Using a reasonable default limit
-    historyDispatch({ ...action, pastLimit } as any);
+    historyDispatch({ ...action, pastLimit } as unknown);
   }, [past.length]);
 
   // Set resume data function
@@ -550,7 +550,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     historyDispatch({
       type: 'SET_RESUME_DATA',
       payload: newData
-    } as any);
+    } as unknown);
   }, [resumeData]);
 
   const debouncedSave = useRef(
@@ -568,7 +568,7 @@ export const ResumeProvider: React.FC<ResumeProviderProps> = ({ children }) => {
     return () => debouncedSave.cancel();
   }, [resumeData, debouncedSave]);
 
-  const updateResumeData = useCallback((section: keyof ResumeData, data: any) => {
+  const updateResumeData = useCallback((section: keyof ResumeData, data: ResumeData[keyof ResumeData]) => {
     dispatch({ type: 'UPDATE_SECTION', payload: { section, data } });
   }, [dispatch]);
 

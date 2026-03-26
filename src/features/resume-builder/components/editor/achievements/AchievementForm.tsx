@@ -9,7 +9,7 @@ type Achievement = ResumeData['achievements'][0];
 interface AchievementFormProps {
   achievement: Partial<Achievement>;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (field: keyof Achievement, value: any) => void;
+  onChange: (field: keyof Achievement, value: unknown) => void;
   onCancel: () => void;
   isEditing: boolean;
 }

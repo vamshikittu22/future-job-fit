@@ -155,7 +155,7 @@ export const ExperienceStep: React.FC = () => {
     );
   };
 
-  const handleAIEnhance = (enhancedData: any) => {
+  const handleAIEnhance = (enhanceddata: unknown) => {
     setResumeData(enhancedData);
     // Also update the form data if we are editing
     if (editingIndex !== null && enhancedData.experience && enhancedData.experience[editingIndex]) {

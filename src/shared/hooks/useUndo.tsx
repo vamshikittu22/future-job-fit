@@ -6,7 +6,7 @@ export type UndoableAction = {
     type: 'delete';
     category: 'experience' | 'education' | 'certification' | 'project' | 'achievement';
     index: number;
-    data: any;
+    data: unknown;
     timestamp: number;
 };
 
@@ -75,7 +75,7 @@ export const useUndo = (options: UseUndoOptions = {}) => {
         (
             category: UndoableAction['category'],
             index: number,
-            data: any,
+            data: unknown,
             performDelete: () => void
         ) => {
             // Clear any existing timeout

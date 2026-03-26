@@ -145,7 +145,7 @@ export const SkillsOrganizeModal = ({
               <TabsContent value="outdated">
                 {organization.outdated.length > 0 ? (
                   <div className="space-y-2">
-                    {organization.outdated.map((item: any, idx: number) => (
+                    {organization.outdated.map((item: unknown, idx: number) => (
                       <Alert key={idx}>
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>

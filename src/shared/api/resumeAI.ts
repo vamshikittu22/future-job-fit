@@ -38,7 +38,7 @@ interface ResumeEvaluationRequest {
   resumeText: string;
   jobDescription?: string;
   model?: string;
-  customInstructions?: any;
+  customInstructions?: Record<string, unknown>;
 }
 
 interface ResumeEvaluationResponse {
@@ -120,7 +120,7 @@ export class ResumeAIService {
   /**
    * Call the offline parser service
    */
-  private async callOfflineParser(endpoint: string, data: any): Promise<any> {
+  private async callOfflineParser(endpoint: string, data: unknown): Promise<unknown> {
     const response = await fetch(`${this.offlineParserUrl}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -157,7 +157,7 @@ export class ResumeAIService {
   /**
    * Make direct API call to Gemini with user's API key
    */
-  private async callGeminiDirect(apiKey: string, task: string, data: any): Promise<any> {
+  private async callGeminiDirect(apiKey: string, task: string, data: unknown): Promise<unknown> {
     const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
     let prompt = '';
@@ -299,7 +299,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
    * Calls the Supabase Edge Function for AI operations
    * Or uses user's API key for direct calls if available
    */
-  private async callEdgeFunction(task: string, data: any): Promise<any> {
+  private async callEdgeFunction(task: string, data: unknown): Promise<unknown> {
     // Check for user-provided API key first
     const sessionKey = this.getSessionAPIKey();
     if (sessionKey) {
@@ -310,7 +310,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
         }
         // Add other providers here (OpenAI, Groq) as needed
         console.warn(`[AI Service] Direct API calls not yet implemented for: ${sessionKey.provider}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('[AI Service] Direct API call failed:', error.message);
         // Don't fall through to edge function, return error to user
         throw error;
@@ -349,7 +349,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   /**
    * Demo mode responses for testing without Supabase
    */
-  private getDemoResponse(task: string, data: any): any {
+  private getDemoResponse(task: string, data: unknown): unknown {
     if (task === 'enhanceSection') {
       const original = data.original_text || '';
       const keywords = data.industry_keywords
@@ -484,7 +484,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
       });
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = performance.now() - startTime;
       
       trackAICall(
@@ -510,7 +510,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
     }
   }
 
-  async analyzeSection(sectionId: string, content: any): Promise<any> {
+  async analyzeSection(sectionId: string, content: unknown): Promise<unknown> {
     const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
     const startTime = performance.now();
 
@@ -708,7 +708,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   }
 
   // Legacy compatibility method
-  async improveContent(sectionName: string, content: any, tone: string): Promise<any> {
+  async improveContent(sectionName: string, content: unknown, tone: string): Promise<unknown> {
     const request: EnhancementRequest = {
       section_type: sectionName.toLowerCase() as any,
       original_text: typeof content === 'string' ? content : JSON.stringify(content),
@@ -741,7 +741,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
   /**
    * Generate suggestions for keyword placement without AI call
    */
-  private getSuggestModeResponse(data: any): any {
+  private getSuggestModeResponse(data: unknown): unknown {
     const original = data.original_text || '';
     const keywords = data.industry_keywords
       ? data.industry_keywords.split(/[,;|]/).map((k: string) => k.trim()).filter(Boolean)
@@ -766,7 +766,7 @@ Return as JSON: {"atsScore": 0-100, "missingKeywords": ["..."], "suggestions": [
       applied_tone_style: data.tone_style || [],
       applied_highlight_areas: data.highlight_areas || [],
       variants: suggestions.length > 0
-        ? suggestions.map((s: any) => `Suggestion: ${s.suggestion}`)
+        ? suggestions.map((s: unknown) => `Suggestion: ${s.suggestion}`)
         : ['No suggestions available. Try Smart Rewrite mode for AI-generated variants.'],
       notes: `Suggest Mode: ${suggestions.length} placement suggestions based on your text and keywords.`
     };
@@ -881,7 +881,7 @@ Return ONLY the rewritten bullet point, nothing else.`;
     try {
       const result = await this.callEdgeFunction('parseJD', { rawText });
       return result as JobDescriptionModel;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AI Service] Cloud JD parsing failed:', error);
       throw new Error(`Failed to parse job description: ${error.message}`);
     }
@@ -908,7 +908,7 @@ Return ONLY the rewritten bullet point, nothing else.`;
         jobDescriptionText
       });
       return result as ATSEvaluationResponse;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AI Service] Cloud ATS evaluation failed:', error);
       throw new Error(`Failed to evaluate ATS: ${error.message}`);
     }

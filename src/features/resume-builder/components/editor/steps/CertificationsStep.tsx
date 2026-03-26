@@ -71,7 +71,7 @@ export const CertificationsStep: React.FC = () => {
         resetForm();
     };
 
-    const handleEdit = (cert: any, index: number) => {
+    const handleEdit = (cert: unknown, index: number) => {
         setFormData({
             id: cert.id,
             name: cert.name || '',

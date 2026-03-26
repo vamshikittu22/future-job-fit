@@ -4,7 +4,7 @@ import { Separator } from '@/shared/ui/separator';
 import { useResume } from '@/shared/contexts/ResumeContext';
 import { useWizard } from '@/shared/contexts/WizardContext';
 import { useAPIKey } from '@/shared/contexts/APIKeyContext';
-import { useTheme } from '@/shared/hooks/useTheme';
+import { useTheme } from 'next-themes';
 import { useMediaQuery } from '@/shared/hooks/use-media-query';
 import { useToast } from '@/shared/hooks/use-toast';
 import {

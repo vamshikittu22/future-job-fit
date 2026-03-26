@@ -5,8 +5,8 @@ import { Card } from "@/shared/ui/card";
 import { Plus, X } from "lucide-react";
 
 interface CertificationSectionProps {
-    certifications: any[];
-    updateResumeData: (section: string, data: any) => void;
+    certifications: unknown[];
+    updateResumeData: (section: string, data: unknown) => void;
 }
 
 export const CertificationSection = ({ certifications, updateResumeData }: CertificationSectionProps) => {
@@ -22,14 +22,14 @@ export const CertificationSection = ({ certifications, updateResumeData }: Certi
     };
 
     const updateCertification = (id: string, field: string, value: string) => {
-        const updated = (certifications || []).map((cert: any) =>
+        const updated = (certifications || []).map((cert: unknown) =>
             cert.id === id ? { ...cert, [field]: value } : cert
         );
         updateResumeData('certifications', updated);
     };
 
     const removeCertification = (id: string) => {
-        updateResumeData('certifications', (certifications || []).filter((cert: any) => cert.id !== id));
+        updateResumeData('certifications', (certifications || []).filter((cert: unknown) => cert.id !== id));
     };
 
     return (
@@ -44,7 +44,7 @@ export const CertificationSection = ({ certifications, updateResumeData }: Certi
                 Add Certification
             </Button>
 
-            {(certifications || []).map((cert: any, index: number) => (
+            {(certifications || []).map((cert: unknown, index: number) => (
                 <Card key={cert.id} className="p-4">
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">

@@ -80,7 +80,7 @@ export const ProjectsStep: React.FC = () => {
     resetForm();
   };
 
-  const handleEdit = (project: any, index: number) => {
+  const handleEdit = (project: unknown, index: number) => {
     setFormData({
       id: project.id,
       name: project.name || '',

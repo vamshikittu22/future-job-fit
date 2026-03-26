@@ -137,23 +137,23 @@ export default function CreateResumeModal({ open, onOpenChange }: CreateResumeMo
         summary: parsedData.summary || parsedData.objective || "",
         skills: Array.isArray(parsedData.skills) ? parsedData.skills : [],
         education: parsedData.education ? 
-          parsedData.education.map((edu: any) => 
+          parsedData.education.map((edu: unknown) => 
             `${edu.degree} in ${edu.fieldOfStudy}\n${edu.school}, ${edu.endYear}`
           ).join('\n\n') : "",
         experience: parsedData.experience ? 
-          parsedData.experience.map((exp: any) => 
+          parsedData.experience.map((exp: unknown) => 
             `${exp.title} at ${exp.company} (${exp.startDate} - ${exp.endDate || 'Present'})\n${exp.description || ''}${exp.achievements ? '\n• ' + exp.achievements.join('\n• ') : ''}`
           ).join('\n\n') : "",
         projects: parsedData.projects ? 
-          parsedData.projects.map((proj: any) => 
+          parsedData.projects.map((proj: unknown) => 
             `${proj.name} (${proj.technologies?.join(', ')})\n${proj.description || ''}`
           ).join('\n\n') : "",
         certifications: parsedData.certifications ? 
-          parsedData.certifications.map((cert: any) => 
+          parsedData.certifications.map((cert: unknown) => 
             `${cert.name} (${cert.issuer} - ${cert.date})`
           ).join('\n') : "",
         achievements: parsedData.awards ? 
-          parsedData.awards.map((award: any) => 
+          parsedData.awards.map((award: unknown) => 
             `${award.title} - ${award.awarder} (${award.date})`
           ).join('\n') : "",
         jobDescription: ""

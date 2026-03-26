@@ -9,7 +9,7 @@ import { extractATSKeywords } from "@/shared/lib/atsKeywords";
 interface PreviewPanelProps {
   resumeText: string;
   jobDescription: string;
-  customInstructions?: any;
+  customInstructions?: Record<string, unknown>;
 }
 
 export default function PreviewPanel({ resumeText, jobDescription, customInstructions }: PreviewPanelProps) {

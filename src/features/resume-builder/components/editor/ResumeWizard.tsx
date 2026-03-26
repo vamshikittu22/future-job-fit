@@ -112,11 +112,11 @@ const ResumeWizard = () => {
         completed += 20;
       }
     } else if (resumeData.skills && typeof resumeData.skills === 'object') {
-      if ((resumeData.skills as any).technical?.length > 0 || 
-          (resumeData.skills as any).soft?.length > 0 || 
-          (resumeData.skills as any).languages?.length > 0 ||
-          (resumeData.skills as any).frameworks?.length > 0 ||
-          (resumeData.skills as any).tools?.length > 0) {
+      if ((resumeData.skills as unknown).technical?.length > 0 || 
+          (resumeData.skills as unknown).soft?.length > 0 || 
+          (resumeData.skills as unknown).languages?.length > 0 ||
+          (resumeData.skills as unknown).frameworks?.length > 0 ||
+          (resumeData.skills as unknown).tools?.length > 0) {
         completed += 20;
       }
     }

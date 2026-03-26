@@ -57,7 +57,7 @@ export const useResumeAI = () => {
         text: v,
         wordCount: v.split(' ').length
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enhancing summary:', error);
       toast({
         title: 'Enhancement Failed',
@@ -90,7 +90,7 @@ export const useResumeAI = () => {
         text: v,
         metrics: [] // The service already incorporates metrics into the text
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enhancing bullet:', error);
       toast({
         title: 'Enhancement Failed',
@@ -194,7 +194,7 @@ export const useResumeAI = () => {
         variant: 'destructive',
       });
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error organizing skills:', error);
       toast({
         title: 'Organization Failed',
@@ -215,7 +215,7 @@ export const useResumeAI = () => {
     setIsLoading(true);
     try {
       return null; // Update as needed
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error suggesting project impact:', error);
       return null;
     } finally {

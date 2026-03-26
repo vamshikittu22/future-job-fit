@@ -5,8 +5,8 @@ import { Card } from "@/shared/ui/card";
 import { Plus, X } from "lucide-react";
 
 interface ProjectSectionProps {
-    projects: any[];
-    updateResumeData: (section: string, data: any) => void;
+    projects: unknown[];
+    updateResumeData: (section: string, data: unknown) => void;
 }
 
 export const ProjectSection = ({ projects, updateResumeData }: ProjectSectionProps) => {
@@ -22,15 +22,15 @@ export const ProjectSection = ({ projects, updateResumeData }: ProjectSectionPro
         updateResumeData('projects', [...(projects || []), newProject]);
     };
 
-    const updateProject = (id: string, field: string, value: any) => {
-        const updated = (projects || []).map((proj: any) =>
+    const updateProject = (id: string, field: string, value: unknown) => {
+        const updated = (projects || []).map((proj: unknown) =>
             proj.id === id ? { ...proj, [field]: value } : proj
         );
         updateResumeData('projects', updated);
     };
 
     const removeProject = (id: string) => {
-        updateResumeData('projects', (projects || []).filter((proj: any) => proj.id !== id));
+        updateResumeData('projects', (projects || []).filter((proj: unknown) => proj.id !== id));
     };
 
     return (
@@ -45,7 +45,7 @@ export const ProjectSection = ({ projects, updateResumeData }: ProjectSectionPro
                 Add Project
             </Button>
 
-            {(projects || []).map((project: any, index: number) => (
+            {(projects || []).map((project: unknown, index: number) => (
                 <Card key={project.id} className="p-4">
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">
@@ -134,7 +134,7 @@ export const ProjectSection = ({ projects, updateResumeData }: ProjectSectionPro
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => updateProject(project.id, 'bullets', project.bullets.filter((_: any, i: number) => i !== bulletIndex))}
+                                            onClick={() => updateProject(project.id, 'bullets', project.bullets.filter((_: unknown, i: number) => i !== bulletIndex))}
                                         >
                                             <X className="w-4 h-4" />
                                         </Button>

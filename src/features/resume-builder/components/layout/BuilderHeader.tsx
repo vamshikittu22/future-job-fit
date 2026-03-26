@@ -32,8 +32,8 @@ interface ResumeBuilderHeaderProps {
   onUndo?: () => void;
   onRedo?: () => void;
   onClearForm?: () => void;
-  onRestoreVersion?: (version: any) => void;
-  savedVersions?: any[];
+  onRestoreVersion?: (version: unknown) => void;
+  savedVersions?: unknown[];
   showPreview: boolean;
   canUndo?: boolean;
   canRedo?: boolean;

@@ -55,7 +55,7 @@ describe('Keyword Integration Utilities', () => {
     });
 
     it('should default to skill category when invalid category provided', () => {
-      const context = getKeywordIntegrationContext('Unknown', 'invalid' as any);
+      const context = getKeywordIntegrationContext('Unknown', 'invalid' as unknown);
       
       expect(context.category).toBe('skill');
     });

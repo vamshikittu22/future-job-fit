@@ -72,7 +72,7 @@ export const AchievementsStep: React.FC = () => {
         resetForm();
     };
 
-    const handleEdit = (achievement: any, index: number) => {
+    const handleEdit = (achievement: unknown, index: number) => {
         setFormData({
             id: achievement.id,
             title: achievement.title || '',

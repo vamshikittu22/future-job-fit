@@ -120,7 +120,7 @@ const WizardLayoutContent: React.FC = () => {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
-  const handleAIEnhance = (enhancedData: any) => {
+  const handleAIEnhance = (enhanceddata: unknown) => {
     setResumeData(enhancedData);
     toast({
       title: 'Resume enhanced!',

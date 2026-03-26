@@ -12,7 +12,7 @@ type Project = ResumeData['projects'][0];
 interface ProjectFormProps {
   project: Partial<Project>;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (field: keyof Project, value: any) => void;
+  onChange: (field: keyof Project, value: unknown) => void;
   onCancel: () => void;
   isEditing: boolean;
 }

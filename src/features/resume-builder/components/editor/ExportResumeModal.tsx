@@ -99,7 +99,7 @@ export function ExportResumeModal({ open, onOpenChange }: ExportResumeModalProps
     'projects',
     'achievements',
     'certifications',
-    ...(resumeData?.customSections?.map((sec: any) => sec.id) || [])
+    ...(resumeData?.customSections?.map((sec: unknown) => sec.id) || [])
   ];
 
   const [scale, setScale] = useState(1);

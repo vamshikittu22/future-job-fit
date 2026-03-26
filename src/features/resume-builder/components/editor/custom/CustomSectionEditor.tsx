@@ -4,11 +4,11 @@ import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 import { Plus, X } from "lucide-react";
 
-export const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpdate: (section: any) => void }) => {
+export const CustomSectionEditor = ({ section, onUpdate }: { section: unknown; onUpdate: (section: unknown) => void }) => {
     const updateItem = (itemId: string, field: string, value: string) => {
         onUpdate({
             ...section,
-            items: section.items.map((item: any) =>
+            items: section.items.map((item: unknown) =>
                 item.id === itemId ? { ...item, [field]: value } : item
             )
         });
@@ -28,7 +28,7 @@ export const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpd
         if (section.items.length > 1) {
             onUpdate({
                 ...section,
-                items: section.items.filter((item: any) => item.id !== itemId)
+                items: section.items.filter((item: unknown) => item.id !== itemId)
             });
         }
     };
@@ -44,7 +44,7 @@ export const CustomSectionEditor = ({ section, onUpdate }: { section: any; onUpd
             )}
 
             <div className="space-y-4">
-                {section.items.map((item: any) => (
+                {section.items.map((item: unknown) => (
                     <div key={item.id} className="space-y-2 border rounded-lg p-4 relative">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">

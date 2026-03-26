@@ -46,7 +46,7 @@ interface ResumeBuilderSidebarProps {
   activeSection: string;
   onSectionChange: (sectionId: string) => void;
   sectionOrder: string[];
-  resumeData: any;
+  resumeData: ResumeData;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onToggleTemplateCarousel?: () => void;
@@ -59,7 +59,7 @@ interface ResumeBuilderSidebarProps {
   onAddCustomSection?: (section: CustomSectionData) => void;
   onEditCustomSection?: (section: CustomSectionData) => void;
   onRemoveCustomSection?: (sectionId: string) => void;
-  updateResumeData: (section: string, data: any) => void;
+  updateResumeData: (section: string, data: unknown) => void;
 }
 
 // Icon mappings for resume sections
@@ -123,7 +123,7 @@ export default function ResumeBuilderSidebar({
           );
         } else if (typeof skills === 'object' && skills !== null) {
           // Old format: { languages: [], frameworks: [], tools: [] }
-          hasSkills = Object.values(skills).some((s: any) => Array.isArray(s) && s.length > 0);
+          hasSkills = Object.values(skills).some((s: unknown) => Array.isArray(s) && s.length > 0);
         }
         return hasSkills ? 'complete' : 'empty';
       case 'experience':

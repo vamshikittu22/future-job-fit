@@ -668,7 +668,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({ isCollapsed, onTog
                   </AccordionTrigger>
                   <AccordionContent className="pt-1 pb-2">
                     <div className="space-y-2">
-                      {atsAnalysis.suggestions.slice(0, 5).map((suggestion: any, index: number) => (
+                      {atsAnalysis.suggestions.slice(0, 5).map((suggestion: {suggestion: string, section?: string}, index: number) => (
                         <div key={index} className="rounded-md border bg-muted/20 p-2 text-[10px]">
                           <div className="flex items-start gap-2">
                             <div className={cn(

@@ -139,6 +139,19 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/clsx') || id.includes('node_modules/tailwind-merge')) {
             return 'vendor-utils';
           }
+
+          // PDF generation
+          if (id.includes('node_modules/jspdf')) {
+            return 'feature-jspdf';
+          }
+          if (id.includes('node_modules/html2pdf') || id.includes('node_modules/pdfjs-dist')) {
+            return 'feature-pdf';
+          }
+
+          // Python WASM runtime (largest single contributor)
+          if (id.includes('node_modules/pyodide')) {
+            return 'feature-pyodide';
+          }
         }
       }
     }

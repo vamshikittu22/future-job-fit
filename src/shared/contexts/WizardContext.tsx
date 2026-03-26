@@ -129,7 +129,7 @@ export const WizardProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // Debounced auto-save with useRef to maintain the same debounced function
   const debouncedAutoSave = React.useRef(
-    debounce((data: any) => {
+    debounce((data: unknown) => {
       performAutoSave();
     }, 2000)
   );

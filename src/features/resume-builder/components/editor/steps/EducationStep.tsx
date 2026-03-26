@@ -90,7 +90,7 @@ export const EducationStep: React.FC = () => {
     setIsAdding(false);
   };
 
-  const handleAIEnhance = (enhancedData: any) => {
+  const handleAIEnhance = (enhanceddata: unknown) => {
     setResumeData(enhancedData);
   };
 

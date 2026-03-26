@@ -209,7 +209,7 @@ export const WizardHelperRail: React.FC<WizardHelperRailProps> = ({ currentStepI
     setIsAIModalOpen(true);
   };
 
-  const handleAIEnhance = (enhancedData: any) => {
+  const handleAIEnhance = (enhanceddata: unknown) => {
     setResumeData(enhancedData);
     setIsAIModalOpen(false);
   };

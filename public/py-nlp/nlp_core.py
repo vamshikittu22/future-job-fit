@@ -212,10 +212,10 @@ def calculate_readability(text: str) -> int:
     score = 100
     sentences = text.split('.')
     avg_sentence_length = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
-    if avg_sentence_length > 25:
-        score -= 10
-    elif avg_sentence_length > 35:
+    if avg_sentence_length > 35:
         score -= 20
+    elif avg_sentence_length > 25:
+        score -= 10
     words = text.split()
     complex_words = sum(1 for w in words if len(w) > 12)
     if complex_words / max(len(words), 1) > 0.1:

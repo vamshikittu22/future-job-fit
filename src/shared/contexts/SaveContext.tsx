@@ -82,7 +82,7 @@ export const SaveProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // This will be implemented in the ResumeBuilder component
       // to get the current resume data
-      const saveData = (window as any).__getCurrentResumeData?.();
+      const saveData = (window as unknown).__getCurrentResumeData?.();
       if (!saveData) return;
 
       const { resumeData, template, sectionOrder } = saveData;
@@ -154,7 +154,7 @@ export const SaveProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resume = savedResumes.find(r => r.id === id);
     if (resume) {
       // This will be implemented in the ResumeBuilder component
-      (window as any).__loadResumeData?.(resume);
+      (window as unknown).__loadResumeData?.(resume);
       setCurrentSlot(id);
       toast({
         title: 'Resume loaded',
@@ -199,7 +199,7 @@ export const SaveProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSavedResumes(prev => [...prev, newResume]);
       setCurrentSlot(newId);
       // This will be implemented in the ResumeBuilder component
-      (window as any).__loadResumeData?.(newResume);
+      (window as unknown).__loadResumeData?.(newResume);
     } else {
       toast({
         title: 'Save limit reached',
@@ -233,7 +233,7 @@ export const SaveProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSavedResumes(prev => [...prev, newResume]);
     setCurrentSlot(newResume.id);
     // This will be implemented in the ResumeBuilder component
-    (window as any).__loadResumeData?.(newResume);
+    (window as unknown).__loadResumeData?.(newResume);
   }, [savedResumes, toast]);
 
   return (

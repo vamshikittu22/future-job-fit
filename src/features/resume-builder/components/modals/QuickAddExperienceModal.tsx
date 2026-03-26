@@ -16,8 +16,8 @@ import { v4 as uuidv4 } from 'uuid';
 interface QuickAddExperienceModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onAdd: (data: any) => void;
-    onExpand: (data: any) => void;
+    onAdd: (data: unknown) => void;
+    onExpand: (data: unknown) => void;
 }
 
 export const QuickAddExperienceModal: React.FC<QuickAddExperienceModalProps> = ({

@@ -13,7 +13,7 @@ import { extractTextFromFile } from "@/shared/utils/textExtraction";
 interface ImportResumeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImport: (resumeData: any) => void;
+  onImport: (resumeData: ResumeData) => void;
 }
 
 export default function ImportResumeModal({
@@ -99,7 +99,7 @@ export default function ImportResumeModal({
         description: "Review the extracted information and make any necessary corrections.",
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Processing failed:", error);
       toast({
         title: "Processing failed",
@@ -111,7 +111,7 @@ export default function ImportResumeModal({
     }
   };
 
-  const mapPythonDataToResume = (pyData: any) => {
+  const mapPythonDataToResume = (pyData: Record<string, unknown>) => {
     const sections = pyData.sections || {};
 
     return {
@@ -334,7 +334,7 @@ export default function ImportResumeModal({
                     Work Experience ({extractedData.experience.length})
                   </h3>
                   <div className="space-y-3">
-                    {extractedData.experience.map((exp: any, index: number) => (
+                    {extractedData.experience.map((exp: unknown, index: number) => (
                       <div key={index} className="text-sm">
                         <div className="font-medium">{exp.title}</div>
                         <div className="text-muted-foreground text-[10px] line-clamp-2">{exp.description}</div>
@@ -350,7 +350,7 @@ export default function ImportResumeModal({
                     Education ({extractedData.education.length})
                   </h3>
                   <div className="space-y-2 text-sm">
-                    {extractedData.education.map((edu: any, index: number) => (
+                    {extractedData.education.map((edu: unknown, index: number) => (
                       <div key={index}>
                         <div className="font-medium">{edu.degree}</div>
                         <div className="text-muted-foreground text-[10px] line-clamp-1">{edu.description}</div>

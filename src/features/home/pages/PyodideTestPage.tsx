@@ -18,7 +18,7 @@ const PyodideTest = () => {
         try {
             const result = await parseResume(inputText || "Sample Resume Text");
             setOutput(result);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Execution Error:", err);
             setError(err.message);
         } finally {

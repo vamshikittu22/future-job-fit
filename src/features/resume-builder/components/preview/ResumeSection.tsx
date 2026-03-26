@@ -1,3 +1,4 @@
+import { ResumeData } from '@/shared/lib/initialData';
 import { useState, useEffect, useRef } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/shared/ui/button";
@@ -23,12 +24,12 @@ import { CertificationSection } from "@/features/resume-builder/components/edito
 interface ResumeSectionProps {
   sectionId: string;
   index: number;
-  resumeData: any;
-  updateResumeData: (section: string, data: any) => void;
+  resumeData: ResumeData;
+  updateResumeData: (section: string, data: unknown) => void;
   isActive?: boolean;
   onActivate?: () => void;
   addCustomSection?: () => void;
-  updateCustomSection?: (index: number, section: any) => void;
+  updateCustomSection?: (index: number, section: unknown) => void;
   removeCustomSection?: (index: number) => void;
 }
 
@@ -68,7 +69,7 @@ const ResumeSection = ({
   removeCustomSection,
 }: ResumeSectionProps) => {
   // Find the custom section if this is a custom section
-  const customSection = resumeData?.customSections?.find((s: any) => s.id === sectionId);
+  const customSection = resumeData?.customSections?.find((s: {id?: string}) => s.id === sectionId);
   const [isExpanded, setIsExpanded] = useState(false);
   const [skillsData, setSkillsData] = useState<SkillCategoryType[]>([]);
   const [localCustomSections, setLocalCustomSections] = useState<any[]>(resumeData?.customSections || []);
@@ -100,9 +101,9 @@ const ResumeSection = ({
     if (resumeData.skills && typeof resumeData.skills === 'object' && !Array.isArray(resumeData.skills)) {
       // New structure: { languages: [], frameworks: [], tools: [] }
       const allSkills = [
-        ...resumeData.skills.languages.map((skill: any) => ({ id: 'languages', name: 'Languages', items: resumeData.skills.languages })),
-        ...resumeData.skills.frameworks.map((skill: any) => ({ id: 'frameworks', name: 'Frameworks', items: resumeData.skills.frameworks })),
-        ...resumeData.skills.tools.map((skill: any) => ({ id: 'tools', name: 'Tools', items: resumeData.skills.tools }))
+        ...resumeData.skills.languages.map((skill: unknown) => ({ id: 'languages', name: 'Languages', items: resumeData.skills.languages })),
+        ...resumeData.skills.frameworks.map((skill: unknown) => ({ id: 'frameworks', name: 'Frameworks', items: resumeData.skills.frameworks })),
+        ...resumeData.skills.tools.map((skill: unknown) => ({ id: 'tools', name: 'Tools', items: resumeData.skills.tools }))
       ];
 
       if (allSkills.length > 0) {
@@ -365,7 +366,7 @@ const ResumeSection = ({
   const getSectionTitle = (id: string) => {
     // First check if it's a custom section
     if (id.startsWith('custom-') && resumeData?.customSections) {
-      const customSection = resumeData.customSections.find((s: any) => s.id === id);
+      const customSection = resumeData.customSections.find((s: {id?: string}) => s.id === id);
       if (customSection) {
         return customSection.title || 'Custom Section';
       }
@@ -387,7 +388,7 @@ const ResumeSection = ({
   const updateCustomSectionItem = (sectionId: string, itemIndex: number, field: string, value: string) => {
     if (!resumeData?.customSections) return;
 
-    const sectionIndex = resumeData.customSections.findIndex((s: any) => s.id === sectionId);
+    const sectionIndex = resumeData.customSections.findIndex((s: unknown) => s.id === sectionId);
     if (sectionIndex === -1) return;
 
     const section = resumeData.customSections[sectionIndex];
@@ -437,7 +438,7 @@ const ResumeSection = ({
               value={customSection.title || ''}
               onChange={(e) => {
                 if (updateCustomSection) {
-                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  const sectionIndex = resumeData.customSections?.findIndex((s: unknown) => s.id === sectionId) ?? -1;
                   if (sectionIndex !== -1) {
                     updateCustomSection(sectionIndex, {
                       ...customSection,
@@ -446,7 +447,7 @@ const ResumeSection = ({
                   }
                 } else {
                   const updatedSections = [...(resumeData.customSections || [])];
-                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  const sectionIndex = updatedSections.findIndex((s: unknown) => s.id === sectionId);
                   if (sectionIndex !== -1) {
                     updatedSections[sectionIndex] = {
                       ...updatedSections[sectionIndex],
@@ -466,7 +467,7 @@ const ResumeSection = ({
               value={customSection.description || ''}
               onChange={(e) => {
                 if (updateCustomSection) {
-                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  const sectionIndex = resumeData.customSections?.findIndex((s: unknown) => s.id === sectionId) ?? -1;
                   if (sectionIndex !== -1) {
                     updateCustomSection(sectionIndex, {
                       ...customSection,
@@ -475,7 +476,7 @@ const ResumeSection = ({
                   }
                 } else {
                   const updatedSections = [...(resumeData.customSections || [])];
-                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  const sectionIndex = updatedSections.findIndex((s: unknown) => s.id === sectionId);
                   if (sectionIndex !== -1) {
                     updatedSections[sectionIndex] = {
                       ...updatedSections[sectionIndex],
@@ -510,7 +511,7 @@ const ResumeSection = ({
                 };
 
                 if (updateCustomSection) {
-                  const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                  const sectionIndex = resumeData.customSections?.findIndex((s: unknown) => s.id === sectionId) ?? -1;
                   if (sectionIndex !== -1) {
                     updateCustomSection(sectionIndex, {
                       ...customSection,
@@ -519,7 +520,7 @@ const ResumeSection = ({
                   }
                 } else {
                   const updatedSections = [...(resumeData.customSections || [])];
-                  const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                  const sectionIndex = updatedSections.findIndex((s: unknown) => s.id === sectionId);
                   if (sectionIndex !== -1) {
                     updatedSections[sectionIndex] = {
                       ...updatedSections[sectionIndex],
@@ -535,7 +536,7 @@ const ResumeSection = ({
             </Button>
           </div>
 
-          {sectionItems.map((item: any, itemIndex: number) => (
+          {sectionItems.map((item: unknown, itemIndex: number) => (
             <div key={item.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Item {itemIndex + 1}</h4>
@@ -545,20 +546,20 @@ const ResumeSection = ({
                   size="sm"
                   onClick={() => {
                     if (updateCustomSection) {
-                      const sectionIndex = resumeData.customSections?.findIndex((s: any) => s.id === sectionId) ?? -1;
+                      const sectionIndex = resumeData.customSections?.findIndex((s: unknown) => s.id === sectionId) ?? -1;
                       if (sectionIndex !== -1) {
                         updateCustomSection(sectionIndex, {
                           ...customSection,
-                          items: customSection.items.filter((_: any, i: number) => i !== itemIndex)
+                          items: customSection.items.filter((_: unknown, i: number) => i !== itemIndex)
                         });
                       }
                     } else {
                       const updatedSections = [...(resumeData.customSections || [])];
-                      const sectionIndex = updatedSections.findIndex((s: any) => s.id === sectionId);
+                      const sectionIndex = updatedSections.findIndex((s: unknown) => s.id === sectionId);
                       if (sectionIndex !== -1) {
                         updatedSections[sectionIndex] = {
                           ...updatedSections[sectionIndex],
-                          items: updatedSections[sectionIndex].items.filter((_: any, i: number) => i !== itemIndex)
+                          items: updatedSections[sectionIndex].items.filter((_: unknown, i: number) => i !== itemIndex)
                         };
                         updateResumeData('customSections', updatedSections);
                       }

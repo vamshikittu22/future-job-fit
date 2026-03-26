@@ -1,3 +1,4 @@
+import { ResumeData } from '@/shared/lib/initialData';
 import { useState } from "react";
 import { Card } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
@@ -89,7 +90,7 @@ const templates: Template[] = [
 interface TemplateCarouselProps {
   selectedTemplate: string;
   onTemplateChange: (templateId: string) => void;
-  resumeData: any;
+  resumeData: ResumeData;
 }
 
 export default function TemplateCarousel({

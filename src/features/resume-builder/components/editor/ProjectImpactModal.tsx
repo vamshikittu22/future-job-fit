@@ -92,7 +92,7 @@ export const ProjectImpactModal = ({
               <div>
                 <h4 className="text-sm font-medium mb-2">Suggested Metrics</h4>
                 <div className="space-y-2">
-                  {suggestions.suggestedMetrics.map((metric: any, idx: number) => (
+                  {suggestions.suggestedMetrics.map((metric: unknown, idx: number) => (
                     <div key={idx} className="p-3 bg-muted rounded-lg">
                       <div className="font-medium text-sm">{metric.type}</div>
                       <div className="text-sm text-muted-foreground">{metric.example}</div>
@@ -104,7 +104,7 @@ export const ProjectImpactModal = ({
               <div>
                 <h4 className="text-sm font-medium mb-2">Impact-Focused Bullets</h4>
                 <div className="space-y-2">
-                  {suggestions.bullets.map((bullet: any, idx: number) => (
+                  {suggestions.bullets.map((bullet: unknown, idx: number) => (
                     <div
                       key={idx}
                       className="p-3 bg-muted rounded-lg hover:bg-accent cursor-pointer transition-colors"

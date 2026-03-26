@@ -22,7 +22,7 @@ interface ATSContextType {
     getRecommendationsForLocation: (location: string) => Recommendation[];
 
     // Analysis (legacy)
-    analysis: any;
+    analysis: Record<string, unknown>;
 }
 
 const ATSContext = createContext<ATSContextType | undefined>(undefined);

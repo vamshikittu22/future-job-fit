@@ -139,7 +139,7 @@ const WizardPreview: React.FC = () => {
     'projects',
     'achievements',
     'certifications',
-    ...(resumeData?.customSections?.map((sec: any) => sec.id) || [])
+    ...(resumeData?.customSections?.map((sec: unknown) => sec.id) || [])
   ];
 
   // Convert resume to text for ATS analysis

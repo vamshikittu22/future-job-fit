@@ -76,7 +76,7 @@ export const SkillsStep: React.FC = () => {
     (skills.frameworks?.length || 0) +
     (skills.tools?.length || 0);
 
-  const handleAIEnhance = (enhancedData: any) => {
+  const handleAIEnhance = (enhanceddata: unknown) => {
     setResumeData(enhancedData);
   };
 

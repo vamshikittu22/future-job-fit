@@ -10,13 +10,13 @@ export interface SectionAnalysis {
     lastUpdated: number;
 }
 
-export const useSectionAnalysis = (sectionId: string, content: any) => {
+export const useSectionAnalysis = (sectionId: string, content: unknown) => {
     const [analysis, setAnalysis] = useState<SectionAnalysis | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const analyze = useCallback(
-        async (data: any) => {
+        async (data: unknown) => {
             if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'string' && !data.trim())) {
                 return;
             }
@@ -41,7 +41,7 @@ export const useSectionAnalysis = (sectionId: string, content: any) => {
     );
 
     const debouncedAnalyze = useCallback(
-        debounce((data: any) => analyze(data), 1000),
+        debounce((data: unknown) => analyze(data), 1000),
         [analyze]
     );
 
