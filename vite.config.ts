@@ -83,7 +83,7 @@ export default defineConfig(({ mode }) => ({
     include: ['@radix-ui/react-separator']
   },
   build: {
-    chunkSizeWarningLimit: 600, // Slightly raise limit since we're close
+    // chunkSizeWarningLimit removed
     rollupOptions: {
       output: {
         manualChunks(id) {

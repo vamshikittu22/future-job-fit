@@ -33,9 +33,7 @@ export interface Education {
   id: string;
   degree: string;
   school: string;
-  institution?: string;
   fieldOfStudy?: string;
-  field?: string;
   startDate: string;
   endDate: string;
   description?: string;
@@ -48,7 +46,6 @@ export interface Project {
   role?: string;
   description: string;
   technologies: string[];
-  tech?: string[];
   bullets?: string[];
   url?: string;
   startDate?: string;

@@ -1,11 +1,10 @@
 import html2canvas from 'html2canvas';
-import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
 import { ResumeData } from '@/shared/types/resume';
 import { generateHTML } from './formats';
 
 /**
  * Generates a simple ATS-friendly PDF. Delegates to generateFormattedPdf
- * using the canonical html2pdf pipeline so only one PDF dependency is needed.
  */
 export const generatePdf = async (resumeData: ResumeData, template: string = 'minimal'): Promise<Blob> => {
   return generateFormattedPdf(resumeData, template);
@@ -13,8 +12,7 @@ export const generatePdf = async (resumeData: ResumeData, template: string = 'mi
 
 /**
  * THE GOLD STANDARD: Generates a pixel-perfect PDF by rendering the centralized HTML 
- * export into a hidden container and capturing it with html2pdf.js.
- * This ensures PDF matches HTML and DOCX exactly.
+ * export into a hidden container and capturing it with html2canvas and jsPDF.
  */
 export const generateFormattedPdf = async (resumeData: ResumeData, template: string = 'modern'): Promise<Blob> => {
   console.log('Generating High-Fidelity PDF from Registry styles...');
@@ -37,27 +35,29 @@ export const generateFormattedPdf = async (resumeData: ResumeData, template: str
     throw new Error('Failed to generate PDF: HTML structure invalid');
   }
 
-  // Define html2pdf options for A4 high-res
-  const opt = {
-    margin: 0,
-    filename: `resume-${template}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      letterRendering: true,
-      backgroundColor: '#ffffff',
-      logging: false
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  };
-
   try {
     // Generate the blob
-    const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false
+    });
+    
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    
     console.log('PDF generation complete.');
-    return pdfBlob;
+    return pdf.output('blob');
   } catch (error) {
     console.error('HTML to PDF conversion failed:', error);
     throw error;
@@ -68,23 +68,28 @@ export const generateFormattedPdf = async (resumeData: ResumeData, template: str
 
 /**
  * Legacy/Alternative: Captures an existing element from the DOM.
- * Now refactored to use html2pdf for better reliability.
  */
 export const generatePdfFromElement = async (element: HTMLElement): Promise<Blob> => {
   console.log('Starting PDF generation from DOM element...');
 
-  const opt = {
-    margin: 0,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff'
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  };
-
-  return html2pdf().set(opt).from(element).output('blob');
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff'
+  });
+  
+  const imgData = canvas.toDataURL('image/jpeg', 0.98);
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  
+  pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+  
+  return pdf.output('blob');
 };
 

@@ -1,10 +1,4 @@
-import * as pdfjs from 'pdfjs-dist';
 import mammoth from 'mammoth';
-
-// Set up PDF.js worker
-// In a Vite environment, we can use the bundled worker
-// @ts-ignore
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 /**
  * Extracts raw text from various file formats
@@ -26,6 +20,10 @@ export async function extractTextFromFile(file: File): Promise<string> {
 }
 
 async function extractTextFromPDF(file: File): Promise<string> {
+    const pdfjs = await import('pdfjs-dist');
+    // @ts-ignore
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
     const arrayBuffer = await file.arrayBuffer();
     const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;

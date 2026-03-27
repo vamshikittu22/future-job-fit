@@ -74,6 +74,7 @@ const router = createBrowserRouter([
       { path: "custom/:id", element: <Suspense fallback={null}><CustomSectionStep /></Suspense> },
     ],
   },
+  { path: "/pyodide-test", element: <Suspense fallback={<PageLoader />}><PyodideTest /></Suspense> },
   { path: "*", element: <NotFound /> },
 ]);
 

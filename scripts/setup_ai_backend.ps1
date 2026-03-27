@@ -24,8 +24,8 @@ npx supabase login
 
 # 3. Set Secrets
 Write-Host "`n3️⃣  Setting Production Secrets..." -ForegroundColor Yellow
-$ProjectRef = "bssbnbszgtlildyfrkhm"
-$GeminiKey = "AIzaSyBPs6YltYMLr9AkIqnq9TWx0ZjuGvcOJ9g"
+$ProjectRef = $env:SUPABASE_PROJECT_REF
+$GeminiKey = $env:GEMINI_API_KEY
 
 npx supabase secrets set --project-ref $ProjectRef GEMINI_API_KEY=$GeminiKey AI_PROVIDER=gemini --yes
 

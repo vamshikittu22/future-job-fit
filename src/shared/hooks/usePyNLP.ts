@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { loadPyodide, type PyodideInterface } from 'pyodide';
+import type { PyodideInterface } from 'pyodide';
 import type {
     JobDescriptionModel,
     ATSEvaluationResponse
@@ -66,6 +66,7 @@ export const usePyNLP = () => {
 
         initializationPromise = (async () => {
             try {
+                const { loadPyodide } = await import('pyodide');
                 const py = await loadPyodide({
                     // v0.26.1 is the latest stable that works well in most environments
                     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/",
